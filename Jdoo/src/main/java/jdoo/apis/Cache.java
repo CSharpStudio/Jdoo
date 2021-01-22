@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.util.ObjectUtils;
 
+import jdoo.exceptions.CacheMissException;
 import jdoo.models.Field;
 import jdoo.models.Self;
 import jdoo.tools.Tuple2;
@@ -37,7 +38,7 @@ public class Cache {
                 return value;
             }
         }
-        throw new CacheMiss("Cache " + record.getMeta().getName() + "." + field.getName() + " not found");
+        throw new CacheMissException("Cache " + record.getMeta().getName() + "." + field.getName() + " not found");
     }
 
     public Object get(Self record, Field field, Object defalult_) {
