@@ -15,12 +15,6 @@ public class BaseField<T extends BaseField<T>> extends Field {
     }
 
     @SuppressWarnings("unchecked")
-    public T model(String model) {
-        this.model_name = model;
-        return (T) this;
-    }
-
-    @SuppressWarnings("unchecked")
     public T store(boolean store) {
         this.store = store;
         return (T) this;

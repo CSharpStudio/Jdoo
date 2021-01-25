@@ -12,6 +12,7 @@ import javax.el.MethodNotFoundException;
 import org.apache.tomcat.util.buf.StringUtils;
 
 import jdoo.exceptions.ModelException;
+import jdoo.tools.Tuple;
 import jdoo.apis.Environment;
 
 public class MetaModel {
@@ -296,10 +297,10 @@ public class MetaModel {
         return true;
     }
 
-    public Self browse(Environment env, List<String> ids, List<String> prefetchIds) {
+    public Self browse(Environment env, Collection<String> ids, Collection<String> prefetchIds) {
         Self m = new Self(this, env);
-        m.ids = ids;
-        m.prefetchIds = prefetchIds;
+        m.ids = new Tuple<>(ids);
+        m.prefetchIds = new Tuple<>(prefetchIds);
         return m;
     }
 

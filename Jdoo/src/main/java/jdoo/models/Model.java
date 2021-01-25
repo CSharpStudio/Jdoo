@@ -5,6 +5,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,17 +18,18 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import org.springframework.util.StringUtils;
 
-import jdoo.tools.CollectionUtils;
 import jdoo.tools.Default;
 import jdoo.tools.Dict;
 import jdoo.tools.IdValues;
 import jdoo.tools.Tuple;
 import jdoo.tools.Tuple2;
+import jdoo.tools.Utils;
 import jdoo.data.Cursor;
 import jdoo.apis.Cache;
+import jdoo.apis.Environment;
 import jdoo.apis.api;
 import jdoo.data.AsIs;
-import jdoo.exceptions.MissingException;
+import jdoo.exceptions.MissingErrorException;
 import jdoo.exceptions.ModelException;
 import jdoo.modules.Registry;
 
@@ -151,7 +153,8 @@ public class Model {
             return self.browse();
         self = self.browse();
         check_access_rights(self, "create");
-        Set<String> bad_names = CollectionUtils.asSet("id", "parent_path");
+        Set<String> bad_names = new HashSet<String>();
+        Collections.addAll(bad_names, "id", "parent_path");
         if (self.getMeta().log_access()) {
             bad_names.addAll(LOG_ACCESS_COLUMNS);
         }
@@ -184,11 +187,11 @@ public class Model {
                     stored.put(key, val);
                 }
                 if (field.inherited) {
-                    if (inherited.containsKey(field.related_field.model_name)) {
-                        inherited.get(field.related_field.model_name).put(key, val);
+                    if (inherited.containsKey(field.related_field.model_name())) {
+                        inherited.get(field.related_field.model_name()).put(key, val);
                     } else {
                         Map<String, Object> m = new Dict().set(key, val);
-                        inherited.put(field.related_field.model_name, m);
+                        inherited.put(field.related_field.model_name(), m);
                     }
                 } else if (StringUtils.hasText(field.inverse)) {
                     inversed.put(key, val);
@@ -221,12 +224,12 @@ public class Model {
             Field field = self.getField(name);
             if (field instanceof Many2manyField && value instanceof List && !((List<?>) value).isEmpty()
                     && ((List<?>) value).get(0) instanceof String) {
-                defaults.put(name, Arrays.asList(new Tuple(6, 0, value)));
+                defaults.put(name, Arrays.asList(new Tuple<>(6, 0, value)));
             } else if (field instanceof One2manyField && value instanceof List && !((List<?>) value).isEmpty()
                     && ((List<?>) value).get(0) instanceof Map) {
-                List<Tuple> values = new ArrayList<Tuple>();
+                List<Tuple<Object>> values = new ArrayList<>();
                 for (Object m : (List<?>) value) {
-                    values.add(new Tuple(0, 0, m));
+                    values.add(new Tuple<>(0, 0, m));
                 }
                 defaults.put(name, values);
             }
@@ -260,12 +263,12 @@ public class Model {
             }
             if (field.inherited) {
                 field = field.related_field;
-                if (parent_fields.containsKey(field.model_name)) {
+                if (parent_fields.containsKey(field.model_name())) {
                     List<String> names = new ArrayList<String>();
                     names.add(field.getName());
-                    parent_fields.put(field.model_name, names);
+                    parent_fields.put(field.model_name(), names);
                 } else {
-                    List<String> names = parent_fields.get(field.model_name);
+                    List<String> names = parent_fields.get(field.model_name());
                     names.add(field.getName());
                 }
             }
@@ -286,7 +289,7 @@ public class Model {
         return defaults;
     }
 
-    public Tuple name_create(Self self, String name) {
+    public Tuple<String> name_create(Self self, String name) {
         String rec_name = self.getMeta().rec_name();
         if (StringUtils.hasText(rec_name)) {
             Self record = create(self, new Dict().set(rec_name, name));
@@ -295,18 +298,19 @@ public class Model {
         return null;
     }
 
-    public List<Tuple> name_get(Self self) {
-        List<Tuple> result = new ArrayList<Tuple>();
+    public List<Tuple<String>> name_get(Self self) {
+        List<Tuple<String>> result = new ArrayList<>();
         String rec_name = self.getMeta().rec_name();
         Field field = self.getMeta().findField(rec_name);
         if (field != null) {
             for (Self record : self) {
-                Tuple tuple = new Tuple(record.id(), field.convert_to_display_name(record.get(field), record));
+                Tuple<String> tuple = new Tuple<>(record.id(),
+                        field.convert_to_display_name(record.get(field), record));
                 result.add(tuple);
             }
         } else {
             for (Self record : self) {
-                Tuple tuple = new Tuple(record.id(), String.format("%s.%s", record.getName(), record.id()));
+                Tuple<String> tuple = new Tuple<>(record.id(), String.format("%s.%s", record.getName(), record.id()));
                 result.add(tuple);
             }
         }
@@ -326,6 +330,21 @@ public class Model {
             }
         }
         flush(self, fnames, self);
+        Environment env = self.env();
+        Cursor cr = env.cr();
+        String user = env.uid();
+        Dict context = env.context();
+        boolean su = env.su();
+        String select_clause = org.apache.tomcat.util.buf.StringUtils.join(field_names, ',');
+        String from_clause = self.table();
+        String where_clause = "id in (%s)";
+        String query_str = String.format("SELECT %s FROM %s WHERE %s", select_clause, from_clause, where_clause);
+        for (Object[] sub_ids : cr.split_for_in_conditions(self.ids())){
+            cr.execute(query_str);
+            //result += cr.fetchall();
+        }
+
+
     }
 
     public boolean write(Self self, Map<String, Object> vals) {
@@ -346,9 +365,8 @@ public class Model {
                 towrite.set(record.id(), "write_uid", self.env().uid());
                 towrite.set(record.id(), "write_date", false);
             }
-            self.env().cache()
-                    .invalidate(Arrays.asList(new Tuple2<Field, List<String>>(self.getField("write_date"), self.ids()),
-                            new Tuple2<Field, List<String>>(self.getField("write_uid"), self.ids())));
+            self.env().cache().invalidate(Arrays.asList(new Tuple2<>(self.getField("write_date"), self.ids()),
+                    new Tuple2<>(self.getField("write_uid"), self.ids())));
         }
 
         for (String fname : vals.keySet()) {
@@ -361,7 +379,7 @@ public class Model {
     }
 
     protected boolean _write(Self self, Map<String, Object> vals) {
-        if (self.ids == null || self.ids.isEmpty())
+        if (!self.hasId())
             return true;
         Cursor cr = self.env().cr();
         List<String> columns = new ArrayList<String>();
@@ -373,7 +391,7 @@ public class Model {
                 continue;
             Field field = self.getField(name);
             assert field.store();
-            columns.add(String.format("\"%s\"=%s", name, field.column_format()));
+            columns.add(String.format("\"%s\"=%s", name, field.column_format));
             params.add(val);
         }
 
@@ -392,13 +410,13 @@ public class Model {
             StringBuilder sb = new StringBuilder();
             org.apache.tomcat.util.buf.StringUtils.join(columns.toArray(new String[0]), ',', sb);
             String query = String.format("UPDATE \"%s\" SET %s WHERE id IN %%s", self.table(), sb.toString());
-            for (Object[] sub_ids : cr.split_for_in_conditions(self.ids)) {
+            for (Object[] sub_ids : cr.split_for_in_conditions(Arrays.asList(self.ids))) {
                 List<Object> p = new ArrayList<Object>();
                 p.addAll(params);
                 p.addAll(Arrays.asList(sub_ids));
                 cr.execute(query, p);
                 if (cr.rowcount() != sub_ids.length)
-                    throw new MissingException(String.format(
+                    throw new MissingErrorException(String.format(
                             "One of the records you are trying to modify has already been deleted (Document type: %s).",
                             self.getMeta().description()));
             }
@@ -472,11 +490,11 @@ public class Model {
     }
 
     void add_model_field(Map<String, List<Field>> model_fields, Field field) {
-        if (!model_fields.containsKey(field.model_name)) {
+        if (!model_fields.containsKey(field.model_name())) {
             List<Field> list = Arrays.asList(field);
-            model_fields.put(field.model_name, list);
+            model_fields.put(field.model_name(), list);
         } else {
-            List<Field> list = (List<Field>) model_fields.get(field.model_name);
+            List<Field> list = (List<Field>) model_fields.get(field.model_name());
             list.add(field);
         }
     }
@@ -677,8 +695,8 @@ public class Model {
                 Field f = (Field) field.get(null);
                 String key = field.getName();
                 f.setName(key);
-                if (StringUtils.hasText(f.compute())) {
-                    Method compute = clazz.getMethod(f.compute(), Self.class);
+                if (StringUtils.hasText(f.compute)) {
+                    Method compute = clazz.getMethod(f.compute, Self.class);
                     api.depends depends = compute.getAnnotation(api.depends.class);
                     if (depends != null) {
                         f.set_depends(depends.value());
@@ -733,5 +751,43 @@ public class Model {
 
     private Field update(Field oldField, Field newField) {
         return newField;
+    }
+
+    public Self exists(Self self) {
+        // TODO
+        // ids, new_ids = [], []
+        // for i in self._ids:
+        // (ids if isinstance(i, int) else new_ids).append(i)
+        // if not ids:
+        // return self
+        // query = """SELECT id FROM "%s" WHERE id IN %%s""" % self._table
+        // self._cr.execute(query, [tuple(ids)])
+        // ids = [r[0] for r in self._cr.fetchall()]
+        // return self.browse(ids + new_ids)
+        return self.browse();
+    }
+
+    public void modified(Self self, Collection<String> fnames, @Default("false") boolean create) {
+
+    }
+
+    public void _fetch_field(Self self, Field field) {
+        check_field_access_rights(self, "read", Arrays.asList(field.getName()));
+        List<Field> fields = new ArrayList<>();
+        if (Utils.Maps.get(self.context(), "prefetch_fields", true) && field.prefetch()) {
+            for (Field f : self.getFields()) {
+                if (f.prefetch() && !(StringUtils.hasText(f.groups) && !user_has_group(self, f.groups))
+                        && !(StringUtils.hasText(f.compute) && self.env().records_to_compute(f).hasId())) {
+                    fields.add(f);
+                }
+            }
+            if (!fields.contains(field)) {
+                fields.add(field);
+                self = self.subtract(self.env().records_to_compute(field));
+            }
+        } else {
+            fields.add(field);
+        }
+        _read(self, fields);
     }
 }

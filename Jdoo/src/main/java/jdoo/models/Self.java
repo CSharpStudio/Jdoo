@@ -2,21 +2,32 @@ package jdoo.models;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import jdoo.exceptions.JdooException;
 import jdoo.exceptions.ModelException;
+import jdoo.exceptions.ValueErrorException;
 import jdoo.tools.Dict;
+import jdoo.tools.Linq;
+import jdoo.tools.Tuple;
 import jdoo.apis.Environment;
 
 public final class Self implements Iterable<Self> {
     private MetaModel meta;
     private Environment env;
-    List<String> ids;
-    List<String> prefetchIds;
+    Tuple<String> ids;
+    Tuple<String> prefetchIds;
+    static Map<Field, Collection<Field>> _field_computed;
+
+    public Map<Field, Collection<Field>> _field_computed(){
+        return _field_computed;
+    }
 
     public Self(MetaModel cls, Environment env) {
         this.meta = cls;
@@ -43,13 +54,12 @@ public final class Self implements Iterable<Self> {
         return env.get(model);
     }
 
-    public Self browse(List<String> ids) {
+    public Self browse(Collection<String> ids) {
         return meta.browse(env, ids, ids);
     }
 
     public Self browse(String id) {
-        ArrayList<String> ids = new ArrayList<String>();
-        ids.add(id);
+        Tuple<String> ids = Tuple.of(id);
         return meta.browse(env, ids, ids);
     }
 
@@ -58,7 +68,7 @@ public final class Self implements Iterable<Self> {
         return meta.browse(env, ids, ids);
     }
 
-    public List<String> ids() {
+    public Collection<String> ids() {
         return ids;
     }
 
@@ -69,7 +79,13 @@ public final class Self implements Iterable<Self> {
     }
 
     public boolean hasId() {
-        return ids != null && !ids.isEmpty();
+        return ids != null && ids.size() > 0;
+    }
+
+    public void ensure_one() {
+        if (ids == null || ids.size() > 1) {
+            throw new ValueErrorException(String.format("Expected singleton: %s", this));
+        }
     }
 
     public String getName() {
@@ -142,7 +158,7 @@ public final class Self implements Iterable<Self> {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T call(TypeReference<?> ref, String method, Object... args) {
+    public <T> T call(TypeReference<T> ref, String method, Object... args) {
         return (T) call(method, args);
     }
 
@@ -170,5 +186,52 @@ public final class Self implements Iterable<Self> {
         public Self next() {
             return browse(ids.get(cusor++));
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s%s", getName(), ids());
+    }
+
+    public Self sudo() {
+        return this;
+    }
+
+    public Self with_context(Dict context) {
+        return this;
+    }
+
+    public Self _in_cache_without(Field field) {
+        Self recs = browse(prefetchIds);
+        List<String> ids = new ArrayList<>(ids());
+        for (String record_id : env.cache().get_missing_ids(recs.subtract(this), field)) {
+            if (record_id.isBlank()) {
+                continue;
+            }
+            ids.add(record_id);
+        }
+        return browse(ids);
+    }
+
+    public Self subtract(Self other) {
+        Collection<String> other_ids = new HashSet<String>(other.ids());
+        return browse(Collections.list(Linq.where(ids(), id -> !other_ids.contains(id))));
+    }
+
+    public Self concat(Self other) {
+        HashSet<String> ids = new HashSet<>(ids());
+        ids.addAll(other.ids());
+        return browse(ids);
+    }
+
+    public Self and(Self other){
+        Collection<String> other_ids = new HashSet<String>(other.ids());
+        return browse(Collections.list(Linq.where(ids(), id -> other_ids.contains(id))));
+    }
+
+    public Self or(Self other){
+        Collection<String> ids = new HashSet<String>(ids());
+        ids.addAll(other.ids());
+        return browse(ids);
     }
 }

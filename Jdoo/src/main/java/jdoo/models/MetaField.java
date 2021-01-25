@@ -39,10 +39,6 @@ public abstract class MetaField {
 
     protected String column_format = "%s";
 
-    String column_format() {
-        return column_format;
-    }
-
     protected boolean relational = false;
 
     boolean relational() {
@@ -79,13 +75,11 @@ public abstract class MetaField {
         return inherited;
     }
 
-    protected String model_name;
+    public String model_name() {
+        return meta.getName();
+    }
 
     protected String comodel_name;
-
-    String comodel_name() {
-        return comodel_name;
-    }
 
     protected Boolean store;
 
@@ -139,10 +133,6 @@ public abstract class MetaField {
 
     protected String compute;
 
-    public String compute() {
-        return compute;
-    }
-
     protected Boolean compute_sudo;
 
     boolean compute_sudo() {
@@ -151,21 +141,9 @@ public abstract class MetaField {
 
     protected String inverse;
 
-    String inverse() {
-        return inverse;
-    }
-
     protected String search;
 
-    String search() {
-        return search;
-    }
-
     protected String related;
-
-    String related() {
-        return related;
-    }
 
     protected Boolean company_dependent;
 
@@ -184,15 +162,7 @@ public abstract class MetaField {
 
     protected String string;
 
-    String string() {
-        return string;
-    }
-
     protected String help;
-
-    String help() {
-        return help;
-    }
 
     protected Boolean readonly;
 
@@ -216,10 +186,6 @@ public abstract class MetaField {
 
     protected String groups;
 
-    String groups() {
-        return groups;
-    }
-
     protected Boolean change_default;
 
     boolean change_default() {
@@ -236,15 +202,7 @@ public abstract class MetaField {
 
     protected String group_operator;
 
-    String group_operator() {
-        return group_operator;
-    }
-
     protected String group_expand;
-
-    String group_expand() {
-        return group_expand;
-    }
 
     protected boolean prefetch = true;
 

@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import jdoo.TransactionCase;
 import jdoo.models.Self;
 import jdoo.tools.Dict;
@@ -17,8 +19,8 @@ public class TestBase extends TransactionCase {
                 new Dict().set("name", "GhostStep").set("is_company", true).set("street", "Main Street, 10")
                         .set("phone", "123456789").set("email", "info@ghoststep.com").set("vat", "BE0477472701")
                         .set("type", "contact"));
-        String id = res_partner.call(Tuple.class, "name_create", "Denis Bladesmith <denis.bladesmith@ghoststep.com>")
-                .get(String.class, 0);
+        String id = res_partner.call(new TypeReference<Tuple<String>>() {
+        }, "name_create", "Denis Bladesmith <denis.bladesmith@ghoststep.com>").get(0);
         Self p1 = res_partner.browse(id);
         assertEquals("Default type must be \"contact\"", "contact", p1.get("type"));
         String p1phone = "123456789#34";

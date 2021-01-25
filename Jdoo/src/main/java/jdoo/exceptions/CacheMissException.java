@@ -1,6 +1,6 @@
 package jdoo.exceptions;
 
-public class CacheMissException extends RuntimeException {
+public class CacheMissException extends JdooException {
 
     /**
      *
