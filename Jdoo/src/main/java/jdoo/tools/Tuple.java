@@ -3,7 +3,6 @@ package jdoo.tools;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-
 import org.springframework.util.ObjectUtils;
 
 public class Tuple<T> implements Collection<T> {
@@ -157,5 +156,29 @@ public class Tuple<T> implements Collection<T> {
     @Override
     public void clear() {
         throw new UnsupportedOperationException("cannot clear");
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append('(');
+        for (Object obj : tuple) {
+            if (sb.length() > 1) {
+                sb.append(',');
+            }
+            sb.append(getString(obj));
+        }
+        sb.append(')');
+        return sb.toString();
+    }
+
+    String getString(Object obj) {
+        if (obj == null) {
+            return "null";
+        }
+        if (obj instanceof String) {
+            return "\"" + obj + "\"";
+        }
+        return obj.toString();
     }
 }

@@ -28,11 +28,11 @@ public class Environment {
         return envs;
     }
 
-    public static Environment create(String key, Registry registry, Cursor cr, String uid, Dict context, boolean su) {
+    public static Environment create(Registry registry, Cursor cr, String uid, Dict context, boolean su) {
         if (init.SUPERUSER_ID.equals(uid))
             su = true;
 
-        Tuple<Object> args = new Tuple<>(key, cr, uid, context, su);
+        Tuple<Object> args = new Tuple<>(registry.tenant(), cr, uid, context, su);
         Environments envs = envs();
         for (Environment env : envs) {
             if (env.args.equals(args)) {
@@ -53,9 +53,9 @@ public class Environment {
         return self;
     }
 
-    public static Environment create(String key, Cursor cr, String uid, Dict context, boolean su) {
-        Registry registry = Loader.getRegistry(key);
-        return create(key, registry, cr, uid, context, su);
+    public static Environment create(String tenant, Cursor cr, String uid, Dict context, boolean su) {
+        Registry registry = Loader.getRegistry(tenant);
+        return create(registry, cr, uid, context, su);
     }
 
     Registry registry;
@@ -117,7 +117,7 @@ public class Environment {
         return get(field.model_name()).browse($protected.get(field, Tuple.emptyTuple()));
     }
 
-    public AutoCloseable protecting(Collection<Field> fields, Self records) {
+    public Protecting protecting(Collection<Field> fields, Self records) {
         StackMap<Field, Collection<String>> $protected = all.$protected;
         Map<Field, Collection<String>> map = $protected.pushmap();
         for (Field field : fields) {
@@ -127,12 +127,13 @@ public class Environment {
             ids_.addAll(records.ids());
             map.put(field, ids_);
         }
-        return new AutoCloseable() {
-            @Override
-            public void close() throws Exception {
-                $protected.popmap();
-            }
-        };
+        return new Protecting();
+    }
+
+    public class Protecting implements AutoCloseable {
+        public void close() {
+            all.$protected.popmap();
+        }
     }
 
     public void remove_to_compute(Field field, Self records) {

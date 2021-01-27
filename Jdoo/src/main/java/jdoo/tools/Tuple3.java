@@ -30,4 +30,19 @@ public class Tuple3<T1, T2, T3> {
         hash = 31 * hash + (T3 == null ? 0 : T3.hashCode());
         return hash;
     }
+
+    @Override
+    public String toString() {
+        return String.format("(%s,%s,%s)", getString(T1), getString(T2), getString(T3));
+    }
+
+    String getString(Object obj) {
+        if (obj == null) {
+            return "null";
+        }
+        if (obj instanceof String) {
+            return "\"" + obj + "\"";
+        }
+        return obj.toString();
+    }
 }

@@ -26,4 +26,19 @@ public class Tuple2<T1, T2> {
         hash = 31 * hash + (T2 == null ? 0 : T2.hashCode());
         return hash;
     }
+
+    @Override
+    public String toString() {
+        return String.format("(%s,%s)", getString(T1), getString(T2));
+    }
+
+    String getString(Object obj) {
+        if (obj == null) {
+            return "null";
+        }
+        if (obj instanceof String) {
+            return "\"" + obj + "\"";
+        }
+        return obj.toString();
+    }
 }

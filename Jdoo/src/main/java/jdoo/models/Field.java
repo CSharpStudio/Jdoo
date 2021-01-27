@@ -10,6 +10,7 @@ import org.springframework.util.StringUtils;
 
 import jdoo.apis.Cache;
 import jdoo.apis.Environment;
+import jdoo.apis.Environment.Protecting;
 import jdoo.exceptions.AccessErrorException;
 import jdoo.exceptions.MissingErrorException;
 import jdoo.tools.Default;
@@ -118,14 +119,12 @@ public class Field extends MetaField {
             if (field_computed == null) {
                 field_computed = Arrays.asList(this);
             }
-            try (AutoCloseable a = records.env().protecting(field_computed, records)) {
+            try (Protecting a = records.env().protecting(field_computed, records)) {
                 new_records.call("modifiel", Arrays.asList(getName()), false);
                 write(new_records, value);
                 if (relational()) {
                     new_records.call("modifiel", Arrays.asList(getName()), false);
                 }
-            } catch (Exception e) {
-
             }
         }
         if (!other_ids.isEmpty()) {

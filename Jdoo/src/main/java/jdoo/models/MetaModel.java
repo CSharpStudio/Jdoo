@@ -65,6 +65,8 @@ public class MetaModel {
     String[] _inherits; // inherited models {'parent_model': 'm2o_field'}
 
     public String[] inherits() {
+        if (_inherits == null)
+            return new String[0];
         return _inherits;
     }
 

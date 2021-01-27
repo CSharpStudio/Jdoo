@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import jdoo.data.Cursor;
+import jdoo.data.Database;
 import jdoo.apis.Environment;
 import jdoo.tools.Dict;
 import jdoo.https.json.JsonRpcParseException;
@@ -19,12 +20,12 @@ public class Controller {
     }
 
     public Environment env(){
-        Cursor cr = new Cursor();
+        Cursor cr = new Cursor(new Database("config/dbcp.properties"));
         return Environment.create("key", cr, "uid", new Dict(), false);
     }
 
     public Self env(String model){
-        Cursor cr = new Cursor();
+        Cursor cr = new Cursor(new Database("config/dbcp.properties"));
         return Environment.create("key", cr, "uid", new Dict(), false).get(model);
     }
 

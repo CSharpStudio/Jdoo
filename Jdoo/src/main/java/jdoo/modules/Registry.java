@@ -4,16 +4,29 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
 import jdoo.models.MetaModel;
 import jdoo.models.MethodInfo;
 import jdoo.models.Model;
+import jdoo.models.Self;
+import jdoo.tools.Dict;
+import jdoo.init;
+import jdoo.apis.Environment;
+import jdoo.data.Cursor;
 import jdoo.exceptions.JdooException;
 import jdoo.exceptions.ModelException;
 
 public class Registry {
     HashMap<String, MetaModel> map = new HashMap<String, MetaModel>();
+    String tenant;
 
-    public Registry() {
+    public String tenant() {
+        return tenant;
+    }
+
+    public Registry(String tenant) {
+        this.tenant = tenant;
         registerBase();
     }
 
@@ -24,7 +37,7 @@ public class Registry {
         return m;
     }
 
-    public boolean contains(String model){
+    public boolean contains(String model) {
         return map.containsKey(model);
     }
 
@@ -45,11 +58,31 @@ public class Registry {
             throw new ModelException("Model:" + clazz.getName() + " cannot be abstract class");
         try {
             Model model = (Model) clazz.getDeclaredConstructor().newInstance();
-            MetaModel meta = model._build_model(this);            
+            MetaModel meta = model._build_model(this);
             map.put(meta.getName(), meta);
         } catch (Exception e) {
             e.printStackTrace();
             throw new JdooException("register class " + clazz.getName() + " failed", e);
+        }
+    }
+
+    public void setup_models(Cursor cr){
+        Environment env = Environment.create(this, cr, init.SUPERUSER_ID, new Dict(), true);
+
+        List<Self> models = new ArrayList<>();
+        for(MetaModel m : map.values()){
+            Self self = env.get(m.getName());
+            models.add(self);
+            self.call("_prepare_setup");
+        }
+        for(Self self : models){
+            self.call("_setup_base");
+        }
+        for(Self self : models){
+            self.call("_setup_fields");
+        }
+        for(Self self : models){
+            self.call("_setup_complete");
         }
     }
 }

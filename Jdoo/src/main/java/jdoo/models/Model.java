@@ -332,18 +332,15 @@ public class Model {
         flush(self, fnames, self);
         Environment env = self.env();
         Cursor cr = env.cr();
-        String user = env.uid();
-        Dict context = env.context();
-        boolean su = env.su();
         String select_clause = org.apache.tomcat.util.buf.StringUtils.join(field_names, ',');
         String from_clause = self.table();
-        String where_clause = "id in (%s)";
+        String where_clause = "id=any(%s)";
         String query_str = String.format("SELECT %s FROM %s WHERE %s", select_clause, from_clause, where_clause);
-        for (Object[] sub_ids : cr.split_for_in_conditions(self.ids())){
-            cr.execute(query_str);
-            //result += cr.fetchall();
+        List<Tuple<?>> result = new ArrayList<>();
+        for (Tuple<?> sub_ids : cr.split_for_in_conditions(self.ids())) {
+            cr.execute(query_str, sub_ids);
+            result.addAll(cr.fetchall());
         }
-
 
     }
 
@@ -410,12 +407,12 @@ public class Model {
             StringBuilder sb = new StringBuilder();
             org.apache.tomcat.util.buf.StringUtils.join(columns.toArray(new String[0]), ',', sb);
             String query = String.format("UPDATE \"%s\" SET %s WHERE id IN %%s", self.table(), sb.toString());
-            for (Object[] sub_ids : cr.split_for_in_conditions(Arrays.asList(self.ids))) {
-                List<Object> p = new ArrayList<Object>();
+            for (Tuple<?> sub_ids : cr.split_for_in_conditions(Arrays.asList(self.ids))) {
+                List<Object> p = new ArrayList<>();
                 p.addAll(params);
                 p.addAll(Arrays.asList(sub_ids));
                 cr.execute(query, p);
-                if (cr.rowcount() != sub_ids.length)
+                if (cr.rowcount() != sub_ids.size())
                     throw new MissingErrorException(String.format(
                             "One of the records you are trying to modify has already been deleted (Document type: %s).",
                             self.getMeta().description()));
@@ -789,5 +786,25 @@ public class Model {
             fields.add(field);
         }
         _read(self, fields);
+    }
+
+    public void _prepare_setup(Self self) {
+
+    }
+
+    public void _setup_base(Self self) {
+        // _inherits_check(self);
+        for (String parent : self.getMeta().inherits()) {
+            self.env(parent).call("_setup_base");
+        }
+        // _add_inherited_fields(self);
+    }
+
+    public void _setup_fields(Self self) {
+
+    }
+
+    public void _setup_complete(Self self) {
+
     }
 }
