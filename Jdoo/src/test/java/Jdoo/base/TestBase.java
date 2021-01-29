@@ -8,8 +8,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import jdoo.TransactionCase;
 import jdoo.models.Self;
-import jdoo.tools.Dict;
-import jdoo.tools.Tuple;
+import jdoo.util.Dict;
+import jdoo.util.Tuple;
 
 public class TestBase extends TransactionCase {
     @Test

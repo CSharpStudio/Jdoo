@@ -1,4 +1,4 @@
-package jdoo.tools;
+package jdoo.util;
 
 import java.util.HashMap;
 

@@ -7,7 +7,7 @@ import jdoo.TransactionCase;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import jdoo.models.Self;
-import jdoo.tools.Dict;
+import jdoo.util.Dict;
 
 public class TestPartner extends TransactionCase {
     @Test

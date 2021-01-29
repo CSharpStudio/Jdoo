@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import jdoo.data.Cursor;
 import jdoo.data.Database;
 import jdoo.apis.Environment;
-import jdoo.tools.Dict;
+import jdoo.util.Dict;
 import jdoo.https.json.JsonRpcParseException;
 import jdoo.https.json.JsonRpcRequest;
 import jdoo.models.Self;

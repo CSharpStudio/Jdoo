@@ -13,9 +13,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import jdoo.exceptions.JdooException;
 import jdoo.exceptions.ModelException;
 import jdoo.exceptions.ValueErrorException;
-import jdoo.tools.Dict;
-import jdoo.tools.Linq;
-import jdoo.tools.Tuple;
+import jdoo.util.Dict;
+import jdoo.util.Linq;
+import jdoo.util.Tuple;
 import jdoo.apis.Environment;
 
 public final class Self implements Iterable<Self> {

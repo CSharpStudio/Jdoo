@@ -4,8 +4,8 @@ import jdoo.models.Field;
 import jdoo.models.Model;
 import jdoo.models.Self;
 import jdoo.models.fields;
-import jdoo.tools.Default;
-import jdoo.tools.Dict;
+import jdoo.util.Default;
+import jdoo.util.Dict;
 
 public class IrDefault extends Model {
         public IrDefault() {

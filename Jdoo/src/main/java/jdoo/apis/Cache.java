@@ -12,9 +12,9 @@ import org.springframework.util.ObjectUtils;
 import jdoo.exceptions.CacheMissException;
 import jdoo.models.Field;
 import jdoo.models.Self;
-import jdoo.tools.Tuple;
+import jdoo.util.Tuple;
 import jdoo.tools.Tuple2;
-import jdoo.tools.Utils;
+import jdoo.util.Utils;
 
 public class Cache {
     HashMap<Field, HashMap<String, Object>> _data = new HashMap<Field, HashMap<String, Object>>();

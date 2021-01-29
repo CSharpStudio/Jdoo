@@ -3,10 +3,10 @@ package jdoo.models;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.function.Function;
 
-import jdoo.tools.Dict;
-import jdoo.tools.Func;
-import jdoo.tools.Tuple;
+import jdoo.util.Dict;
+import jdoo.util.Tuple;
 import jdoo.tools.Tuple2;
 
 public abstract class MetaField {
@@ -170,12 +170,12 @@ public abstract class MetaField {
         return company_dependent != null && company_dependent;
     }
 
-    protected Func<Object, Self> default_;
+    protected Function<Self,Object> default_;
     protected Object default_value;
 
     Object get_default_value(Self self) {
         if (default_ != null)
-            return default_.call(self);
+            return default_.apply(self);
         return default_value;
     }
 

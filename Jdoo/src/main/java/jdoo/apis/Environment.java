@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import jdoo.init;
 import jdoo.data.Cursor;
@@ -13,10 +14,9 @@ import jdoo.models.Field;
 import jdoo.models.Self;
 import jdoo.modules.Loader;
 import jdoo.modules.Registry;
-import jdoo.tools.Action;
-import jdoo.tools.Dict;
+import jdoo.util.Dict;
 import jdoo.tools.StackMap;
-import jdoo.tools.Tuple;
+import jdoo.util.Tuple;
 
 public class Environment {
     static ThreadLocal<Environments> local = new ThreadLocal<Environments>();
@@ -161,11 +161,11 @@ public class Environment {
     private Dict lazy_properties = new Dict();
 
     @SuppressWarnings("unchecked")
-    <T> T lazy_property(String p, Action<T> func) {
+    <T> T lazy_property(String p, Supplier<T> func) {
         if (lazy_properties.containsKey(p)) {
             return (T) lazy_properties.get(p);
         }
-        T obj = func.call();
+        T obj = func.get();
         lazy_properties.put(p, obj);
         return obj;
     }

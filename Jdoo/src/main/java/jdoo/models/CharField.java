@@ -1,7 +1,7 @@
 package jdoo.models;
 
 import jdoo.data.PgVarchar;
-import jdoo.tools.Tuple;
+import jdoo.util.Tuple;
 import jdoo.tools.Tuple2;
 
 public class CharField extends StringField<CharField> {

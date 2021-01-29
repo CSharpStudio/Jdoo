@@ -2,7 +2,7 @@ package jdoo.models;
 
 import java.util.Map;
 
-import jdoo.tools.Dict;
+import jdoo.util.Dict;
 
 public class One2manyField extends _RelationalMultiField<One2manyField> {
     public One2manyField(){

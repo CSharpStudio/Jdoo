@@ -10,7 +10,7 @@ import jdoo.models.BaseModel;
 import jdoo.models.MetaModel;
 import jdoo.models.MethodInfo;
 import jdoo.models.Self;
-import jdoo.tools.Dict;
+import jdoo.util.Dict;
 import jdoo.init;
 import jdoo.apis.Environment;
 import jdoo.data.Cursor;

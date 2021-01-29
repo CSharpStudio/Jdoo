@@ -17,11 +17,11 @@ import jdoo.data.Cursor;
 import jdoo.exceptions.AccessErrorException;
 import jdoo.exceptions.MissingErrorException;
 import jdoo.exceptions.ModelException;
-import jdoo.tools.Default;
-import jdoo.tools.Dict;
+import jdoo.util.Default;
+import jdoo.util.Dict;
 import jdoo.tools.IdValues;
 import jdoo.tools.Sql;
-import jdoo.tools.Tuple;
+import jdoo.util.Tuple;
 
 public class Field extends MetaField {
     public Object get(Self record) {

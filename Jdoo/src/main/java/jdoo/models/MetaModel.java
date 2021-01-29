@@ -12,7 +12,7 @@ import javax.el.MethodNotFoundException;
 import org.apache.tomcat.util.buf.StringUtils;
 
 import jdoo.exceptions.ModelException;
-import jdoo.tools.Tuple;
+import jdoo.util.Tuple;
 import jdoo.apis.Environment;
 
 public class MetaModel {

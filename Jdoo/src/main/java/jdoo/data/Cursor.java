@@ -1,17 +1,14 @@
 package jdoo.data;
 
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -20,9 +17,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import jdoo.exceptions.DataException;
-import jdoo.tools.Dict;
+import jdoo.util.Dict;
 import jdoo.tools.Sql;
-import jdoo.tools.Tuple;
+import jdoo.util.Tuple;
 
 public class Cursor implements AutoCloseable {
     private static Logger logger = LogManager.getLogger(Cursor.class);

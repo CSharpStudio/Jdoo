@@ -1,12 +1,13 @@
-package jdoo.tools;
+package jdoo.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Map.Entry;
 
 public class Utils {
     public class Collections {
@@ -39,9 +40,25 @@ public class Utils {
     }
 
     public static <K, V> void update(Map<K, V> old, Map<K, V> $new) {
-        for (K key : $new.keySet()) {
-            old.put(key, $new.get(key));
+        old.putAll($new);
+    }
+
+    public static <K, V> Entry<K, V> popitem(Map<K, V> map) {
+        Iterator<Entry<K, V>> iterator = map.entrySet().iterator();
+        if (iterator.hasNext()) {
+            Entry<K, V> e = iterator.next();
+            map.remove(e.getKey());
+            return e;
         }
+        throw new NoSuchElementException("map is empty");
+    }
+
+    public static <K, V> V setdefault(Map<K, V> map, K key, V value) {
+        if (map.containsKey(key)) {
+            return map.get(key);
+        }
+        map.put(key, value);
+        return value;
     }
 
     public static List<Tuple<Object>> zip(Collection<?>... collections) {

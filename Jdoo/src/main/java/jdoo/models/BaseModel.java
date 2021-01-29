@@ -20,13 +20,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.util.StringUtils;
 
-import jdoo.tools.Default;
-import jdoo.tools.Dict;
+import jdoo.util.Default;
+import jdoo.util.Dict;
 import jdoo.tools.IdValues;
 import jdoo.tools.Sql;
-import jdoo.tools.Tuple;
+import jdoo.util.Tuple;
 import jdoo.tools.Tuple2;
-import jdoo.tools.Utils;
+import jdoo.util.Utils;
 import jdoo.data.Cursor;
 import jdoo.apis.Cache;
 import jdoo.apis.Environment;
@@ -238,7 +238,7 @@ public class BaseModel {
                 defaults.put(name, values);
             }
         }
-        defaults.update(vals);
+        defaults.putAll(vals);
         return defaults;
 
     }
@@ -287,7 +287,7 @@ public class BaseModel {
         }
 
         for (String model : parent_fields.keySet()) {
-            defaults.update(self.env(model).call(Dict.class, "default_get", parent_fields.get(model)));
+            defaults.putAll(self.env(model).call(Dict.class, "default_get", parent_fields.get(model)));
         }
 
         return defaults;

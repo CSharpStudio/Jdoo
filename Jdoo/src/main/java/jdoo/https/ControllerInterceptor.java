@@ -15,8 +15,8 @@ import jdoo.https.json.JsonRpcInvalidParamsException;
 import jdoo.https.json.JsonRpcParameter;
 import jdoo.https.json.JsonRpcRequest;
 import jdoo.https.json.JsonRpcResponse;
-import jdoo.tools.Default;
-import jdoo.tools.TypeUtils;
+import jdoo.util.Default;
+import jdoo.util.TypeUtils;
 
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;

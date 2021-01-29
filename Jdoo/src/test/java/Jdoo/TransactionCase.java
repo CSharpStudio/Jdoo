@@ -7,7 +7,7 @@ import jdoo.apis.Environment;
 import jdoo.models.Self;
 import jdoo.modules.Loader;
 import jdoo.modules.Registry;
-import jdoo.tools.Dict;
+import jdoo.util.Dict;
 import jdoo.data.Database;
 
 public class TransactionCase {    

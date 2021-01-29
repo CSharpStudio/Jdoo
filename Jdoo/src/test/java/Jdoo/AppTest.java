@@ -13,8 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Test;
 import jdoo.models.Self;
-import jdoo.tools.Dict;
-import jdoo.tools.TypeUtils;
+import jdoo.util.Dict;
+import jdoo.util.TypeUtils;
 import jdoo.https.json.JsonRpcRequest;
 import jdoo.https.json.RpcId;
 import jdoo.apis.Environment;

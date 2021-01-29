@@ -1,8 +1,8 @@
 package jdoo.models;
 
 import java.util.List;
+import java.util.function.Function;
 
-import jdoo.tools.Func;
 import jdoo.tools.Tuple2;
 
 public class fields {
@@ -114,7 +114,7 @@ public class fields {
         return new SelectionField().string(string).selection(selection);
     }
 
-    public static SelectionField Selection(Func<Object, Self> func){
+    public static SelectionField Selection(Function<Self, Object> func) {
         return new SelectionField().selection(func);
     }
 
@@ -135,7 +135,7 @@ public class fields {
     }
 
     public static Many2oneField Many2one(String comodel_name) {
-        return  new Many2oneField().comodel_name(comodel_name);
+        return new Many2oneField().comodel_name(comodel_name);
     }
 
     public static Many2oneField Many2one(String comodel_name, String string) {
@@ -147,7 +147,7 @@ public class fields {
     }
 
     public static One2manyField One2many(String comodel_name) {
-        return  new One2manyField().comodel_name(comodel_name);
+        return new One2manyField().comodel_name(comodel_name);
     }
 
     public static One2manyField One2many(String comodel_name, String inverse_name) {
@@ -163,7 +163,7 @@ public class fields {
     }
 
     public static Many2manyField Many2many(String comodel_name) {
-        return  new Many2manyField().comodel_name(comodel_name);
+        return new Many2manyField().comodel_name(comodel_name);
     }
 
     public static Many2manyField Many2many(String comodel_name, String relation) {
@@ -178,7 +178,9 @@ public class fields {
         return new Many2manyField().relation(relation).comodel_name(comodel_name).column1(column1).column2(column2);
     }
 
-    public static Many2manyField Many2many(String comodel_name, String relation, String column1, String column2, String string) {
-        return new Many2manyField().relation(relation).comodel_name(comodel_name).column1(column1).column2(column2).string(string);
+    public static Many2manyField Many2many(String comodel_name, String relation, String column1, String column2,
+            String string) {
+        return new Many2manyField().relation(relation).comodel_name(comodel_name).column1(column1).column2(column2)
+                .string(string);
     }
 }

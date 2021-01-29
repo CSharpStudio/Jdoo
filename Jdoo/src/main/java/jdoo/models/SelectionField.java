@@ -1,9 +1,9 @@
 package jdoo.models;
 
 import java.util.List;
+import java.util.function.Function;
 
 import jdoo.data.PgVarchar;
-import jdoo.tools.Func;
 import jdoo.tools.Tuple2;
 
 public class SelectionField extends BaseField<SelectionField> {
@@ -14,7 +14,7 @@ public class SelectionField extends BaseField<SelectionField> {
 
     List<Tuple2<String, String>> selection;
     Boolean validate;
-    Func<Object, Self> func;
+    Function<Self, Object> func;
 
     boolean get_validate() {
         return validate == null || validate;
@@ -25,7 +25,7 @@ public class SelectionField extends BaseField<SelectionField> {
         return this;
     }
 
-    public SelectionField selection(Func<Object, Self> func) {
+    public SelectionField selection(Function<Self, Object> func) {
         this.func = func;
         return this;
     }

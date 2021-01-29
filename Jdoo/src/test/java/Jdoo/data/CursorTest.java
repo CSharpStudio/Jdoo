@@ -13,7 +13,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import jdoo.tools.Tuple;
+import jdoo.util.Tuple;
 
 public class CursorTest {
     Database db;

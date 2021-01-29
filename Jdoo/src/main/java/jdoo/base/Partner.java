@@ -12,7 +12,7 @@ import jdoo.models.Model;
 import jdoo.models.Self;
 import jdoo.models.d;
 import jdoo.models.fields;
-import jdoo.tools.Dict;
+import jdoo.util.Dict;
 import jdoo.tools.Tuple2;
 
 public class Partner extends Model {
