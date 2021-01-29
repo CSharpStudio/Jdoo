@@ -3,7 +3,7 @@ package jdoo.models;
 import java.util.List;
 import java.util.function.Function;
 
-import jdoo.tools.Tuple2;
+import jdoo.util.Pair;
 
 public class fields {
     public static BooleanField Boolean() {
@@ -30,7 +30,7 @@ public class fields {
         return new FloatField().string(string);
     }
 
-    public static FloatField Float(String string, Tuple2<Integer, Integer> digits) {
+    public static FloatField Float(String string, Pair<Integer, Integer> digits) {
         return new FloatField().string(string).digits(digits);
     }
 
@@ -106,11 +106,11 @@ public class fields {
         return new SelectionField();
     }
 
-    public static SelectionField Selection(List<Tuple2<String, String>> selection) {
+    public static SelectionField Selection(List<Pair<String, String>> selection) {
         return new SelectionField().selection(selection);
     }
 
-    public static SelectionField Selection(List<Tuple2<String, String>> selection, String string) {
+    public static SelectionField Selection(List<Pair<String, String>> selection, String string) {
         return new SelectionField().string(string).selection(selection);
     }
 
@@ -122,11 +122,11 @@ public class fields {
         return new ReferenceField();
     }
 
-    public static ReferenceField Reference(List<Tuple2<String, String>> selection) {
+    public static ReferenceField Reference(List<Pair<String, String>> selection) {
         return (ReferenceField) new ReferenceField().selection(selection);
     }
 
-    public static ReferenceField Reference(List<Tuple2<String, String>> selection, String string) {
+    public static ReferenceField Reference(List<Pair<String, String>> selection, String string) {
         return (ReferenceField) new ReferenceField().string(string).selection(selection);
     }
 

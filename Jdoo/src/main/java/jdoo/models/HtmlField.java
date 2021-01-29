@@ -1,10 +1,10 @@
 package jdoo.models;
 
-import jdoo.tools.Tuple2;
+import jdoo.util.Pair;
 
 public class HtmlField extends StringField<HtmlField> {
     public HtmlField(){
-        column_type = new Tuple2<String, Object>("text", "text");
+        column_type = new Pair<>("text", "text");
     }
 
     Boolean sanitize;

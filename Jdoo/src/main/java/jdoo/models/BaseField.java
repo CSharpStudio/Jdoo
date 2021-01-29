@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.function.Function;
 
-import jdoo.tools.Tuple2;
-
 public class BaseField<T extends BaseField<T>> extends Field {
 
     @SuppressWarnings("unchecked")
@@ -99,7 +97,7 @@ public class BaseField<T extends BaseField<T>> extends Field {
     }
 
     @SuppressWarnings("unchecked")
-    public T states(HashMap<String, Set<Tuple2<String, Boolean>>> states) {
+    public T states(HashMap<String, Set<State>> states) {
         this.states = states;
         return (T) this;
     }
@@ -123,14 +121,14 @@ public class BaseField<T extends BaseField<T>> extends Field {
     }
 
     @SuppressWarnings("unchecked")
-    public T default_(Function<Self,Object> defaultFunc) {
+    public T default_(Function<Self, Object> defaultFunc) {
         this.default_ = defaultFunc;
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
-    public T change_default(boolean change_default){
+    public T change_default(boolean change_default) {
         this.change_default = change_default;
-        return (T)this;
+        return (T) this;
     }
 }

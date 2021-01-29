@@ -2,7 +2,7 @@ package jdoo.models;
 
 import jdoo.data.PgVarchar;
 import jdoo.util.Tuple;
-import jdoo.tools.Tuple2;
+import jdoo.util.Pair;
 
 public class CharField extends StringField<CharField> {
     public CharField() {
@@ -17,9 +17,9 @@ public class CharField extends StringField<CharField> {
     }
 
     @Override
-    Tuple2<String, Object> column_type() {
+    Pair<String, Object> column_type() {
         if (column_type == null) {
-            column_type = new Tuple2<String, Object>("varchar", new PgVarchar(size));
+            column_type = new Pair<>("varchar", new PgVarchar(size));
         }
         return column_type;
     }

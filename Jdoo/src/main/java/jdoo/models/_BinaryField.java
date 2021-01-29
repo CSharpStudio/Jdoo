@@ -1,8 +1,7 @@
 package jdoo.models;
 
 import java.util.HashSet;
-
-import jdoo.tools.Tuple2;
+import jdoo.util.Pair;
 
 public abstract class _BinaryField<T extends _BinaryField<T>> extends BaseField<T> {
     public _BinaryField() {
@@ -20,9 +19,9 @@ public abstract class _BinaryField<T extends _BinaryField<T>> extends BaseField<
     }
 
     @Override
-    Tuple2<String, Object> column_type() {
+    Pair<String, Object> column_type() {
         if (column_type == null && (attachment == null || !attachment)) {
-            column_type = new Tuple2<String, Object>("bytea", "bytea");
+            column_type = new Pair<>("bytea", "bytea");
         }
         return column_type;
     }

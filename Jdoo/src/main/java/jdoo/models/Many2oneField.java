@@ -1,10 +1,10 @@
 package jdoo.models;
 
-import jdoo.tools.Tuple2;
+import jdoo.util.Pair;
 
 public class Many2oneField extends _RelationalField<Many2oneField> {
     public Many2oneField() {
-        column_type = new Tuple2<String, Object>("varchar", "varchar");
+        column_type = new Pair<>("varchar", "varchar");
     }
 
     String ondelete;

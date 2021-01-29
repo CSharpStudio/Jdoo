@@ -6,8 +6,8 @@ import java.util.Set;
 import java.util.function.Function;
 
 import jdoo.util.Dict;
+import jdoo.util.Pair;
 import jdoo.util.Tuple;
-import jdoo.tools.Tuple2;
 
 public abstract class MetaField {
     private String name;
@@ -70,9 +70,9 @@ public abstract class MetaField {
         return column_cast_from;
     }
 
-    Tuple2<String, Object> column_type;
+    Pair<String, Object> column_type;
 
-    Tuple2<String, Object> column_type() {
+    Pair<String, Object> column_type() {
         return column_type;
     }
 
@@ -170,7 +170,7 @@ public abstract class MetaField {
         return company_dependent != null && company_dependent;
     }
 
-    protected Function<Self,Object> default_;
+    protected Function<Self, Object> default_;
     protected Object default_value;
 
     Object get_default_value(Self self) {
@@ -195,12 +195,30 @@ public abstract class MetaField {
         return required != null && required;
     }
 
-    protected HashMap<String, Set<Tuple2<String, Boolean>>> states;
+    protected HashMap<String, Set<State>> states;
 
-    HashMap<String, Set<Tuple2<String, Boolean>>> states() {
+    HashMap<String, Set<State>> states() {
         if (states == null)
-            states = new HashMap<String, Set<Tuple2<String, Boolean>>>();
+            states = new HashMap<String, Set<State>>();
         return states;
+    }
+
+    public class State {
+        private String state;
+        private boolean value;
+
+        public State(String state, boolean value) {
+            this.state = state;
+            this.value = value;
+        }
+
+        public String state() {
+            return state;
+        }
+
+        public boolean value() {
+            return value;
+        }
     }
 
     protected String groups;

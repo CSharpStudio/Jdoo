@@ -241,14 +241,14 @@ public class Field extends MetaField {
     public void update_db_column(Self model, Dict column) {
         Cursor cr = model.env().cr();
         if (column == null) {
-            Sql.create_column(cr, model.table(), getName(), column_type().T1.toString(), string);
+            Sql.create_column(cr, model.table(), getName(), column_type().second().toString(), string);
             return;
         }
-        if (column.get("udt_name").equals(column_type().T0)) {
+        if (column.get("udt_name").equals(column_type().first())) {
             return;
         }
         if (column_cast_from().contains(column.get("udt_name"))) {
-            Sql.convert_column(cr, model.table(), getName(), column_type().T1.toString());
+            Sql.convert_column(cr, model.table(), getName(), column_type().second().toString());
         } else {
             String newname = getName() + "_moved{0}";
             int i = 0;
@@ -259,7 +259,7 @@ public class Field extends MetaField {
                 Sql.drop_not_null(cr, model.table(), getName());
             }
             Sql.rename_column(cr, model.table(), getName(), MessageFormat.format(newname, i));
-            Sql.create_column(cr, model.table(), getName(), column_type().T1.toString(), string);
+            Sql.create_column(cr, model.table(), getName(), column_type().second().toString(), string);
         }
     }
 

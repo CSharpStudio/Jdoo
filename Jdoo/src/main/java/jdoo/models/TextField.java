@@ -1,11 +1,11 @@
 package jdoo.models;
 
+import jdoo.util.Pair;
 import jdoo.util.Tuple;
-import jdoo.tools.Tuple2;
 
 public class TextField extends StringField<TextField> {
     public TextField() {
-        column_type = new Tuple2<String, Object>("text", "text");
+        column_type = new Pair<>("text", "text");
         column_cast_from = new Tuple<>("varchar");
     }
 }

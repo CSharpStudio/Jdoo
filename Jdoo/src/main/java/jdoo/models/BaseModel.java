@@ -22,10 +22,10 @@ import org.springframework.util.StringUtils;
 
 import jdoo.util.Default;
 import jdoo.util.Dict;
+import jdoo.util.Pair;
 import jdoo.tools.IdValues;
 import jdoo.tools.Sql;
 import jdoo.util.Tuple;
-import jdoo.tools.Tuple2;
 import jdoo.util.Utils;
 import jdoo.data.Cursor;
 import jdoo.apis.Cache;
@@ -366,8 +366,8 @@ public class BaseModel {
                 towrite.set(record.id(), "write_uid", self.env().uid());
                 towrite.set(record.id(), "write_date", null);
             }
-            self.env().cache().invalidate(Arrays.asList(new Tuple2<>(self.getField("write_date"), self.ids()),
-                    new Tuple2<>(self.getField("write_uid"), self.ids())));
+            self.env().cache().invalidate(Arrays.asList(new Pair<>(self.getField("write_date"), self.ids()),
+                    new Pair<>(self.getField("write_uid"), self.ids())));
         }
 
         for (String fname : vals.keySet()) {

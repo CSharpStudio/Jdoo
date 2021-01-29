@@ -1,12 +1,12 @@
 package jdoo.models;
 
+import jdoo.util.Pair;
 import jdoo.util.Tuple;
-import jdoo.tools.Tuple2;
 
 public class MonetaryField extends BaseField<MonetaryField> {
     public MonetaryField() {
         group_operator = "sum";
-        column_type = new Tuple2<String, Object>("numeric", "numeric");
+        column_type = new Pair<>("numeric", "numeric");
         column_cast_from = new Tuple<>("float8");
     }
 

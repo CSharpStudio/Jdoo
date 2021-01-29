@@ -12,8 +12,8 @@ import org.springframework.util.ObjectUtils;
 import jdoo.exceptions.CacheMissException;
 import jdoo.models.Field;
 import jdoo.models.Self;
+import jdoo.util.Pair;
 import jdoo.util.Tuple;
-import jdoo.tools.Tuple2;
 import jdoo.util.Utils;
 
 public class Cache {
@@ -211,14 +211,14 @@ public class Cache {
         _data.clear();
     }
 
-    public void invalidate(List<Tuple2<Field, Collection<String>>> spec) {
-        for (Tuple2<Field, Collection<String>> tuple : spec) {
-            if (tuple.T1.isEmpty()) {
-                _data.remove(tuple.T0);
+    public void invalidate(List<Pair<Field, Collection<String>>> spec) {
+        for (Pair<Field, Collection<String>> tuple : spec) {
+            if (tuple.second().isEmpty()) {
+                _data.remove(tuple.first());
             } else {
-                HashMap<String, Object> field_cache = _data.get(tuple.T0);
+                HashMap<String, Object> field_cache = _data.get(tuple.first());
                 if (field_cache != null) {
-                    for (String id : tuple.T1) {
+                    for (String id : tuple.second()) {
                         field_cache.remove(id);
                     }
                 }

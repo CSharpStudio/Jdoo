@@ -13,7 +13,7 @@ import jdoo.models.Self;
 import jdoo.models.d;
 import jdoo.models.fields;
 import jdoo.util.Dict;
-import jdoo.tools.Tuple2;
+import jdoo.util.Pair;
 
 public class Partner extends Model {
 
@@ -61,9 +61,9 @@ public class Partner extends Model {
     static Field employee = fields.Boolean().help("Check this box if this contact is an Employee.");
     static Field function = fields.Char("Job Position");
     static Field type = fields
-            .Selection(Arrays.asList(new Tuple2<>("contact", "Contact"), new Tuple2<>("invoice", "Invoice Address"),
-                    new Tuple2<>("delivery", "Delivery Address"), new Tuple2<>("other", "Other Address"),
-                    new Tuple2<>("private", "Private Address")))
+            .Selection(Arrays.asList(new Pair<>("contact", "Contact"), new Pair<>("invoice", "Invoice Address"),
+                    new Pair<>("delivery", "Delivery Address"), new Pair<>("other", "Other Address"),
+                    new Pair<>("private", "Private Address")))
             .string("Address Type").default_("contact")
             .help("Invoice & Delivery addresses are used in sales orders. Private addresses are only visible by authorized users.");
     static Field street = fields.Char();
@@ -87,7 +87,7 @@ public class Partner extends Model {
 
     // # company_type is only an interface field, do not use it in business logic
     static Field company_type = fields.Selection().string("Company Type")
-            .selection(Arrays.asList(new Tuple2<>("person", "Individual"), new Tuple2<>("company", "Company")))
+            .selection(Arrays.asList(new Pair<>("person", "Individual"), new Pair<>("company", "Company")))
             .compute("_compute_company_type").inverse("_write_company_type");
     static Field company_id = fields.Many2one("res.company", "Company").index(true);
     static Field color = fields.Integer("Color Index").default_(0);
