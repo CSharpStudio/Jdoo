@@ -1,21 +1,27 @@
 package jdoo.models;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.util.StringUtils;
 
 import jdoo.apis.Cache;
 import jdoo.apis.Environment;
 import jdoo.apis.Environment.Protecting;
+import jdoo.data.Cursor;
 import jdoo.exceptions.AccessErrorException;
 import jdoo.exceptions.MissingErrorException;
+import jdoo.exceptions.ModelException;
 import jdoo.tools.Default;
 import jdoo.tools.Dict;
 import jdoo.tools.IdValues;
+import jdoo.tools.Sql;
+import jdoo.tools.Tuple;
 
 public class Field extends MetaField {
     public Object get(Self record) {
@@ -218,5 +224,88 @@ public class Field extends MetaField {
         Object cache_value = convert_to_cache(value, record, false);
         Object record_value = convert_to_record(cache_value, record);
         return convert_to_read(record_value, record);
+    }
+
+    public boolean update_db(Self model, Map<String, Dict> columns) {
+        try {
+            Dict column = columns.get(getName());
+            update_db_column(model, column);
+            update_db_notnull(model, column);
+            update_db_index(model, column);
+            return false;
+        } catch (Exception e) {
+            throw new ModelException(String.format("model %s field %s update_db error", model.getName(), getName()));
+        }
+    }
+
+    public void update_db_column(Self model, Dict column) {
+        Cursor cr = model.env().cr();
+        if (column == null) {
+            Sql.create_column(cr, model.table(), getName(), column_type().T1.toString(), string);
+            return;
+        }
+        if (column.get("udt_name").equals(column_type().T0)) {
+            return;
+        }
+        if (column_cast_from().contains(column.get("udt_name"))) {
+            Sql.convert_column(cr, model.table(), getName(), column_type().T1.toString());
+        } else {
+            String newname = getName() + "_moved{0}";
+            int i = 0;
+            while (Sql.column_exists(cr, model.table(), MessageFormat.format(newname, i))) {
+                i += 1;
+            }
+            if ("NO".equals(column.get("is_nullable"))) {
+                Sql.drop_not_null(cr, model.table(), getName());
+            }
+            Sql.rename_column(cr, model.table(), getName(), MessageFormat.format(newname, i));
+            Sql.create_column(cr, model.table(), getName(), column_type().T1.toString(), string);
+        }
+    }
+
+    public void update_db_notnull(Self model, Dict column) {
+        boolean has_notnull = column != null && column.get("is_nullable").equals("NO");
+        if (column != null || (required() && !has_notnull)) {
+            if (model.call(Boolean.class, "_table_has_rows")) {
+                model.call("_init_column", getName());
+                model.call("flush", Arrays.asList(getName()));
+            }
+        }
+        if (required() && !has_notnull) {
+            Sql.set_not_null(model.env().cr(), model.table(), getName());
+        } else if (!required() && has_notnull) {
+            Sql.drop_not_null(model.env().cr(), model.table(), getName());
+        }
+    }
+
+    public void update_db_index(Self model, Dict column) {
+
+    }
+
+    public Object cache_key(Environment env) {
+        List<Object> objs = new ArrayList<>();
+        Dict ctx = env.context();
+        for (String key : depends_context()) {
+            if ("force_company".equals(key)) {
+                if (ctx.containsKey("force_company")) {
+                    objs.add(ctx.get("force_company"));
+                } else {
+                    objs.add(env.company().id());
+                }
+            } else if ("uid".equals(key)) {
+                objs.add(new Tuple<>(env.uid(), env.su()));
+            } else if ("active_test".equals(key)) {
+                if (ctx.containsKey("active_test")) {
+                    objs.add(ctx.get("active_test"));
+                } else if (this.context().containsKey("active_test")) {
+                    objs.add(context().get("active_test"));
+                } else {
+                    objs.add(true);
+                }
+            } else {
+                objs.add(ctx.get(key));
+            }
+        }
+        return new Tuple<>(objs);
     }
 }

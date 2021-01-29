@@ -146,7 +146,7 @@ public class MetaModel {
         _name = name;
     }
 
-    public MetaModel(Model m) {
+    public MetaModel(BaseModel m) {
         _auto = m._auto;
         _register = m._register;
         _abstract = m._abstract;
@@ -301,8 +301,8 @@ public class MetaModel {
 
     public Self browse(Environment env, Collection<String> ids, Collection<String> prefetchIds) {
         Self m = new Self(this, env);
-        m.ids = new Tuple<>(ids);
-        m.prefetchIds = new Tuple<>(prefetchIds);
+        m.ids = Tuple.fromCollection(ids);
+        m.prefetchIds = Tuple.fromCollection(prefetchIds);
         return m;
     }
 

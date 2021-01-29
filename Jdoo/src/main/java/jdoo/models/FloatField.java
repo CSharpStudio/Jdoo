@@ -1,10 +1,12 @@
 package jdoo.models;
 
+import jdoo.tools.Tuple;
 import jdoo.tools.Tuple2;
 
 public class FloatField extends BaseField<FloatField> {
     public FloatField() {
         group_operator = "sum";
+        column_cast_from = new Tuple<>("int4", "numeric", "float8");
     }
 
     @Override

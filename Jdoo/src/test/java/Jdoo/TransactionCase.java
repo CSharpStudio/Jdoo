@@ -1,11 +1,11 @@
 package jdoo;
 
 import org.junit.Before;
+import org.junit.After;
 
 import jdoo.apis.Environment;
-import jdoo.base.__init__;
-import jdoo.data.Cursor;
 import jdoo.models.Self;
+import jdoo.modules.Loader;
 import jdoo.modules.Registry;
 import jdoo.tools.Dict;
 import jdoo.data.Database;
@@ -17,9 +17,13 @@ public class TransactionCase {
     }
     @Before
     public void setUp(){
-        Registry registry = new Registry("test");
-        __init__.init(registry);
-        Cursor cr = new Database("config/dbcp.properties").cursor();
-        env = Environment.create(registry, cr, "uid", new Dict(), false);
+        Registry registry = Loader.getRegistry("test");
+        Database db = new Database("config/dbcp.properties");
+        env = Environment.create(registry, db.cursor(), "uid", new Dict(), false);
+    }
+
+    @After
+    public void tearDown() {
+        //env.cr().commit();
     }
 }

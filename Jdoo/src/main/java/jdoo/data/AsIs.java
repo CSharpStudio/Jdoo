@@ -6,4 +6,9 @@ public class AsIs {
     public AsIs(String sql) {
         this.sql = sql;
     }
+
+    @Override
+    public String toString() {
+        return sql;
+    }
 }

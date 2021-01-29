@@ -1,5 +1,6 @@
 package jdoo.data;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -19,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 
 import jdoo.exceptions.DataException;
 import jdoo.tools.Dict;
+import jdoo.tools.Sql;
 import jdoo.tools.Tuple;
 
 public class Cursor implements AutoCloseable {
@@ -150,34 +153,38 @@ public class Cursor implements AutoCloseable {
     }
 
     public boolean execute(String sql) {
-        return execute(sql, new Object[0], false);
+        return execute(sql, Collections.emptyList(), false);
     }
 
     public boolean execute(String sql, boolean log_exceptions) {
-        return execute(sql, new Object[0], log_exceptions);
+        return execute(sql, Collections.emptyList(), log_exceptions);
     }
 
-    public boolean execute(String sql, Object... params) {
+    public boolean execute(String sql, Collection<?> params) {
         return execute(sql, params, false);
     }
 
-    public boolean execute(String sql, Object[] params, boolean log_exceptions) {
-        logger.debug(mogrify(sql, params));
+    public boolean execute(String sql, Collection<?> params, boolean log_exceptions) {
+        String cmd = mogrify(sql, params);
+        logger.debug(cmd);
         reset();
         try {
-            statement = connection.prepareStatement(sql.replace("%s", "?"));
-            for (int i = 0; i < params.length; i++) {
-                Object param = params[i];
-                if (param instanceof Date) {
-                    Date dt = (Date) param;
-                    statement.setDate(i + 1, new java.sql.Date(dt.getTime()));
-                } else if (param instanceof Collection<?>) {
-                    Collection<?> c = (Collection<?>) param;
-                    statement.setObject(i + 1, c.toArray());
-                } else {
-                    statement.setObject(i + 1, param);
-                }
-            }
+            statement = connection.prepareStatement(cmd);
+            // statement = connection.prepareStatement(sql.replace("%s", "?"));
+            // for (int i = 0; i < params.length; i++) {
+            // Object param = params[i];
+            // if (param instanceof Date) {
+            // Date dt = (Date) param;
+            // statement.setDate(i + 1, new java.sql.Date(dt.getTime()));
+            // } else if (param instanceof Collection<?>) {
+            // Collection<?> c = (Collection<?>) param;
+            // Array array = connection.createArrayOf("varchar", c.toArray());
+            // statement.setArray(i + 1, array);
+            // // statement.setObject(i + 1, c.toArray());
+            // } else {
+            // statement.setObject(i + 1, param);
+            // }
+            // }
             boolean result = statement.execute();
             if (!result) {
                 rowcount = statement.getUpdateCount();
@@ -188,9 +195,7 @@ public class Cursor implements AutoCloseable {
                 scroll();
             }
             return result;
-        } catch (
-
-        SQLException e) {
+        } catch (SQLException e) {
             throw new DataException("execute sql error:" + sql, e);
         }
     }
@@ -209,20 +214,18 @@ public class Cursor implements AutoCloseable {
         }
     }
 
-    public String mogrify(String sql, Object... params) {
-        Object[] args = new Object[params.length];
-        for (int i = 0; i < params.length; i++) {
-            Object param = params[i];
-            if (param instanceof String) {
-                args[i] = "'" + ((String) param).replace("'", "''") + "'";
-            } else if (param instanceof Date) {
-                SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                args[i] = "'" + sf.format((Date) param) + "'";
-            } else {
-                args[i] = param;
-            }
+    public String mogrify(String sql, Collection<?> params) {
+        Object[] args = new Object[params.size()];
+        int i = 0;
+        for (Object param : params) {
+            args[i++] = Sql.getValueSql(param);
         }
-        return String.format(sql, args);
+        try {
+            return String.format(sql, args);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return sql;
+        }
     }
 
     void ensureExecuted() {

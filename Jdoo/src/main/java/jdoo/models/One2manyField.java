@@ -1,5 +1,9 @@
 package jdoo.models;
 
+import java.util.Map;
+
+import jdoo.tools.Dict;
+
 public class One2manyField extends _RelationalMultiField<One2manyField> {
     public One2manyField(){
         copy = false;
@@ -23,5 +27,10 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
     public One2manyField auto_join(boolean auto_join) {
         this.auto_join = auto_join;
         return this;
+    }
+
+    @Override
+    public boolean update_db(Self model, Map<String, Dict> columns) {
+        return true;
     }
 }

@@ -20,18 +20,24 @@ public class Tuple<T> implements Collection<T> {
         tuple = new Object[0];
     }
 
-    @SuppressWarnings("unchecked")
+    @SafeVarargs
+    @SuppressWarnings("varargs")
     public Tuple(T... e) {
         tuple = e;
     }
 
-    public Tuple(Collection<T> e) {
+    private Tuple(Collection<T> e) {
         tuple = e.toArray();
     }
 
-    @SuppressWarnings("unchecked")
+    public static <E> Tuple<E> fromCollection(Collection<E> e) {
+        return new Tuple<>(e);
+    }
+
+    @SafeVarargs
+    @SuppressWarnings("varargs")
     public static <E> Tuple<E> of(E... e) {
-        return new Tuple<E>(e);
+        return new Tuple<>(e);
     }
 
     public int size() {
@@ -172,7 +178,7 @@ public class Tuple<T> implements Collection<T> {
         return sb.toString();
     }
 
-    String getString(Object obj) {
+    private String getString(Object obj) {
         if (obj == null) {
             return "null";
         }

@@ -1,10 +1,12 @@
 package jdoo.models;
 
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
 
+import jdoo.tools.Dict;
 import jdoo.tools.Func;
+import jdoo.tools.Tuple;
 import jdoo.tools.Tuple2;
 
 public abstract class MetaField {
@@ -37,6 +39,15 @@ public abstract class MetaField {
         return (meta.getName() + "@" + name).hashCode();
     }
 
+    protected Dict context;
+
+    Dict context() {
+        if (context == null) {
+            context = new Dict();
+        }
+        return context;
+    }
+
     protected String column_format = "%s";
 
     protected boolean relational = false;
@@ -49,6 +60,14 @@ public abstract class MetaField {
 
     boolean translate() {
         return translate != null && translate;
+    }
+
+    Tuple<String> column_cast_from;
+
+    Tuple<String> column_cast_from() {
+        if (column_cast_from == null)
+            column_cast_from = Tuple.emptyTuple();
+        return column_cast_from;
     }
 
     Tuple2<String, Object> column_type;
@@ -119,9 +138,9 @@ public abstract class MetaField {
 
     protected Set<String> depends_context;
 
-    Set<String> depends_context() {
+    public Set<String> depends_context() {
         if (depends_context == null)
-            depends_context = new HashSet<String>();
+            depends_context = Collections.emptySet();
         return depends_context;
     }
 

@@ -1,5 +1,6 @@
 package jdoo.apis;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -12,6 +13,7 @@ import jdoo.models.Field;
 import jdoo.models.Self;
 import jdoo.modules.Loader;
 import jdoo.modules.Registry;
+import jdoo.tools.Action;
 import jdoo.tools.Dict;
 import jdoo.tools.StackMap;
 import jdoo.tools.Tuple;
@@ -95,6 +97,12 @@ public class Environment {
         return cache;
     }
 
+    public void clear() {
+        cache.invalidate();
+        all.tocompute.clear();
+        all.towrite.clear();
+    }
+
     Environment() {
     }
 
@@ -148,5 +156,60 @@ public class Environment {
         if (ids.isEmpty()) {
             all.tocompute().remove(field);
         }
+    }
+
+    private Dict lazy_properties = new Dict();
+
+    @SuppressWarnings("unchecked")
+    <T> T lazy_property(String p, Action<T> func) {
+        if (lazy_properties.containsKey(p)) {
+            return (T) lazy_properties.get(p);
+        }
+        T obj = func.call();
+        lazy_properties.put(p, obj);
+        return obj;
+    }
+
+    public void reset_lazy_property() {
+        lazy_properties.clear();
+    }
+
+    public Self user() {
+        return lazy_property("user", () -> {
+            return create(registry, cr, uid, context, true).get("res.users").browse(uid);
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    public Self company() {
+        return lazy_property("company", () -> {
+            if (context.containsKey("allowed_company_ids")) {
+                Tuple<String> company_ids = (Tuple<String>) context.get("allowed_company_ids");
+                String company_id = company_ids.get(0);
+                if (user().get(Self.class, "company_ids").ids().contains(company_id)) {
+                    return get("res.company").browse(company_id);
+                }
+            }
+            return user().get(Self.class, "company_id");
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    public Self companies() {
+        return lazy_property("companies", () -> {
+            List<String> allowed_company_ids = new ArrayList<>();
+            if (context.containsKey("allowed_company_ids")) {
+                Tuple<String> company_ids = (Tuple<String>) context.get("allowed_company_ids");
+                Collection<String> users_company_ids = user().get(Self.class, "company_ids").ids();
+                for (String company_id : company_ids) {
+                    if (users_company_ids.contains(company_id)) {
+                        allowed_company_ids.add(company_id);
+                    }
+                }
+            } else {
+                allowed_company_ids.addAll(user().get(Self.class, "company_ids").ids());
+            }
+            return get("res.company").browse(allowed_company_ids);
+        });
     }
 }

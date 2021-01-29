@@ -1,7 +1,15 @@
 package jdoo.models;
 
+import java.util.Map;
+
+import jdoo.tools.Dict;
+
 public class Many2manyField extends _RelationalMultiField<Many2manyField> {
-    boolean _explicit=true;
+    public Many2manyField() {
+
+    }
+
+    boolean _explicit = true;
     String relation;
     String column1;
     String column2;
@@ -9,15 +17,17 @@ public class Many2manyField extends _RelationalMultiField<Many2manyField> {
     Integer limit;
     String ondelete;
 
-    public Many2manyField relation(String relation){
+    public Many2manyField relation(String relation) {
         this.relation = relation;
         return this;
     }
-    public Many2manyField column1(String column1){
+
+    public Many2manyField column1(String column1) {
         this.column1 = column1;
         return this;
     }
-    public Many2manyField column2(String column2){
+
+    public Many2manyField column2(String column2) {
         this.column2 = column2;
         return this;
     }
@@ -36,5 +46,9 @@ public class Many2manyField extends _RelationalMultiField<Many2manyField> {
         this.auto_join = auto_join;
         return this;
     }
-}
 
+    @Override
+    public boolean update_db(Self model, Map<String, Dict> columns) {
+        return true;
+    }
+}
