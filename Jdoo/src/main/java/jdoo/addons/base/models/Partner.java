@@ -1,4 +1,4 @@
-package jdoo.base;
+package jdoo.addons.base.models;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import jdoo.apis.api;
 import jdoo.models.Field;
 import jdoo.models.Model;
-import jdoo.models.Self;
+import jdoo.models.RecordSet;
 import jdoo.models.d;
 import jdoo.models.fields;
 import jdoo.util.Dict;
@@ -110,76 +110,76 @@ public class Partner extends Model {
 
     @api.depends({ "is_company", "name", "parent_id.name", "type", "company_name" })
     @api.depends_context({ "show_address", "show_address_only", "show_email", "html_format", "show_vat" })
-    public void _compute_display_name(Self self) {
+    public void _compute_display_name(RecordSet self) {
         // diff = dict(show_address=None, show_address_only=None, show_email=None,
         // html_format=None, show_vat=None)
         // names = dict(self.with_context(**diff).name_get())
         Dict names = self.call(Dict.class, "name_get");
-        for (Self partner : self)
+        for (RecordSet partner : self)
             partner.set(display_name, names.get(partner.id()));
     }
 
-    public void _compute_active_lang_count(Self self) {
+    public void _compute_active_lang_count(RecordSet self) {
         int lang_count = self.env("res.lang").call(List.class, "get_installed").size();
-        for (Self partner : self) {
+        for (RecordSet partner : self) {
             partner.set(active_lang_count, lang_count);
         }
     }
 
     @api.depends("tz")
-    public void _compute_tz_offset(Self self) {
+    public void _compute_tz_offset(RecordSet self) {
 
     }
 
     @api.depends({ "user_ids.share", "user_ids.active" })
-    public void _compute_partner_share(Self self) {
+    public void _compute_partner_share(RecordSet self) {
 
     }
 
     @api.depends("vat")
-    public void _compute_same_vat_partner_id(Self self) {
+    public void _compute_same_vat_partner_id(RecordSet self) {
 
     }
 
     @api.depends("self->_display_address_depends(self)")
-    public void _compute_contact_address(Self self) {
+    public void _compute_contact_address(RecordSet self) {
 
     }
 
     @api.depends({ "is_company", "parent_id.commercial_partner_id" })
-    public void _compute_commercial_partner(Self self) {
+    public void _compute_commercial_partner(RecordSet self) {
 
     }
 
     @api.depends({ "company_name", "parent_id.is_company", "commercial_partner_id.name" })
-    public void _compute_commercial_company_name(Self self) {
+    public void _compute_commercial_company_name(RecordSet self) {
 
     }
 
     @api.depends({ "name", "email" })
-    public void _compute_email_formatted(Self self) {
+    public void _compute_email_formatted(RecordSet self) {
 
     }
 
     @api.depends("is_company")
-    public void _compute_company_type(Self self) {
+    public void _compute_company_type(RecordSet self) {
 
     }
 
-    public void _compute_get_ids(Self self) {
+    public void _compute_get_ids(RecordSet self) {
 
     }
 
-    static List<String> _tz_get(Self self) {
+    static List<String> _tz_get(RecordSet self) {
         return new ArrayList<String>();
     }
 
-    static List<String> _lang_get(Self self) {
+    static List<String> _lang_get(RecordSet self) {
         return self.env("res.lang").call(new TypeReference<List<String>>() {
         }, "get_installed");
     }
 
-    static Self _default_category(Self self) {
+    static RecordSet _default_category(RecordSet self) {
         return self.env("res.partner.category").browse((String) self.context().get("category_id"));
     }
 }

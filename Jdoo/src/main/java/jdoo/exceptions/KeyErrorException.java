@@ -2,9 +2,6 @@ package jdoo.exceptions;
 
 public class KeyErrorException extends JdooException {
 
-    /**
-     *
-     */
     private static final long serialVersionUID = 1L;
 
     public KeyErrorException() {

@@ -2,11 +2,7 @@ package jdoo.exceptions;
 
 public class AccessErrorException extends JdooException {
 
-
-    /**
-     *
-     */
-    private static final long serialVersionUID = -286004599619699513L;
+    private static final long serialVersionUID = 1L;
 
     public AccessErrorException() {
     }

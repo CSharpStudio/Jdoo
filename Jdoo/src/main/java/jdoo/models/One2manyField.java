@@ -30,7 +30,7 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
     }
 
     @Override
-    public boolean update_db(Self model, Map<String, Dict> columns) {
+    public boolean update_db(RecordSet model, Map<String, Dict> columns) {
         return true;
     }
 }

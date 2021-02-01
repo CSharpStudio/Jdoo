@@ -6,19 +6,19 @@ import jdoo.TransactionCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import jdoo.models.Self;
+import jdoo.models.RecordSet;
 import jdoo.util.Dict;
 
 public class TestPartner extends TransactionCase {
     @Test
     public void test_name_search() {
-        Self test_partner = env("res.partner").call(Self.class, "create", new Dict() {
+        RecordSet test_partner = env("res.partner").call(RecordSet.class, "create", new Dict() {
             {
                 put("name", "Vlad the Impaler");
             }
         });
 
-        Self test_user = env("res.users").call(Self.class, "create", new Dict() {
+        RecordSet test_user = env("res.users").call(RecordSet.class, "create", new Dict() {
             {
                 put("name", "Vlad the Impaler");
                 put("login", "vlad");

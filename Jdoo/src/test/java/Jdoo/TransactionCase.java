@@ -4,7 +4,7 @@ import org.junit.Before;
 import org.junit.After;
 
 import jdoo.apis.Environment;
-import jdoo.models.Self;
+import jdoo.models.RecordSet;
 import jdoo.modules.Loader;
 import jdoo.modules.Registry;
 import jdoo.util.Dict;
@@ -12,7 +12,7 @@ import jdoo.data.Database;
 
 public class TransactionCase {    
     protected Environment env;
-    protected Self env(String model){
+    protected RecordSet env(String model){
         return env.get(model);
     }
     @Before

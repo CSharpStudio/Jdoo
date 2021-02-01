@@ -2,10 +2,7 @@ package jdoo.exceptions;
 
 public class CacheMissException extends JdooException {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = 168543100249339794L;
+    private static final long serialVersionUID = 1L;
 
     public CacheMissException() {
     }

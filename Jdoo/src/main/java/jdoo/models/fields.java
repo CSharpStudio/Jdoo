@@ -114,7 +114,7 @@ public class fields {
         return new SelectionField().string(string).selection(selection);
     }
 
-    public static SelectionField Selection(Function<Self, Object> func) {
+    public static SelectionField Selection(Function<RecordSet, Object> func) {
         return new SelectionField().selection(func);
     }
 

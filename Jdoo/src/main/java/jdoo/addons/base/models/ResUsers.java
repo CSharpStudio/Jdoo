@@ -1,4 +1,4 @@
-package jdoo.base;
+package jdoo.addons.base.models;
 
 import jdoo.models.Field;
 import jdoo.models.Model;

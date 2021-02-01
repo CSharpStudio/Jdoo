@@ -2,10 +2,6 @@ package jdoo.exceptions;
 
 public class ValueErrorException extends JdooException {
 
-
-    /**
-     *
-     */
     private static final long serialVersionUID = 1L;
 
     public ValueErrorException() {

@@ -1,8 +1,8 @@
-package jdoo.base;
+package jdoo.addons.base.models;
 
 import jdoo.models.Field;
 import jdoo.models.Model;
-import jdoo.models.Self;
+import jdoo.models.RecordSet;
 import jdoo.models.d;
 import jdoo.models.fields;
 
@@ -25,11 +25,11 @@ public class IrModelAccess extends Model {
     static Field perm_create = fields.Boolean("Create Access");
     static Field perm_unlink = fields.Boolean("Delete Access");
 
-    public boolean check_groups(Self self, String group) {
+    public boolean check_groups(RecordSet self, String group) {
         return true;
     }
 
-    public boolean check(Self self, String model, String mode, boolean raise_exception) {
+    public boolean check(RecordSet self, String model, String mode, boolean raise_exception) {
         return true;
     }
 }

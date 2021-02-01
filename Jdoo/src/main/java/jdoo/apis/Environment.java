@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import jdoo.init;
 import jdoo.data.Cursor;
 import jdoo.models.Field;
-import jdoo.models.Self;
+import jdoo.models.RecordSet;
 import jdoo.modules.Loader;
 import jdoo.modules.Registry;
 import jdoo.util.Dict;
@@ -106,26 +106,26 @@ public class Environment {
     Environment() {
     }
 
-    public Self get(String model) {
+    public RecordSet get(String model) {
         return registry.get(model).browse(this, Tuple.emptyTuple(), Tuple.emptyTuple());
     }
 
-    public Self records_to_compute(Field field) {
+    public RecordSet records_to_compute(Field field) {
         return get(field.model_name()).browse(all.tocompute(field));
     }
 
-    public boolean is_protected(Field field, Self record) {
+    public boolean is_protected(Field field, RecordSet record) {
         StackMap<Field, Collection<String>> $protected = all.$protected;
         Collection<String> ids = $protected.get(field, Tuple.emptyTuple());
         return ids.contains(record.id());
     }
 
-    public Self $protected(Field field) {
+    public RecordSet $protected(Field field) {
         StackMap<Field, Collection<String>> $protected = all.$protected;
         return get(field.model_name()).browse($protected.get(field, Tuple.emptyTuple()));
     }
 
-    public Protecting protecting(Collection<Field> fields, Self records) {
+    public Protecting protecting(Collection<Field> fields, RecordSet records) {
         StackMap<Field, Collection<String>> $protected = all.$protected;
         Map<Field, Collection<String>> map = $protected.pushmap();
         for (Field field : fields) {
@@ -144,7 +144,7 @@ public class Environment {
         }
     }
 
-    public void remove_to_compute(Field field, Self records) {
+    public void remove_to_compute(Field field, RecordSet records) {
         if (!records.hasId()) {
             return;
         }
@@ -174,40 +174,40 @@ public class Environment {
         lazy_properties.clear();
     }
 
-    public Self user() {
+    public RecordSet user() {
         return lazy_property("user", () -> {
             return create(registry, cr, uid, context, true).get("res.users").browse(uid);
         });
     }
 
     @SuppressWarnings("unchecked")
-    public Self company() {
+    public RecordSet company() {
         return lazy_property("company", () -> {
             if (context.containsKey("allowed_company_ids")) {
                 Tuple<String> company_ids = (Tuple<String>) context.get("allowed_company_ids");
                 String company_id = company_ids.get(0);
-                if (user().get(Self.class, "company_ids").ids().contains(company_id)) {
+                if (user().get(RecordSet.class, "company_ids").ids().contains(company_id)) {
                     return get("res.company").browse(company_id);
                 }
             }
-            return user().get(Self.class, "company_id");
+            return user().get(RecordSet.class, "company_id");
         });
     }
 
     @SuppressWarnings("unchecked")
-    public Self companies() {
+    public RecordSet companies() {
         return lazy_property("companies", () -> {
             List<String> allowed_company_ids = new ArrayList<>();
             if (context.containsKey("allowed_company_ids")) {
                 Tuple<String> company_ids = (Tuple<String>) context.get("allowed_company_ids");
-                Collection<String> users_company_ids = user().get(Self.class, "company_ids").ids();
+                Collection<String> users_company_ids = user().get(RecordSet.class, "company_ids").ids();
                 for (String company_id : company_ids) {
                     if (users_company_ids.contains(company_id)) {
                         allowed_company_ids.add(company_id);
                     }
                 }
             } else {
-                allowed_company_ids.addAll(user().get(Self.class, "company_ids").ids());
+                allowed_company_ids.addAll(user().get(RecordSet.class, "company_ids").ids());
             }
             return get("res.company").browse(allowed_company_ids);
         });

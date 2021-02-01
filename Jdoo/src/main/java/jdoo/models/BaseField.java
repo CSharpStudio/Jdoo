@@ -121,7 +121,7 @@ public class BaseField<T extends BaseField<T>> extends Field {
     }
 
     @SuppressWarnings("unchecked")
-    public T default_(Function<Self, Object> defaultFunc) {
+    public T default_(Function<RecordSet, Object> defaultFunc) {
         this.default_ = defaultFunc;
         return (T) this;
     }

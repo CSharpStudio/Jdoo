@@ -1,9 +1,9 @@
-package jdoo.base;
+package jdoo.addons.base.models;
 
 import jdoo.models.Kwargs;
 import jdoo.models.Field;
 import jdoo.models.Model;
-import jdoo.models.Self;
+import jdoo.models.RecordSet;
 import jdoo.models.d;
 import jdoo.models.fields;
 
@@ -41,7 +41,7 @@ public class ResBank extends Model {
     // return result;
     // }
 
-    public Object _name_search(Self self, Kwargs args) {
+    public Object _name_search(RecordSet self, Kwargs args) {
 
         return null;
     }

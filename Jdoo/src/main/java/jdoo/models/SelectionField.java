@@ -14,7 +14,7 @@ public class SelectionField extends BaseField<SelectionField> {
 
     List<Pair<String, String>> selection;
     Boolean validate;
-    Function<Self, Object> func;
+    Function<RecordSet, Object> func;
 
     boolean get_validate() {
         return validate == null || validate;
@@ -25,7 +25,7 @@ public class SelectionField extends BaseField<SelectionField> {
         return this;
     }
 
-    public SelectionField selection(Function<Self, Object> func) {
+    public SelectionField selection(Function<RecordSet, Object> func) {
         this.func = func;
         return this;
     }

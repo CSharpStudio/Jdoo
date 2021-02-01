@@ -12,34 +12,14 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Test;
-import jdoo.models.Self;
-import jdoo.util.Dict;
 import jdoo.util.TypeUtils;
 import jdoo.https.json.JsonRpcRequest;
 import jdoo.https.json.RpcId;
-import jdoo.apis.Environment;
-import jdoo.data.Cursor;
-import jdoo.base.ResUsers;
-import jdoo.modules.Registry;
-import jdoo.data.Database;
+
 /**
  * Unit test for simple App.
  */
 public class AppTest {
-
-    @Test
-    public void callMethodWithName() {
-        Registry registry = new Registry("test");
-        registry.register(ResUsers.class);
-        Cursor cr = new Cursor(new Database("config/dbcp.properties"));
-        Environment env = Environment.create(registry, cr, "uid", new Dict(), false);
-        Self m = env.get("res.users");
-        Object n = m.call(String.class, "name_get");
-
-        System.out.println(n);
-        assertTrue(true);
-    }
-
     @Test
     public void rpcIdJsonDeserialize() throws JsonParseException, JsonMappingException, IOException {
         ObjectMapper mapper = new ObjectMapper();

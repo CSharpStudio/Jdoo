@@ -10,7 +10,7 @@ import jdoo.apis.Environment;
 import jdoo.util.Dict;
 import jdoo.https.json.JsonRpcParseException;
 import jdoo.https.json.JsonRpcRequest;
-import jdoo.models.Self;
+import jdoo.models.RecordSet;
 
 public class Controller {
     @Autowired
@@ -24,7 +24,7 @@ public class Controller {
         return Environment.create("key", cr, "uid", new Dict(), false);
     }
 
-    public Self env(String model){
+    public RecordSet env(String model){
         Cursor cr = new Cursor(new Database("config/dbcp.properties"));
         return Environment.create("key", cr, "uid", new Dict(), false).get(model);
     }

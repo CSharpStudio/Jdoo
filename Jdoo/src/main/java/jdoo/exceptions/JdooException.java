@@ -2,10 +2,7 @@ package jdoo.exceptions;
 
 public class JdooException extends RuntimeException {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = 7914951921574187300L;
+    private static final long serialVersionUID = 1L;
 
     public JdooException() {
     }

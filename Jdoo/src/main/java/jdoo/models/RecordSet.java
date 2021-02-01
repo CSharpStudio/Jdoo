@@ -18,7 +18,7 @@ import jdoo.util.Linq;
 import jdoo.util.Tuple;
 import jdoo.apis.Environment;
 
-public final class Self implements Iterable<Self> {
+public final class RecordSet implements Iterable<RecordSet> {
     private MetaModel meta;
     private Environment env;
     Tuple<String> ids;
@@ -29,7 +29,7 @@ public final class Self implements Iterable<Self> {
         return _field_computed;
     }
 
-    public Self(MetaModel cls, Environment env) {
+    public RecordSet(MetaModel cls, Environment env) {
         this.meta = cls;
         this.env = env;
     }
@@ -50,20 +50,20 @@ public final class Self implements Iterable<Self> {
         return env.context().get(key);
     }
 
-    public Self env(String model) {
+    public RecordSet env(String model) {
         return env.get(model);
     }
 
-    public Self browse(Collection<String> ids) {
+    public RecordSet browse(Collection<String> ids) {
         return meta.browse(env, ids, ids);
     }
 
-    public Self browse(String id) {
+    public RecordSet browse(String id) {
         Tuple<String> ids = Tuple.of(id);
         return meta.browse(env, ids, ids);
     }
 
-    public Self browse() {
+    public RecordSet browse() {
         ArrayList<String> ids = new ArrayList<String>();
         return meta.browse(env, ids, ids);
     }
@@ -133,7 +133,7 @@ public final class Self implements Iterable<Self> {
     }
 
     private Object[] getArgs(Object[] args) {
-        if (args.length > 0 && args[0] instanceof Self) {
+        if (args.length > 0 && args[0] instanceof RecordSet) {
             return args;
         }
         Object[] result = new Object[args.length + 1];
@@ -170,11 +170,11 @@ public final class Self implements Iterable<Self> {
     }
 
     @Override
-    public Iterator<Self> iterator() {
+    public Iterator<RecordSet> iterator() {
         return new SelfIterator();
     }
 
-    class SelfIterator implements Iterator<Self> {
+    class SelfIterator implements Iterator<RecordSet> {
         int cusor = 0;
 
         @Override
@@ -183,7 +183,7 @@ public final class Self implements Iterable<Self> {
         }
 
         @Override
-        public Self next() {
+        public RecordSet next() {
             return browse(ids.get(cusor++));
         }
     }
@@ -193,16 +193,16 @@ public final class Self implements Iterable<Self> {
         return String.format("%s%s", getName(), ids());
     }
 
-    public Self sudo() {
+    public RecordSet sudo() {
         return this;
     }
 
-    public Self with_context(Dict context) {
+    public RecordSet with_context(Dict context) {
         return this;
     }
 
-    public Self _in_cache_without(Field field) {
-        Self recs = browse(prefetchIds);
+    public RecordSet _in_cache_without(Field field) {
+        RecordSet recs = browse(prefetchIds);
         List<String> ids = new ArrayList<>(ids());
         for (String record_id : env.cache().get_missing_ids(recs.subtract(this), field)) {
             if (record_id.isBlank()) {
@@ -213,23 +213,23 @@ public final class Self implements Iterable<Self> {
         return browse(ids);
     }
 
-    public Self subtract(Self other) {
+    public RecordSet subtract(RecordSet other) {
         Collection<String> other_ids = new HashSet<String>(other.ids());
         return browse(Collections.list(Linq.where(ids(), id -> !other_ids.contains(id))));
     }
 
-    public Self concat(Self other) {
+    public RecordSet concat(RecordSet other) {
         HashSet<String> ids = new HashSet<>(ids());
         ids.addAll(other.ids());
         return browse(ids);
     }
 
-    public Self and(Self other){
+    public RecordSet and(RecordSet other){
         Collection<String> other_ids = new HashSet<String>(other.ids());
         return browse(Collections.list(Linq.where(ids(), id -> other_ids.contains(id))));
     }
 
-    public Self or(Self other){
+    public RecordSet or(RecordSet other){
         Collection<String> ids = new HashSet<String>(ids());
         ids.addAll(other.ids());
         return browse(ids);

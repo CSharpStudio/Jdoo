@@ -24,7 +24,7 @@ import jdoo.tools.Sql;
 import jdoo.util.Tuple;
 
 public class Field extends MetaField {
-    public Object get(Self record) {
+    public Object get(RecordSet record) {
         if (!record.hasId()) {
             Object value = convert_to_cache(null, record, false);
             return convert_to_record(value, record);
@@ -33,7 +33,7 @@ public class Field extends MetaField {
         Environment env = record.env();
         if (StringUtils.hasText(compute) && env.all().tocompute(this).contains(record.id())
                 && !env.is_protected(this, record)) {
-            Self recs = this.recursive() ? record : env.records_to_compute(this);
+            RecordSet recs = this.recursive() ? record : env.records_to_compute(this);
             try {
                 compute_value(recs);
             } catch (AccessErrorException e) {
@@ -45,13 +45,13 @@ public class Field extends MetaField {
             value = env.cache().get(record, this);
         } else {
             if (StringUtils.hasText(record.id()) && store()) {
-                Self recs = record._in_cache_without(this);
+                RecordSet recs = record._in_cache_without(this);
                 try {
                     recs.call("_fetch_field", this);
                 } catch (AccessErrorException e) {
                     record.call("_fetch_field", this);
                 }
-                if (env.cache().contains(record, this) && !record.call(Self.class, "exists").hasId()) {
+                if (env.cache().contains(record, this) && !record.call(RecordSet.class, "exists").hasId()) {
                     throw new MissingErrorException("Record does not exist or has been deleted.\r\n"
                             + String.format("(Record: %s, User: %s)", record, env.uid()));
                 }
@@ -61,7 +61,7 @@ public class Field extends MetaField {
                     value = convert_to_cache(null, record, false);
                     env.cache().set(record, this, value);
                 } else {
-                    Self recs = this.recursive() || record.id().isBlank() ? record : record._in_cache_without(this);
+                    RecordSet recs = this.recursive() || record.id().isBlank() ? record : record._in_cache_without(this);
                     try {
                         compute_value(recs);
                     } catch (AccessErrorException e) {
@@ -91,7 +91,7 @@ public class Field extends MetaField {
         return convert_to_record(value, record);
     }
 
-    public void compute_value(Self records) {
+    public void compute_value(RecordSet records) {
         if (compute_sudo()) {
             records = records.sudo();
         }
@@ -102,7 +102,7 @@ public class Field extends MetaField {
         }
     }
 
-    public void set(Self records, Object value) {
+    public void set(RecordSet records, Object value) {
         List<String> protected_ids = new ArrayList<>();
         List<String> new_ids = new ArrayList<>();
         List<String> other_ids = new ArrayList<>();
@@ -116,11 +116,11 @@ public class Field extends MetaField {
             }
         }
         if (!protected_ids.isEmpty()) {
-            Self protected_records = records.browse(protected_ids);
+            RecordSet protected_records = records.browse(protected_ids);
             write(protected_records, value);
         }
         if (!new_ids.isEmpty()) {
-            Self new_records = records.browse(new_ids);
+            RecordSet new_records = records.browse(new_ids);
             Collection<Field> field_computed = records._field_computed().get(this);
             if (field_computed == null) {
                 field_computed = Arrays.asList(this);
@@ -140,33 +140,33 @@ public class Field extends MetaField {
         }
     }
 
-    public Self write(Self records, Object value) {
+    public RecordSet write(RecordSet records, Object value) {
         records.env().remove_to_compute(this, records);
         Cache cache = records.env().cache();
         Object cache_value = convert_to_cache(value, records, true);
         records = cache.get_records_different_from(records, this, cache_value);
         if (!records.hasId())
             return records;
-        for (Self rec : records) {
+        for (RecordSet rec : records) {
             cache.set(rec, this, cache_value);
         }
         if (store()) {
             IdValues towrite = records.env().all().towrite(records.getName());
-            Self record = records.browse(records.id());
+            RecordSet record = records.browse(records.id());
             Object write_value = convert_to_record(cache_value, record);
             Object column_value = convert_to_column(write_value, record, null, true);
-            for (Self rec : records) {
+            for (RecordSet rec : records) {
                 towrite.set(rec.id(), getName(), column_value);
             }
         }
         return records;
     }
 
-    String convert_to_display_name(Object value, Self record) {
+    String convert_to_display_name(Object value, RecordSet record) {
         return value == null ? "" : value.toString();
     }
 
-    Object convert_to_column(Object value, Self record, @Default Object values, @Default("true") boolean validate) {
+    Object convert_to_column(Object value, RecordSet record, @Default Object values, @Default("true") boolean validate) {
         if (value == null)
             return null;
         return value.toString();
@@ -184,7 +184,7 @@ public class Field extends MetaField {
      * @param validate
      * @return
      */
-    public Object convert_to_cache(Object value, Self record, @Default("true") boolean validate) {
+    public Object convert_to_cache(Object value, RecordSet record, @Default("true") boolean validate) {
         return value;
     }
 
@@ -196,7 +196,7 @@ public class Field extends MetaField {
      * @param record
      * @return
      */
-    public Object convert_to_record(Object value, Self record) {
+    public Object convert_to_record(Object value, RecordSet record) {
         return value;
     }
 
@@ -208,7 +208,7 @@ public class Field extends MetaField {
      * @param record
      * @return
      */
-    public Object convert_to_read(Object value, Self record) {
+    public Object convert_to_read(Object value, RecordSet record) {
         return value;
     }
 
@@ -220,13 +220,13 @@ public class Field extends MetaField {
      * @param record
      * @return
      */
-    public Object convert_to_write(Object value, Self record) {
+    public Object convert_to_write(Object value, RecordSet record) {
         Object cache_value = convert_to_cache(value, record, false);
         Object record_value = convert_to_record(cache_value, record);
         return convert_to_read(record_value, record);
     }
 
-    public boolean update_db(Self model, Map<String, Dict> columns) {
+    public boolean update_db(RecordSet model, Map<String, Dict> columns) {
         try {
             Dict column = columns.get(getName());
             update_db_column(model, column);
@@ -238,7 +238,7 @@ public class Field extends MetaField {
         }
     }
 
-    public void update_db_column(Self model, Dict column) {
+    public void update_db_column(RecordSet model, Dict column) {
         Cursor cr = model.env().cr();
         if (column == null) {
             Sql.create_column(cr, model.table(), getName(), column_type().second().toString(), string);
@@ -263,7 +263,7 @@ public class Field extends MetaField {
         }
     }
 
-    public void update_db_notnull(Self model, Dict column) {
+    public void update_db_notnull(RecordSet model, Dict column) {
         boolean has_notnull = column != null && column.get("is_nullable").equals("NO");
         if (column != null || (required() && !has_notnull)) {
             if (model.call(Boolean.class, "_table_has_rows")) {
@@ -278,7 +278,7 @@ public class Field extends MetaField {
         }
     }
 
-    public void update_db_index(Self model, Dict column) {
+    public void update_db_index(RecordSet model, Dict column) {
 
     }
 
@@ -307,5 +307,9 @@ public class Field extends MetaField {
             }
         }
         return new Tuple<>(objs);
+    }
+
+    public void setup_full(){
+        
     }
 }

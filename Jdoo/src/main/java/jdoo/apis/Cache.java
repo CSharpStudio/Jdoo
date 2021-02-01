@@ -11,7 +11,7 @@ import org.springframework.util.ObjectUtils;
 
 import jdoo.exceptions.CacheMissException;
 import jdoo.models.Field;
-import jdoo.models.Self;
+import jdoo.models.RecordSet;
 import jdoo.util.Pair;
 import jdoo.util.Tuple;
 import jdoo.util.Utils;
@@ -19,7 +19,7 @@ import jdoo.util.Utils;
 public class Cache {
     HashMap<Field, HashMap<String, Object>> _data = new HashMap<Field, HashMap<String, Object>>();
 
-    public boolean contains(Self record, Field field) {
+    public boolean contains(RecordSet record, Field field) {
         if (_data.containsKey(field)) {
             HashMap<String, Object> values = _data.get(field);
             if (!field.depends_context().isEmpty()) {
@@ -35,7 +35,7 @@ public class Cache {
         return false;
     }
 
-    public Object get(Self record, Field field) {
+    public Object get(RecordSet record, Field field) {
         if (_data.containsKey(field)) {
             HashMap<String, Object> values = _data.get(field);
             if (values.containsKey(record.id())) {
@@ -51,7 +51,7 @@ public class Cache {
         throw new CacheMissException("Cache " + record.getMeta().getName() + "." + field.getName() + " not found");
     }
 
-    public Object get(Self record, Field field, Object defalult_) {
+    public Object get(RecordSet record, Field field, Object defalult_) {
         if (_data.containsKey(field)) {
             HashMap<String, Object> values = _data.get(field);
             if (values.containsKey(record.id())) {
@@ -67,7 +67,7 @@ public class Cache {
         return defalult_;
     }
 
-    public void set(Self record, Field field, Object value) {
+    public void set(RecordSet record, Field field, Object value) {
         HashMap<String, Object> values;
         if (_data.containsKey(field)) {
             values = _data.get(field);
@@ -86,7 +86,7 @@ public class Cache {
     }
 
     @SuppressWarnings("unchecked")
-    public void update(Self records, Field field, Collection<Object> values) {
+    public void update(RecordSet records, Field field, Collection<Object> values) {
         HashMap<String, Object> field_cache;
         if (_data.containsKey(field)) {
             field_cache = _data.get(field);
@@ -115,7 +115,7 @@ public class Cache {
         }
     }
 
-    public Object remove(Self record, Field field) {
+    public Object remove(RecordSet record, Field field) {
         if (_data.containsKey(field)) {
             HashMap<String, Object> values = _data.get(field);
             return values.remove(record.id());
@@ -123,7 +123,7 @@ public class Cache {
         return null;
     }
 
-    public Collection<Object> get_values(Self records, Field field) {
+    public Collection<Object> get_values(RecordSet records, Field field) {
         List<Object> values = new ArrayList<>();
         if (_data.containsKey(field)) {
             HashMap<String, Object> field_cache = _data.get(field);
@@ -142,7 +142,7 @@ public class Cache {
         return values;
     }
 
-    public Self get_records_different_from(Self records, Field field, Object value) {
+    public RecordSet get_records_different_from(RecordSet records, Field field, Object value) {
         List<String> ids = new ArrayList<String>();
         HashMap<String, Object> field_cache = _data.get(field);
         for (String record_id : records.ids()) {
@@ -159,7 +159,7 @@ public class Cache {
     }
 
     @SuppressWarnings("unchecked")
-    public Collection<Field> get_fields(Self record) {
+    public Collection<Field> get_fields(RecordSet record) {
         List<Field> fields = new ArrayList<>();
         for (Field field : record.getFields()) {
             if ("id".equals(field.getName())) {
@@ -184,7 +184,7 @@ public class Cache {
         return fields;
     }
 
-    public Self get_records(Self model, Field field) {
+    public RecordSet get_records(RecordSet model, Field field) {
         if (_data.containsKey(field)) {
             HashMap<String, Object> field_cache = _data.get(field);
             return model.browse(field_cache.keySet());
@@ -193,7 +193,7 @@ public class Cache {
         }
     }
 
-    public Collection<String> get_missing_ids(Self records, Field field) {
+    public Collection<String> get_missing_ids(RecordSet records, Field field) {
         if (!_data.containsKey(field)) {
             return Collections.emptyList();
         }

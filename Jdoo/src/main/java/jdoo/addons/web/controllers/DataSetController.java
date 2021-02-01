@@ -1,4 +1,4 @@
-package jdoo.web.controllers;
+package jdoo.addons.web.controllers;
 
 import java.util.List;
 import java.util.Map;

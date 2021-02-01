@@ -170,10 +170,10 @@ public abstract class MetaField {
         return company_dependent != null && company_dependent;
     }
 
-    protected Function<Self, Object> default_;
+    protected Function<RecordSet, Object> default_;
     protected Object default_value;
 
-    Object get_default_value(Self self) {
+    Object get_default_value(RecordSet self) {
         if (default_ != null)
             return default_.apply(self);
         return default_value;

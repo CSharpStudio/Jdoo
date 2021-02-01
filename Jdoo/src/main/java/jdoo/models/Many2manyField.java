@@ -48,7 +48,7 @@ public class Many2manyField extends _RelationalMultiField<Many2manyField> {
     }
 
     @Override
-    public boolean update_db(Self model, Map<String, Dict> columns) {
+    public boolean update_db(RecordSet model, Map<String, Dict> columns) {
         return true;
     }
 }

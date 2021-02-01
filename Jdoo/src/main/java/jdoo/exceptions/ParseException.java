@@ -2,10 +2,7 @@ package jdoo.exceptions;
 
 public class ParseException extends JdooException {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = -7028649977105713167L;
+    private static final long serialVersionUID = 1L;
 
     public ParseException() {
     }

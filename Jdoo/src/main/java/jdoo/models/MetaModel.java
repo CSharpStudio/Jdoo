@@ -2,67 +2,87 @@ package jdoo.models;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.el.MethodNotFoundException;
 
-import org.apache.tomcat.util.buf.StringUtils;
+import org.springframework.util.StringUtils;
 
 import jdoo.exceptions.ModelException;
+import jdoo.exceptions.TypeErrorException;
+import jdoo.exceptions.ValidationErrorException;
+import jdoo.modules.Registry;
 import jdoo.util.Tuple;
 import jdoo.apis.Environment;
+import jdoo.data.Cursor;
 
 public class MetaModel {
+    protected static List<String> LOG_ACCESS_COLUMNS = Arrays.asList("create_uid", "create_date", "write_uid",
+            "write_date");
     private HashMap<String, Field> fields;
     private HashMap<String, MethodInfo> keyMethods;
     private HashMap<String, List<MethodInfo>> nameMethods;
-    boolean _auto = false; // don't create any database backend
+
+    protected boolean _auto = false; // don't create any database backend
+    protected boolean _register = false; // not visible in ORM registry
+    protected boolean _abstract = true; // whether model is abstract
+    protected boolean _transient = false; // whether model is transient
+
+    protected String _name; // the model name
+    protected String _description; // the model's informal name
+    protected boolean _custom = false; // should be True for custom models only
+
+    protected Object _inherit; // Python-inherited models ('model' or ['model'])
+    protected String[] _inherits; // inherited models {'parent_model': 'm2o_field'}
+
+    protected String _table; // SQL table name used by model
+    protected String[] _sql_constraints; // SQL constraints [(name, sql_def, message)]
+
+    protected String _rec_name; // field to use for labeling records
+    protected String _order = "id"; // default order for searching results
+    protected String _parent_name = "parent_id"; // the many2one field used as parent field
+    protected boolean _parent_store = false; // set to True to compute parent_path field
+    protected String _date_name = "date"; // field to use for default calendar view
+    protected String _fold_name = "fold"; // field to determine folded groups in kanban views
+
+    protected boolean _needaction = false; // whether the model supports "need actions" (see mail)
+    protected boolean _translate = true; // False disables translations export for this model
+    protected boolean _check_company_auto = false;
+    protected boolean _log_access = true;
 
     public boolean auto() {
         return _auto;
     }
 
-    boolean _register = false; // not visible in ORM registry
-
     public boolean register() {
         return _register;
     }
-
-    boolean _abstract = true; // whether model is abstract
 
     public boolean _abstract() {
         return _abstract;
     }
 
-    boolean _transient = false; // whether model is transient
-
     public boolean _transient() {
         return _transient;
     }
 
-    String _name; // the model name
-    String _description; // the model's informal name
+    public String name() {
+        return _name;
+    }
 
     public String description() {
         return _description;
     }
 
-    boolean _custom = false; // should be True for custom models only
-
     public boolean custom() {
         return _custom;
     }
-
-    String _inherit; // Python-inherited models ('model' or ['model'])
-
-    public String inherit() {
-        return _inherit;
-    }
-
-    String[] _inherits; // inherited models {'parent_model': 'm2o_field'}
 
     public String[] inherits() {
         if (_inherits == null)
@@ -70,83 +90,93 @@ public class MetaModel {
         return _inherits;
     }
 
-    String _table; // SQL table name used by model
-
     public String table() {
         return _table;
     }
-
-    String[] _sql_constraints; // SQL constraints [(name, sql_def, message)]
 
     public String[] _sql_constraints() {
         return _sql_constraints;
     }
 
-    String _rec_name; // field to use for labeling records
-
     public String rec_name() {
         return _rec_name;
     }
-
-    String _order = "id"; // default order for searching results
 
     public String order() {
         return _order;
     }
 
-    String _parent_name = "parent_id"; // the many2one field used as parent field
-
     public String parent_name() {
         return _parent_name;
     }
-
-    boolean _parent_store = false; // set to True to compute parent_path field
 
     public boolean parent_store() {
         return _parent_store;
     }
 
-    String _date_name = "date"; // field to use for default calendar view
-
     public String date_name() {
         return _date_name;
     }
-
-    String _fold_name = "fold"; // field to determine folded groups in kanban views
 
     public String fold_name() {
         return _fold_name;
     }
 
-    boolean _needaction = false; // whether the model supports "need actions" (see mail)
-
     public boolean needaction() {
         return _needaction;
     }
-
-    boolean _translate = true; // False disables translations export for this model
 
     public boolean translate() {
         return _translate;
     }
 
-    boolean _check_company_auto = false;
-
     public boolean check_company_auto() {
         return _check_company_auto;
     }
 
-    boolean _log_access = true;
-
     public boolean log_access() {
         return _log_access;
+    }
+
+    List<String> _inherits_children;
+
+    List<String> _inherit_children;
+
+    Tuple<MetaModel> _bases;
+
+    String _module;
+
+    String _original_module;
+
+    List<String> inherits_children() {
+        if (_inherits_children == null) {
+            _inherits_children = new ArrayList<>();
+        }
+        return _inherits_children;
+    }
+
+    Tuple<MetaModel> _bases() {
+        if (_bases == null) {
+            _bases = Tuple.emptyTuple();
+        }
+        return _bases;
+    }
+
+    protected MetaModel() {
+
     }
 
     public MetaModel(String name) {
         _name = name;
     }
 
-    public MetaModel(BaseModel m) {
+    public MetaModel(String name, String module) {
+        _name = name;
+        _register = false;
+        _original_module = module;
+    }
+
+    public MetaModel(MetaModel m) {
         _auto = m._auto;
         _register = m._register;
         _abstract = m._abstract;
@@ -264,7 +294,7 @@ public class MetaModel {
             }
         }
         StringBuilder sb = new StringBuilder();
-        StringUtils.join(args, ',', o -> o == null ? "null" : o.getClass().getName(), sb);
+        org.apache.tomcat.util.buf.StringUtils.join(args, ',', o -> o == null ? "null" : o.getClass().getName(), sb);
         throw new MethodNotFoundException("method:" + method + "(" + sb.toString() + ") not found");
     }
 
@@ -299,8 +329,8 @@ public class MetaModel {
         return true;
     }
 
-    public Self browse(Environment env, Collection<String> ids, Collection<String> prefetchIds) {
-        Self m = new Self(this, env);
+    public RecordSet browse(Environment env, Collection<String> ids, Collection<String> prefetchIds) {
+        RecordSet m = new RecordSet(this, env);
         m.ids = Tuple.fromCollection(ids);
         m.prefetchIds = Tuple.fromCollection(prefetchIds);
         return m;
@@ -321,5 +351,111 @@ public class MetaModel {
         }
         key += ")";
         return key;
+    }
+
+    public void init(Registry pool, Cursor cr) {
+
+    }
+
+    @SuppressWarnings("unchecked")
+    public static MetaModel _build_model(Class<?> clazz, String module, Registry pool, Cursor cr)
+            throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
+            NoSuchMethodException, SecurityException {
+        MetaModel cls = (MetaModel) clazz.getDeclaredConstructor().newInstance();
+        cls._module = module;
+        List<String> parents = new ArrayList<>();
+        if (cls._inherit instanceof String) {
+            parents.add((String) cls._inherit);
+        } else if (cls._inherit instanceof Collection<?>) {
+            parents.addAll((Collection<String>) cls._inherit);
+        } else if (cls._inherit instanceof String[]) {
+            parents.addAll(Arrays.asList((String[]) cls._inherit));
+        }
+        String name;
+        if (!StringUtils.hasText(cls._name)) {
+            name = cls._name;
+        } else if (parents.size() == 1) {
+            name = parents.get(0);
+        } else {
+            name = clazz.getName();
+        }
+        if (name != "base") {
+            parents.add("base");
+        }
+        MetaModel ModelClass;
+        if (parents.contains(name)) {
+            if (!pool.contains(name)) {
+                throw new TypeErrorException(String.format("Model %s does not exist in registry.", name));
+            }
+            ModelClass = pool.get(name);
+            ModelClass._build_model_check_base(cls);
+        } else {
+            ModelClass = new MetaModel(name, cls._module);
+        }
+        List<MetaModel> bases = Arrays.asList(cls);
+        for (String parent : parents) {
+            if (!pool.contains(parent)) {
+                throw new TypeErrorException(
+                        String.format("Model %s inherits from non-existing model %s.", name, parent));
+            }
+            MetaModel parent_class = pool.get(parent);
+            if (parent.equals(name)) {
+                for (MetaModel base : parent_class._bases()) {
+                    if (bases.contains(base)) {
+                        bases.remove(base);
+                    }
+                    bases.add(base);
+                }
+            } else {
+                if (parents.contains(name)) {
+                    _build_model_check_parent(ModelClass, cls, parent_class);
+                }else{
+                    _build_model_check_parent(cls, cls, parent_class);
+                }
+                if (bases.contains(parent_class)) {
+                    bases.remove(parent_class);
+                }
+                bases.add(parent_class);
+                parent_class.inherits_children().add(name);
+            }
+        }
+        ModelClass._bases = Tuple.fromCollection(bases);
+        ModelClass._build_model_attributes(pool);
+
+        Util.check_pg_name(ModelClass._table);
+
+        ModelClass.init(pool, cr);
+
+        return ModelClass;
+    }
+
+    static void _build_model_check_parent(MetaModel model_class, MetaModel cls, MetaModel parent_class) {
+        if (model_class._abstract && !parent_class._abstract) {
+            throw new TypeErrorException(
+                    String.format("In %s, the abstract model %s cannot inherit from the non-abstract model %s.", cls,
+                            model_class._name, parent_class._name));
+        }
+    }
+
+    public void _build_model_check_base(MetaModel cls) {
+
+    }
+
+    public void _build_model_attributes(Registry pool) {
+
+    }
+
+    static class Util {
+        static final Pattern pattern = Pattern.compile("^[a-z_][a-z0-9_$]*$", Pattern.CASE_INSENSITIVE);
+
+        // final String pattern="^[a-z_][a-z0-9_$]*$";
+        public static void check_pg_name(String name) {
+            if (!pattern.matcher(name).matches()) {
+                throw new ValidationErrorException(String.format("Invalid characters in table name %s", name));
+            }
+            if (name.length() > 63) {
+                throw new ValidationErrorException(String.format("Table name %s is too long", name));
+            }
+        }
     }
 }

@@ -318,4 +318,19 @@ public class Cursor implements AutoCloseable {
             throw new DataException("read row error", e);
         }
     }
+
+    public SavePoint savepoint() {
+        return new SavePoint();
+    }
+
+    public class SavePoint implements AutoCloseable {
+
+        public SavePoint() {
+
+        }
+
+        @Override
+        public void close() {
+        }
+    }
 }

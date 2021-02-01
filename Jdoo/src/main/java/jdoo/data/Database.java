@@ -4,11 +4,28 @@ import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javax.sql.DataSource;
 import org.apache.commons.dbcp.BasicDataSourceFactory;
 import jdoo.exceptions.DataException;
 
 public class Database {
+    static ConcurrentHashMap<String, Database> databases = new ConcurrentHashMap<String, Database>();
+
+    public static Database get(String tenant) {
+        if (!databases.containsKey(tenant)) {
+            synchronized (Database.class) {
+                if (!databases.containsKey(tenant)) {
+                    Database db = new Database("config/dbcp.properties");// db shoud be get from tenant
+                    databases.put(tenant, db);
+                    return db;
+                }
+            }
+        }
+        return databases.get(tenant);
+    }
+
     DataSource dataSource;
 
     public DataSource getDataSource() {
@@ -47,7 +64,7 @@ public class Database {
         }
     }
 
-    public Cursor cursor(){
+    public Cursor cursor() {
         return new Cursor(dataSource);
     }
 }

@@ -12,7 +12,7 @@ import jdoo.util.Dict;
 //@EnableAutoConfiguration
 @RestController
 @SpringBootApplication
-@ComponentScan(basePackageClasses = { jdoo.web.controllers.DataSetController.class })
+@ComponentScan(basePackageClasses = { jdoo.addons.web.controllers.DataSetController.class })
 @ComponentScan("WebApi")
 public class App {
     public static void main(String[] args) {

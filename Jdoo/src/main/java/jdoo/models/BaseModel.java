@@ -1,7 +1,5 @@
 package jdoo.models;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,46 +28,43 @@ import jdoo.util.Utils;
 import jdoo.data.Cursor;
 import jdoo.apis.Cache;
 import jdoo.apis.Environment;
-import jdoo.apis.api;
 import jdoo.data.AsIs;
 import jdoo.exceptions.MissingErrorException;
-import jdoo.exceptions.ModelException;
-import jdoo.modules.Registry;
 
-public class BaseModel {
+public class BaseModel extends MetaModel {
     private static Logger _logger = LogManager.getLogger(BaseModel.class);
     MetaModel meta;
     static List<String> LOG_ACCESS_COLUMNS = Arrays.asList("create_uid", "create_date", "write_uid", "write_date");
     Map<Field, Object> _field_computed = new HashMap<>();
 
-    protected boolean _auto = false; // don't create any database backend
-    protected boolean _register = false; // not visible in ORM registry
-    protected boolean _abstract = true; // whether model is abstract
-    protected boolean _transient = false; // whether model is transient
+    // protected boolean _auto = false; // don't create any database backend
+    // protected boolean _register = false; // not visible in ORM registry
+    // protected boolean _abstract = true; // whether model is abstract
+    // protected boolean _transient = false; // whether model is transient
 
-    protected String _name; // the model name
-    protected String _description; // the model's informal name
-    protected boolean _custom = false; // should be True for custom models only
+    // protected String _name; // the model name
+    // protected String _description; // the model's informal name
+    // protected boolean _custom = false; // should be True for custom models only
 
-    protected String _inherit; // Python-inherited models ('model' or ['model'])
-    protected String[] _inherits; // inherited models {'parent_model': 'm2o_field'}
+    // protected String _inherit; // Python-inherited models ('model' or ['model'])
+    // protected String[] _inherits; // inherited models {'parent_model': 'm2o_field'}
 
-    protected String _table; // SQL table name used by model
-    protected String[] _sql_constraints; // SQL constraints [(name, sql_def, message)]
+    // protected String _table; // SQL table name used by model
+    // protected String[] _sql_constraints; // SQL constraints [(name, sql_def, message)]
 
-    protected String _rec_name; // field to use for labeling records
-    protected String _order = "id"; // default order for searching results
-    protected String _parent_name = "parent_id"; // the many2one field used as parent field
-    protected boolean _parent_store = false; // set to True to compute parent_path field
-    protected String _date_name = "date"; // field to use for default calendar view
-    protected String _fold_name = "fold"; // field to determine folded groups in kanban views
+    // protected String _rec_name; // field to use for labeling records
+    // protected String _order = "id"; // default order for searching results
+    // protected String _parent_name = "parent_id"; // the many2one field used as parent field
+    // protected boolean _parent_store = false; // set to True to compute parent_path field
+    // protected String _date_name = "date"; // field to use for default calendar view
+    // protected String _fold_name = "fold"; // field to determine folded groups in kanban views
 
-    protected boolean _needaction = false; // whether the model supports "need actions" (see mail)
-    protected boolean _translate = true; // False disables translations export for this model
-    protected boolean _check_company_auto = false;
-    protected boolean _log_access = true;
+    // protected boolean _needaction = false; // whether the model supports "need actions" (see mail)
+    // protected boolean _translate = true; // False disables translations export for this model
+    // protected boolean _check_company_auto = false;
+    // protected boolean _log_access = true;
 
-    protected Self _create(Self self, Collection<Dict> data_list) {
+    protected RecordSet _create(RecordSet self, Collection<Dict> data_list) {
         List<String> ids = new ArrayList<>();
         List<Field> other_fields = new ArrayList<>();
         // List<String> translated_fields = new ArrayList<>();
@@ -110,9 +105,9 @@ public class BaseModel {
             String query = "INSERT INTO \"" + self.table() + "\" (" + columns + ") VALUES (" + formats + ")";
             cr.execute(query, values);
         }
-        Self records = self.browse(ids);
+        RecordSet records = self.browse(ids);
         Cache cache = self.env().cache();
-        for (Self record : records) {
+        for (RecordSet record : records) {
             for (Dict data : data_list) {
                 Dict stored = (Dict) data.get("stored");
                 for (String fname : stored.keySet()) {
@@ -146,7 +141,7 @@ public class BaseModel {
     }
 
     @SuppressWarnings("unchecked")
-    public Self create(Self self, Object values) {
+    public RecordSet create(RecordSet self, Object values) {
         List<Map<String, Object>> vals_list = new ArrayList<Map<String, Object>>();
         if (values instanceof Map<?, ?>) {
             vals_list.add((Map<String, Object>) values);
@@ -208,12 +203,12 @@ public class BaseModel {
             data_list.add(data);
         }
 
-        Self records = _create(self, data_list);
+        RecordSet records = _create(self, data_list);
 
         return records;
     }
 
-    Map<String, Object> _add_missing_default_values(Self self, Map<String, Object> vals) {
+    Map<String, Object> _add_missing_default_values(RecordSet self, Map<String, Object> vals) {
         List<String> missing_defaults = new ArrayList<String>();
         for (Field field : self.getFields()) {
             if (!vals.containsKey(field.getName())) {
@@ -243,7 +238,7 @@ public class BaseModel {
 
     }
 
-    public Dict default_get(Self self, Collection<String> fields_list) {
+    public Dict default_get(RecordSet self, Collection<String> fields_list) {
         Dict defaults = new Dict();
         Map<String, Object> ir_defaults = self.env("ir.default").call(new TypeReference<Map<String, Object>>() {
         }, "get_model_defaults", self.getName(), false);
@@ -293,27 +288,27 @@ public class BaseModel {
         return defaults;
     }
 
-    public Tuple<String> name_create(Self self, String name) {
+    public Tuple<String> name_create(RecordSet self, String name) {
         String rec_name = self.getMeta().rec_name();
         if (StringUtils.hasText(rec_name)) {
-            Self record = create(self, new Dict().set(rec_name, name));
+            RecordSet record = create(self, new Dict().set(rec_name, name));
             return name_get(record).get(0);
         }
         return null;
     }
 
-    public List<Tuple<String>> name_get(Self self) {
+    public List<Tuple<String>> name_get(RecordSet self) {
         List<Tuple<String>> result = new ArrayList<>();
         String rec_name = self.getMeta().rec_name();
         Field field = self.getMeta().findField(rec_name);
         if (field != null) {
-            for (Self record : self) {
+            for (RecordSet record : self) {
                 Tuple<String> tuple = new Tuple<>(record.id(),
                         field.convert_to_display_name(record.get(field), record));
                 result.add(tuple);
             }
         } else {
-            for (Self record : self) {
+            for (RecordSet record : self) {
                 Tuple<String> tuple = new Tuple<>(record.id(), String.format("%s.%s", record.getName(), record.id()));
                 result.add(tuple);
             }
@@ -321,7 +316,7 @@ public class BaseModel {
         return result;
     }
 
-    protected void _read(Self self, Collection<Field> fields) {
+    protected void _read(RecordSet self, Collection<Field> fields) {
         if (fields.isEmpty())
             return;
         check_access_rights(self, "read", true);
@@ -348,7 +343,7 @@ public class BaseModel {
 
     }
 
-    public boolean write(Self self, Map<String, Object> vals) {
+    public boolean write(RecordSet self, Map<String, Object> vals) {
         if (!self.hasId()) {
             return true;
         }
@@ -362,7 +357,7 @@ public class BaseModel {
 
         if (self.getMeta().log_access()) {
             IdValues towrite = self.env().all().towrite(self.getName());
-            for (Self record : self) {
+            for (RecordSet record : self) {
                 towrite.set(record.id(), "write_uid", self.env().uid());
                 towrite.set(record.id(), "write_date", null);
             }
@@ -379,7 +374,7 @@ public class BaseModel {
         return true;
     }
 
-    protected boolean _write(Self self, Map<String, Object> vals) {
+    protected boolean _write(RecordSet self, Map<String, Object> vals) {
         if (!self.hasId())
             return true;
         Cursor cr = self.env().cr();
@@ -426,15 +421,15 @@ public class BaseModel {
         return true;
     }
 
-    public void flush(Self self) {
+    public void flush(RecordSet self) {
         flush(self, null, null);
     }
 
-    public void flush(Self self, Collection<String> fnames) {
+    public void flush(RecordSet self, Collection<String> fnames) {
         flush(self, fnames, null);
     }
 
-    public void flush(Self self, @Default Collection<String> fnames, @Default Self records) {
+    public void flush(RecordSet self, @Default Collection<String> fnames, @Default RecordSet records) {
         HashMap<String, IdValues> towrite = self.env().all().towrite();
         if (fnames == null) {
             recompute(self, null, null);
@@ -453,7 +448,7 @@ public class BaseModel {
                 }
                 Dict dict = (Dict) to;
                 boolean hasToWrite = false;
-                for (Self record : records) {
+                for (RecordSet record : records) {
                     Dict kv = (Dict) dict.get(record.id());
                     for (String f : fnames) {
                         if (kv.containsKey(f)) {
@@ -485,7 +480,7 @@ public class BaseModel {
         }
     }
 
-    void flush_model(Self self, String model_name, Map<String, IdValues> towrite, List<Field> fields) {
+    void flush_model(RecordSet self, String model_name, Map<String, IdValues> towrite, List<Field> fields) {
         Collection<HashMap<String, Object>> vals = towrite.get(model_name).values();
         for (Field field : fields) {
             for (HashMap<String, Object> v : vals) {
@@ -508,7 +503,7 @@ public class BaseModel {
         }
     }
 
-    public void recompute(Self self, @Default Collection<String> fnames, @Default Self records) {
+    public void recompute(RecordSet self, @Default Collection<String> fnames, @Default RecordSet records) {
         if (fnames == null) {
 
         } else {
@@ -532,13 +527,13 @@ public class BaseModel {
         }
     }
 
-    private void recompute_process(Self self, Field field) {
+    private void recompute_process(RecordSet self, Field field) {
 
     }
 
-    private void flush_process(Self model, IdValues id_values) {
+    private void flush_process(RecordSet model, IdValues id_values) {
         for (String id : id_values.ids()) {
-            Self recs = model.browse(id);
+            RecordSet recs = model.browse(id);
             try {
                 _write(recs, id_values.get(id));
             } catch (Exception exc) {
@@ -547,7 +542,7 @@ public class BaseModel {
         }
     }
 
-    public List<Dict> read(Self self, Collection<String> fields) {
+    public List<Dict> read(RecordSet self, Collection<String> fields) {
         Collection<Field> _fields = check_field_access_rights(self, "read", fields);
         List<Field> stored_fields = new ArrayList<Field>();
         for (Field field : _fields) {
@@ -564,7 +559,7 @@ public class BaseModel {
         }
         _read(self, _fields);
         List<Dict> result = new ArrayList<Dict>();
-        for (Self record : self) {
+        for (RecordSet record : self) {
             Dict dict = new Dict();
             dict.put("id", record.id());
             boolean error = false;
@@ -582,7 +577,7 @@ public class BaseModel {
         return result;
     }
 
-    public Collection<Field> check_field_access_rights(Self self, String operatoin, Collection<String> fields) {
+    public Collection<Field> check_field_access_rights(RecordSet self, String operatoin, Collection<String> fields) {
         if (self.env().su()) {
             if (fields != null && fields.size() > 0) {
                 ArrayList<Field> result = new ArrayList<Field>();
@@ -617,21 +612,21 @@ public class BaseModel {
         return result;
     }
 
-    public void check_access_rule(Self self, String operation) {
+    public void check_access_rule(RecordSet self, String operation) {
         if (self.env().su())
             return;
 
     }
 
-    public boolean check_access_rights(Self self, String operation) {
+    public boolean check_access_rights(RecordSet self, String operation) {
         return check_access_rights(self, operation, true);
     }
 
-    public boolean check_access_rights(Self self, String operation, boolean raise_exception) {
+    public boolean check_access_rights(RecordSet self, String operation, boolean raise_exception) {
         return self.env("ir.model.access").call(boolean.class, "check", self.getName(), operation, raise_exception);
     }
 
-    private boolean valid(Self self, Field field) {
+    private boolean valid(RecordSet self, Field field) {
         if (StringUtils.hasText(field.groups)) {
             return user_has_group(self, field.groups);
         }
@@ -639,130 +634,11 @@ public class BaseModel {
         return true;
     }
 
-    public boolean user_has_group(Self self, String groups) {
+    public boolean user_has_group(RecordSet self, String groups) {
         return true;
     }
 
-    public MetaModel _build_model(Registry registry) {
-        if (!StringUtils.hasText(_name)) {
-            _name = _inherit;
-        }
-        Class<?> clazz = getClass();
-        if (!StringUtils.hasText(_name))
-            throw new ModelException("Model:" + clazz.getName() + " has not set name or inherit");
-        MetaModel meta;
-        if (registry.contains(_name)) {
-            meta = registry.get(_name);
-        } else {
-            meta = new MetaModel(this);
-        }
-        ArrayList<String> inherits = new ArrayList<String>();
-        if (StringUtils.hasText(_inherit)) {
-            inherits.add(_inherit);
-        }
-        if (_inherits != null) {
-            for (String x : _inherits) {
-                inherits.add(x);
-            }
-        }
-        if (inherits.isEmpty()) {
-            inherits.add("base");
-        }
-        HashMap<String, Field> fieldMetas = new HashMap<String, Field>();
-        ArrayList<MethodInfo> methodMetas = new ArrayList<MethodInfo>();
-
-        for (String base : inherits) {
-            if (!registry.contains(base))
-                throw new ModelException(
-                        "Inherit model:" + base + "defind in class:" + clazz.getName() + " has not be registered");
-            MetaModel parent = registry.get(base);
-            for (Field f : parent.getFields()) {
-                if (!LOG_ACCESS_COLUMNS.contains(f.getName())) {
-                    fieldMetas.putIfAbsent(f.getName(), f);
-                }
-            }
-            for (List<MethodInfo> values : parent.getNameMethods().values()) {
-                for (MethodInfo v : values) {
-                    methodMetas.add(new MethodInfo(meta, v.getMethod()));
-                }
-            }
-        }
-
-        Method[] methods = clazz.getDeclaredMethods();
-        for (Method method : methods) {
-            methodMetas.add(new MethodInfo(meta, method));
-        }
-        meta.setMethods(methodMetas);
-
-        java.lang.reflect.Field[] fields = clazz.getDeclaredFields();
-        for (java.lang.reflect.Field field : fields) {
-            if (!Modifier.isStatic(field.getModifiers()) || !Field.class.isAssignableFrom(field.getType())) {
-                continue;
-            }
-            try {
-                field.setAccessible(true);
-                Field f = (Field) field.get(null);
-                String key = field.getName();
-                f.setName(key);
-                if (StringUtils.hasText(f.compute)) {
-                    Method compute = clazz.getMethod(f.compute, Self.class);
-                    api.depends depends = compute.getAnnotation(api.depends.class);
-                    if (depends != null) {
-                        f.set_depends(depends.value());
-                    }
-                }
-                if (fieldMetas.containsKey(key)) {
-                    Field old = fieldMetas.get(key);
-                    Field new_ = update(old, f);
-                    new_.setMeta(meta);
-                    fieldMetas.replace(key, new_);
-                } else {
-                    f.setMeta(meta);
-                    fieldMetas.put(key, f);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new ModelException("Model:" + getClass().getName() + " register field " + field.getName()
-                        + " error:" + e.getMessage());
-            }
-        }
-        if (meta._log_access) {
-            Field create_uid = jdoo.models.fields.Many2one("res.users").string("Created by").automatic(true)
-                    .readonly(true);
-            create_uid.setName("create_uid");
-            create_uid.setMeta(meta);
-            fieldMetas.put("create_uid", create_uid);
-            Field create_date = jdoo.models.fields.DateTime().string("Created on").automatic(true).readonly(true);
-            create_date.setName("create_date");
-            create_date.setMeta(meta);
-            fieldMetas.put("create_date", create_date);
-            Field write_uid = jdoo.models.fields.Many2one("res.users").string("Last Updated by").automatic(true)
-                    .readonly(true);
-            write_uid.setName("write_uid");
-            write_uid.setMeta(meta);
-            fieldMetas.put("write_uid", write_uid);
-            Field write_date = jdoo.models.fields.DateTime().string("Last Updated on").automatic(true).readonly(true);
-            write_date.setName("write_date");
-            write_date.setMeta(meta);
-            fieldMetas.put("write_date", write_date);
-        }
-        if (StringUtils.hasText(meta._rec_name)) {
-            assert fieldMetas.containsKey(meta._rec_name)
-                    : String.format("Invalid rec_name %s for model %s", meta._rec_name, meta._name);
-        } else if (fieldMetas.containsKey("name")) {
-            meta._rec_name = "name";
-        } else if (fieldMetas.containsKey("x_name")) {
-            meta._rec_name = "x_name";
-        }
-        meta.setFields(fieldMetas.values());
-        return meta;
-    }
-
-    private Field update(Field oldField, Field newField) {
-        return newField;
-    }
-
-    public Self exists(Self self) {
+    public RecordSet exists(RecordSet self) {
         // TODO
         // ids, new_ids = [], []
         // for i in self._ids:
@@ -776,11 +652,11 @@ public class BaseModel {
         return self.browse();
     }
 
-    public void modified(Self self, Collection<String> fnames, @Default("false") boolean create) {
+    public void modified(RecordSet self, Collection<String> fnames, @Default("false") boolean create) {
 
     }
 
-    public void _fetch_field(Self self, Field field) {
+    public void _fetch_field(RecordSet self, Field field) {
         check_field_access_rights(self, "read", Arrays.asList(field.getName()));
         List<Field> fields = new ArrayList<>();
         if (Utils.Maps.get(self.context(), "prefetch_fields", true) && field.prefetch()) {
@@ -800,11 +676,11 @@ public class BaseModel {
         _read(self, fields);
     }
 
-    public void _prepare_setup(Self self) {
+    public void _prepare_setup(RecordSet self) {
 
     }
 
-    public void _setup_base(Self self) {
+    public void _setup_base(RecordSet self) {
         // _inherits_check(self);
         for (String parent : self.getMeta().inherits()) {
             self.env(parent).call("_setup_base");
@@ -812,15 +688,15 @@ public class BaseModel {
         // _add_inherited_fields(self);
     }
 
-    public void _setup_fields(Self self) {
+    public void _setup_fields(RecordSet self) {
 
     }
 
-    public void _setup_complete(Self self) {
+    public void _setup_complete(RecordSet self) {
 
     }
 
-    public void _auto_init(Self self) {
+    public void _auto_init(RecordSet self) {
         Cursor cr = self.env().cr();
         boolean must_create_table = !Sql.table_exists(cr, self.table());
         if (self.getMeta().auto()) {
@@ -844,11 +720,11 @@ public class BaseModel {
         }
     }
 
-    public void init(Self self) {
+    public void init(RecordSet self) {
 
     }
 
-    public void _init_column(Self self, String column_name) {
+    public void _init_column(RecordSet self, String column_name) {
         Field field = self.getField(column_name);
         Object value = null;
         if (field.default_ != null && field.default_value != null) {
@@ -865,7 +741,7 @@ public class BaseModel {
         }
     }
 
-    public boolean _table_has_rows(Self self) {
+    public boolean _table_has_rows(RecordSet self) {
         Cursor cr = self.env().cr();
         cr.execute(String.format("SELECT 1 FROM \"%s\" LIMIT 1", self.table()));
         return cr.rowcount() > 0;
