@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.springframework.util.StringUtils;
 
 import jdoo.util.Default;
 import jdoo.util.Dict;
+import jdoo.util.Linq;
 import jdoo.util.Pair;
 import jdoo.tools.IdValues;
 import jdoo.tools.Sql;
@@ -32,6 +34,7 @@ import jdoo.exceptions.MissingErrorException;
 import jdoo.models._fields.BooleanField;
 import jdoo.models._fields.Many2manyField;
 import jdoo.models._fields.One2manyField;
+import jdoo.apis.api;
 
 public class BaseModel extends MetaModel {
     private static Logger _logger = LogManager.getLogger(BaseModel.class);
@@ -230,7 +233,12 @@ public class BaseModel extends MetaModel {
                 defaults.put(name, ir_defaults.get(name));
                 continue;
             }
-            Field field = self.getField(name);
+            Field field = null;
+            try {
+                field = self.getField(name);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             if (field.$default != null) {
                 defaults.put(name, field.$default.apply(self));
                 continue;
@@ -661,12 +669,96 @@ public class BaseModel extends MetaModel {
         if (cls._setup_done) {
             return;
         }
+        for (Field field : Linq.orderBy(cls.$fields, f -> f._sequence)) {
+            if (!field.automatic() && !field.menual() && !field.inherited) {
+                _add_field(self, field.name, field);
+            }
+        }
+        _add_magic_fields(self);
 
-        // _inherits_check(self);
+        // # 2. add manual fields
+        // if self.pool._init_modules:
+        // self.env['ir.model.fields']._add_manual_fields(self)
+
+        _inherits_check(self);
         for (String parent : self.type()._inherits.keySet()) {
             self.env(parent).call("_setup_base");
         }
-        // _add_inherited_fields(self);
+        _add_inherited_fields(self);
+
+        cls._setup_done = true;
+        if (StringUtils.hasText(cls._rec_name)) {
+            assert cls._fields.containsKey(cls._rec_name)
+                    : String.format("Invalid rec_name %s for model %s", cls._rec_name, cls._name);
+        } else if (cls._fields.containsKey("name")) {
+            cls._rec_name = "name";
+        } else if (cls._fields.containsKey("x_name")) {
+            cls._rec_name = "x_name";
+        }
+    }
+
+    void _add_inherited_fields(RecordSet self) {
+        Map<String, Field> fields = new HashMap<>();
+        for (Entry<String, String> entry : self.type().inherits().entrySet()) {
+            String parent_model = entry.getKey();
+            String parent_field = entry.getValue();
+            RecordSet parent = self.env(parent_model);
+            for (Field field : parent.getFields()) {
+                fields.put(field.name, field.$new(f -> {
+                    f.inherited = true;
+                    f.inherited_field = field;
+                    f.related = new Tuple<>(parent_field, field.name);
+                    f.compute_sudo = false;
+                    f.copy = field.copy;
+                    f.readonly = field.readonly;
+                }));
+            }
+        }
+        for (Entry<String, Field> entry : fields.entrySet()) {
+            String name = entry.getKey();
+            Field field = entry.getValue();
+            if (!self.hasField(name)) {
+                _add_field(self, name, field);
+            }
+        }
+    }
+
+    void _inherits_check(RecordSet self) {
+
+    }
+
+    void _add_field(RecordSet self, String name, Field field) {
+        MetaModel cls = self.type();
+        field.name = name;
+        field.model_name = cls.name();
+        cls._fields.put(name, field);
+        field.setup_base(self, name);
+    }
+
+    void _add_magic_fields(RecordSet self) {
+        java.util.function.BiConsumer<String, Field> add = (name, field) -> {
+            if (!self.hasField(name)) {
+                _add_field(self, name, field);
+            }
+        };
+        _add_field(self, "id", fields.Id().automatic(true));
+        add.accept("display_name",
+                fields.Char().string("Display Name").automatic(true).compute("_compute_display_name"));
+
+        String last_modified_name;
+        if (self.type().log_access()) {
+            add.accept("create_uid", fields.Many2one("res.users").string("Created by").automatic(true).readonly(true));
+            add.accept("create_date", fields.Datetime().string("Created on").automatic(true).readonly(true));
+            add.accept("write_uid",
+                    fields.Many2one("res.users").string("Last Updated by").automatic(true).readonly(true));
+            add.accept("write_date", fields.Datetime().string("Last Updated on").automatic(true).readonly(true));
+            last_modified_name = "compute_concurrency_field_with_access";
+        } else {
+            last_modified_name = "compute_concurrency_field";
+        }
+        // this field must override any other column or field
+        _add_field(self, CONCURRENCY_CHECK_FIELD, fields.Datetime().string("Last Modified on")
+                .compute(last_modified_name).compute_sudo(false).automatic(true));
     }
 
     public void _setup_fields(RecordSet self) {
@@ -726,5 +818,25 @@ public class BaseModel extends MetaModel {
         Cursor cr = self.env().cr();
         cr.execute(String.format("SELECT 1 FROM \"%s\" LIMIT 1", self.table()));
         return cr.rowcount() > 0;
+    }
+
+    public void compute_concurrency_field(RecordSet self) {
+        for (RecordSet record : self) {
+            record.set(CONCURRENCY_CHECK_FIELD, new Date());
+        }
+    }
+
+    @api.depends({ "create_date", "write_date" })
+    public void compute_concurrency_field_with_access(RecordSet self) {
+        for (RecordSet record : self) {
+            Object date = record.get("write_date");
+            if (date == null) {
+                date = record.get("create_date");
+            }
+            if (date == null) {
+                date = new Date();
+            }
+            record.set(CONCURRENCY_CHECK_FIELD, date);
+        }
     }
 }

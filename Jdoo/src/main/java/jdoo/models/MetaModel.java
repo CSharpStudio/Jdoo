@@ -2,6 +2,7 @@ package jdoo.models;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,13 +28,14 @@ import jdoo.data.Cursor;
 public class MetaModel {
     protected static List<String> LOG_ACCESS_COLUMNS = Arrays.asList("create_uid", "create_date", "write_uid",
             "write_date");
+    List<Field> $fields;
 
     private List<String> _inherits_children;
     private Set<String> _inherit_children;
     private Tuple<MetaModel> _bases;
     private String _module;
     private String _original_module;
-    private Map<String, Field> _fields;
+    Map<String, Field> _fields;
     private Map<String, MethodInfo> keyMethods;
     private Map<String, List<MethodInfo>> nameMethods;
     /** don't create any database backend */
@@ -78,7 +80,7 @@ public class MetaModel {
     protected boolean _translate = true;
     protected boolean _check_company_auto = false;
     protected Boolean _log_access;
-
+    static final String CONCURRENCY_CHECK_FIELD = "__last_update";
     boolean _setup_done;
 
     public String name() {
@@ -123,17 +125,12 @@ public class MetaModel {
         _inherit_children = new TreeSet<>();
         _inherits_children = new ArrayList<>();
         _fields = new TreeMap<>();
-    }
-
-    public void setFields(Collection<Field> fields) {
-        this._fields = new HashMap<String, Field>();
-        for (Field field : fields)
-            this._fields.put(field.getName(), field);
+        $fields = new ArrayList<>();
     }
 
     public Collection<Field> getFields() {
         if (_fields == null) {
-            _fields = new HashMap<String, Field>();
+            return Collections.emptyList();
         }
         return _fields.values();
     }
@@ -336,15 +333,25 @@ public class MetaModel {
                 } else {
                     _build_model_check_parent(cls, cls, parent_class);
                 }
-                if (bases.contains(parent_class)) {
-                    bases.remove(parent_class);
-                }
+                bases.remove(parent_class);
                 bases.add(parent_class);
                 parent_class._inherit_children.add(name);
             }
         }
         ModelClass._bases = Tuple.fromCollection(bases);
 
+        for (java.lang.reflect.Field field : clazz.getDeclaredFields()) {
+            if (!Modifier.isStatic(field.getModifiers()) || !Field.class.isAssignableFrom(field.getType())) {
+                continue;
+            }
+            field.setAccessible(true);
+            Field f = (Field) field.get(null);
+            f.name = field.getName();
+            if (f.name.startsWith("$")) {
+                f.name = f.name.substring(1);
+            }
+            ModelClass.$fields.add(f);
+        }
         List<MethodInfo> method_list = new ArrayList<>();
         for (int i = ModelClass._bases.size(); i > 0; i--) {
             MetaModel base = ModelClass._bases.get(i - 1);

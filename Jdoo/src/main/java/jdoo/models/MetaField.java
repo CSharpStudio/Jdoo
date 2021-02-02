@@ -1,5 +1,6 @@
 package jdoo.models;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
@@ -37,7 +38,7 @@ public abstract class MetaField {
     /** whether the field is inherited (_inherits) */
     boolean inherited;
     /** the corresponding inherited field */
-    String inherited_field;
+    Field inherited_field;
 
     /** name of the field */
     String name;
@@ -69,7 +70,7 @@ public abstract class MetaField {
     /** search(recs, operator, value) searches on self */
     protected String search;
     /** sequence of field names, for related fields */
-    protected String related;
+    protected Collection<String> related;
     /** whether ``self`` is company-dependent (property field) */
     protected Boolean company_dependent;
     /** default(recs) returns the default value */
@@ -100,24 +101,14 @@ public abstract class MetaField {
     protected String group_expand;
     /** whether the field is prefetched */
     protected boolean prefetch = true;
-
-    private MetaModel meta;
     protected Dict context;
 
     protected MetaField() {
         _sequence = _global_seq++;
     }
 
-    public void setMeta(MetaModel meta) {
-        this.meta = meta;
-    }
-
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     Dict context() {
@@ -152,7 +143,7 @@ public abstract class MetaField {
     }
 
     public String model_name() {
-        return meta.name();
+        return model_name;
     }
 
     boolean store() {
@@ -247,13 +238,13 @@ public abstract class MetaField {
     public boolean equals(Object obj) {
         if (obj instanceof MetaField) {
             MetaField field = (MetaField) obj;
-            return field.meta.name() == meta.name() && field.name == name;
+            return field.model_name == model_name && field.name == name;
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return (meta.name() + "@" + name).hashCode();
+        return (model_name + "@" + name).hashCode();
     }
 }

@@ -7,6 +7,10 @@ import jdoo.models._fields.*;
 import jdoo.util.Pair;
 
 public class fields {
+    public static IdField Id() {
+        return new IdField();
+    }
+
     public static BooleanField Boolean() {
         return new BooleanField();
     }
@@ -79,11 +83,11 @@ public class fields {
         return new DateField().string(string);
     }
 
-    public static DateTimeField DateTime() {
+    public static DateTimeField Datetime() {
         return new DateTimeField();
     }
 
-    public static DateTimeField DateTime(String string) {
+    public static DateTimeField Datetime(String string) {
         return new DateTimeField().string(string);
     }
 

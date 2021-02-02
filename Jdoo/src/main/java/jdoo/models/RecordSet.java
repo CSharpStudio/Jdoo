@@ -25,7 +25,7 @@ public final class RecordSet implements Iterable<RecordSet> {
     Tuple<String> prefetchIds;
     static Map<Field, Collection<Field>> _field_computed;
 
-    public Map<Field, Collection<Field>> _field_computed(){
+    public Map<Field, Collection<Field>> _field_computed() {
         return _field_computed;
     }
 
@@ -98,6 +98,10 @@ public final class RecordSet implements Iterable<RecordSet> {
 
     public Field getField(String field) {
         return meta.getField(field);
+    }
+
+    public boolean hasField(String field) {
+        return meta._fields.containsKey(field);
     }
 
     public Collection<Field> getFields() {
@@ -224,12 +228,12 @@ public final class RecordSet implements Iterable<RecordSet> {
         return browse(ids);
     }
 
-    public RecordSet and(RecordSet other){
+    public RecordSet and(RecordSet other) {
         Collection<String> other_ids = new HashSet<String>(other.ids());
         return browse(Collections.list(Linq.where(ids(), id -> other_ids.contains(id))));
     }
 
-    public RecordSet or(RecordSet other){
+    public RecordSet or(RecordSet other) {
         Collection<String> ids = new HashSet<String>(ids());
         ids.addAll(other.ids());
         return browse(ids);

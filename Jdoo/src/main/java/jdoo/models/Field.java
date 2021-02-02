@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.springframework.util.StringUtils;
 
@@ -17,6 +18,7 @@ import jdoo.data.Cursor;
 import jdoo.exceptions.AccessErrorException;
 import jdoo.exceptions.MissingErrorException;
 import jdoo.exceptions.ModelException;
+import jdoo.exceptions.TypeErrorException;
 import jdoo.util.Default;
 import jdoo.util.Dict;
 import jdoo.tools.IdValues;
@@ -317,5 +319,19 @@ public class Field extends MetaField {
 
     public void setup_full() {
 
+    }
+
+    public void setup_base(RecordSet self, String name) {
+
+    }
+
+    public Field $new(Consumer<Field> consumer) {
+        try {
+            Field field = (Field) getClass().getConstructor().newInstance();
+            consumer.accept(field);
+            return field;
+        } catch (Exception e) {
+            throw new TypeErrorException(String.format("new field %s error", getClass().getName()), e);
+        }
     }
 }
