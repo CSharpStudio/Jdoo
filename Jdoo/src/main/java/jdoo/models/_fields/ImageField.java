@@ -1,4 +1,4 @@
-package jdoo.models;
+package jdoo.models._fields;
 
 public class ImageField extends _BinaryField<ImageField> {
     Integer max_width;

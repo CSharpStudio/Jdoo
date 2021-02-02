@@ -1,4 +1,4 @@
-package jdoo.base;
+package jdoo.addons.base;
 
 import org.junit.Test;
 

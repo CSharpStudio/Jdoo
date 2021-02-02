@@ -4,15 +4,15 @@
     Base.class })
 
 @jdoo.modules.Manifest(
-    name = "base", 
-    version = "1.3", 
+    name = "web", 
+    version = "1.0", 
     category = "Hidden", 
-    description = "The kernel of Odoo, needed for all installation.\n===================================================", 
-    depends = {}, 
+    description = "Odoo Web core module.\n===================================================\n\nThis module provides the core of the Odoo Web Client.", 
+    depends = {"base"}, 
     data = {}, 
     test = {}, 
-    installable = true, 
-    auto_install = true)
+    auto_install = true,
+    bootstrap = true)
 package jdoo.addons.web;
 
 import jdoo.addons.web.models.*;

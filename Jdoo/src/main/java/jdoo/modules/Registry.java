@@ -42,15 +42,22 @@ public class Registry {
     }
 
     void registerBase() {
-        Class<?> clazz = BaseModel.class;
-        MetaModel base = new MetaModel("base");
-        ArrayList<MethodInfo> methodMetas = new ArrayList<MethodInfo>();
-        Method[] methods = clazz.getDeclaredMethods();
-        for (Method method : methods) {
-            methodMetas.add(new MethodInfo(base, method));
-        }
-        base.setMethods(methodMetas);
-        map.put("base", base);
+        // Class<?> clazz = BaseModel.class;
+        // MetaModel base = new MetaModel("base", "base");
+        // ArrayList<MethodInfo> methodMetas = new ArrayList<MethodInfo>();
+        // Method[] methods = clazz.getDeclaredMethods();
+        // for (Method method : methods) {
+        //     methodMetas.add(new MethodInfo(base, method));
+        // }
+        // base.setMethods(methodMetas);
+        // map.put("base", base);
+        
+        // try {
+        //     MetaModel meta = MetaModel._build_model(BaseModel.class, "base", this, null);
+        //     map.put(meta.name(), meta);
+        // } catch (Exception e) {
+        //     throw new JdooException("register BaseModel failed", e);
+        // }
     }
 
     public void setup_models(Cursor cr) {
@@ -58,7 +65,7 @@ public class Registry {
 
         List<RecordSet> models = new ArrayList<>();
         for (MetaModel m : map.values()) {
-            RecordSet self = env.get(m.getName());
+            RecordSet self = env.get(m.name());
             models.add(self);
             self.call("_prepare_setup");
         }
@@ -77,7 +84,7 @@ public class Registry {
         Environment env = Environment.create(this, cr, init.SUPERUSER_ID, new Dict(), true);
         List<RecordSet> models = new ArrayList<>();
         for (MetaModel m : map.values()) {
-            RecordSet self = env.get(m.getName());
+            RecordSet self = env.get(m.name());
             models.add(self);
             self.call("_auto_init");
             self.call("init");
@@ -91,7 +98,7 @@ public class Registry {
                 throw new ModelException("Model:" + clazz.getName() + " cannot be abstract class");
             try {
                 MetaModel meta = MetaModel._build_model(clazz, module, this, cr);
-                map.put(meta.getName(), meta);
+                map.put(meta.name(), meta);
             } catch (Exception e) {
                 throw new JdooException("load module " + module + " class " + clazz.getName() + " failed", e);
             }

@@ -1,4 +1,4 @@
-package jdoo.models;
+package jdoo.models._fields;
 
 import jdoo.util.Tuple;
 import jdoo.util.Pair;
@@ -10,7 +10,7 @@ public class FloatField extends BaseField<FloatField> {
     }
 
     @Override
-    Pair<String, Object> column_type() {
+    public Pair<String, Object> column_type() {
         if (column_type == null) {
             if (digits != null)
                 column_type = new Pair<>("numeric", "numeric");

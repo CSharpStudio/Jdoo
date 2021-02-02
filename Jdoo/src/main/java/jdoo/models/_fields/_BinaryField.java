@@ -1,4 +1,4 @@
-package jdoo.models;
+package jdoo.models._fields;
 
 import java.util.HashSet;
 import jdoo.util.Pair;
@@ -19,7 +19,7 @@ public abstract class _BinaryField<T extends _BinaryField<T>> extends BaseField<
     }
 
     @Override
-    Pair<String, Object> column_type() {
+    public Pair<String, Object> column_type() {
         if (column_type == null && (attachment == null || !attachment)) {
             column_type = new Pair<>("bytea", "bytea");
         }

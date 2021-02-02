@@ -1,9 +1,10 @@
-package jdoo.models;
+package jdoo.models._fields;
 
 import java.util.List;
 import java.util.function.Function;
 
 import jdoo.data.PgVarchar;
+import jdoo.models.RecordSet;
 import jdoo.util.Pair;
 
 public class SelectionField extends BaseField<SelectionField> {

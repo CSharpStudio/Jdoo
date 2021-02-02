@@ -1,4 +1,4 @@
-package jdoo.models;
+package jdoo.models._fields;
 
 public abstract class StringField<T extends StringField<T>> extends BaseField<T> {
     Boolean translate;

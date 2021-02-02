@@ -1,11 +1,13 @@
 @jdoo.modules.Import({ 
+    Base.class,
+    Unknown.class,
+    IrModel.class,
     IrModelAccess.class, 
     IrDefault.class, 
     PartnerCategory.class, 
     Partner.class, 
     ResBank.class,
     ResUsers.class })
-
 @jdoo.modules.Manifest(
     name = "base", 
     version = "1.3", 

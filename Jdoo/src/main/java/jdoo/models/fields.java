@@ -3,6 +3,7 @@ package jdoo.models;
 import java.util.List;
 import java.util.function.Function;
 
+import jdoo.models._fields.*;
 import jdoo.util.Pair;
 
 public class fields {

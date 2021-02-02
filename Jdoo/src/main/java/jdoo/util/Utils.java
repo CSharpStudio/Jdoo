@@ -10,29 +10,31 @@ import java.util.NoSuchElementException;
 import java.util.Map.Entry;
 
 public class Utils {
-    public class Collections {
 
+    @SuppressWarnings("unchecked")
+    public static <T> ArrayList<T> asList(T... e){
+        ArrayList<T> list = new ArrayList<>();
+        for (T a : e) {
+            list.add(a);
+        }
+        return list;
     }
 
-    public static class Sets {
-        @SuppressWarnings("unchecked")
-        public static <T> HashSet<T> asHashSet(T... e) {
-            HashSet<T> set = new HashSet<>();
-            for (T a : e) {
-                set.add(a);
-            }
-            return set;
+    @SuppressWarnings("unchecked")
+    public static <T> HashSet<T> asHashSet(T... e) {
+        HashSet<T> set = new HashSet<>();
+        for (T a : e) {
+            set.add(a);
         }
+        return set;
     }
 
-    public static class Maps {
-        @SuppressWarnings("unchecked")
-        public static <K, V> V get(Map<K, ?> map, K key, V $default) {
-            if (map.containsKey(key)) {
-                return (V) map.get(key);
-            }
-            return $default;
+    @SuppressWarnings("unchecked")
+    public static <K, V> V get(Map<K, ?> map, K key, V $default) {
+        if (map.containsKey(key)) {
+            return (V) map.get(key);
         }
+        return $default;
     }
 
     public static <K, V> MapBuilder<K, V> map(K key, V value) {

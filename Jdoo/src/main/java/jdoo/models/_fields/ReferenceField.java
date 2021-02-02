@@ -1,4 +1,4 @@
-package jdoo.models;
+package jdoo.models._fields;
 
 public class ReferenceField extends SelectionField{
     

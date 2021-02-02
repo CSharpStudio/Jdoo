@@ -1,5 +1,6 @@
-package jdoo.models;
+package jdoo.models._fields;
 
+import jdoo.models.Domain;
 import jdoo.util.Dict;
 
 public class _RelationalField<T extends _RelationalField<T>> extends BaseField<T> {

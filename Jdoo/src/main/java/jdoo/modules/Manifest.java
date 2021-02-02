@@ -30,10 +30,11 @@ public @interface Manifest {
 
     String[] test() default {};
 
-    boolean installable();
+    boolean installable() default false;
 
     boolean auto_install();
 
     String post_init_hook() default "";
 
+    boolean bootstrap() default false;
 }

@@ -24,45 +24,20 @@ import jdoo.util.Pair;
 import jdoo.tools.IdValues;
 import jdoo.tools.Sql;
 import jdoo.util.Tuple;
-import jdoo.util.Utils;
 import jdoo.data.Cursor;
 import jdoo.apis.Cache;
 import jdoo.apis.Environment;
 import jdoo.data.AsIs;
 import jdoo.exceptions.MissingErrorException;
+import jdoo.models._fields.BooleanField;
+import jdoo.models._fields.Many2manyField;
+import jdoo.models._fields.One2manyField;
 
 public class BaseModel extends MetaModel {
     private static Logger _logger = LogManager.getLogger(BaseModel.class);
     MetaModel meta;
     static List<String> LOG_ACCESS_COLUMNS = Arrays.asList("create_uid", "create_date", "write_uid", "write_date");
     Map<Field, Object> _field_computed = new HashMap<>();
-
-    // protected boolean _auto = false; // don't create any database backend
-    // protected boolean _register = false; // not visible in ORM registry
-    // protected boolean _abstract = true; // whether model is abstract
-    // protected boolean _transient = false; // whether model is transient
-
-    // protected String _name; // the model name
-    // protected String _description; // the model's informal name
-    // protected boolean _custom = false; // should be True for custom models only
-
-    // protected String _inherit; // Python-inherited models ('model' or ['model'])
-    // protected String[] _inherits; // inherited models {'parent_model': 'm2o_field'}
-
-    // protected String _table; // SQL table name used by model
-    // protected String[] _sql_constraints; // SQL constraints [(name, sql_def, message)]
-
-    // protected String _rec_name; // field to use for labeling records
-    // protected String _order = "id"; // default order for searching results
-    // protected String _parent_name = "parent_id"; // the many2one field used as parent field
-    // protected boolean _parent_store = false; // set to True to compute parent_path field
-    // protected String _date_name = "date"; // field to use for default calendar view
-    // protected String _fold_name = "fold"; // field to determine folded groups in kanban views
-
-    // protected boolean _needaction = false; // whether the model supports "need actions" (see mail)
-    // protected boolean _translate = true; // False disables translations export for this model
-    // protected boolean _check_company_auto = false;
-    // protected boolean _log_access = true;
 
     protected RecordSet _create(RecordSet self, Collection<Dict> data_list) {
         List<String> ids = new ArrayList<>();
@@ -154,7 +129,7 @@ public class BaseModel extends MetaModel {
         check_access_rights(self, "create");
         Set<String> bad_names = new HashSet<String>();
         Collections.addAll(bad_names, "id", "parent_path");
-        if (self.getMeta().log_access()) {
+        if (self.type().log_access()) {
             bad_names.addAll(LOG_ACCESS_COLUMNS);
         }
         List<Dict> data_list = new ArrayList<Dict>();
@@ -174,9 +149,9 @@ public class BaseModel extends MetaModel {
                 if (bad_names.contains(key))
                     continue;
                 Object val = vals.get(key);
-                Field field = self.getMeta().findField(key);
+                Field field = self.type().findField(key);
                 if (field == null) {
-                    System.out.printf("%s.create() with unknown fields: %s", self.getName(), key);
+                    System.out.printf("%s.create() with unknown fields: %s", self.name(), key);
                     continue;
                 }
                 if (field.company_dependent()) {
@@ -241,7 +216,7 @@ public class BaseModel extends MetaModel {
     public Dict default_get(RecordSet self, Collection<String> fields_list) {
         Dict defaults = new Dict();
         Map<String, Object> ir_defaults = self.env("ir.default").call(new TypeReference<Map<String, Object>>() {
-        }, "get_model_defaults", self.getName(), false);
+        }, "get_model_defaults", self.name(), false);
 
         Map<String, List<String>> parent_fields = new HashMap<String, List<String>>();
 
@@ -256,8 +231,8 @@ public class BaseModel extends MetaModel {
                 continue;
             }
             Field field = self.getField(name);
-            if (field.default_ != null || field.default_value != null) {
-                defaults.put(name, field.get_default_value(self));
+            if (field.$default != null) {
+                defaults.put(name, field.$default.apply(self));
                 continue;
             }
             if (field.inherited) {
@@ -274,7 +249,7 @@ public class BaseModel extends MetaModel {
         }
 
         for (String fname : defaults.keySet()) {
-            Field field = self.getMeta().findField(fname);
+            Field field = self.type().findField(fname);
             if (field != null) {
                 Object value = field.convert_to_cache(defaults.get(fname), self, false);
                 defaults.put(fname, field.convert_to_write(value, self));
@@ -289,7 +264,7 @@ public class BaseModel extends MetaModel {
     }
 
     public Tuple<String> name_create(RecordSet self, String name) {
-        String rec_name = self.getMeta().rec_name();
+        String rec_name = self.type().rec_name();
         if (StringUtils.hasText(rec_name)) {
             RecordSet record = create(self, new Dict().set(rec_name, name));
             return name_get(record).get(0);
@@ -299,8 +274,8 @@ public class BaseModel extends MetaModel {
 
     public List<Tuple<String>> name_get(RecordSet self) {
         List<Tuple<String>> result = new ArrayList<>();
-        String rec_name = self.getMeta().rec_name();
-        Field field = self.getMeta().findField(rec_name);
+        String rec_name = self.type().rec_name();
+        Field field = self.type().findField(rec_name);
         if (field != null) {
             for (RecordSet record : self) {
                 Tuple<String> tuple = new Tuple<>(record.id(),
@@ -309,7 +284,7 @@ public class BaseModel extends MetaModel {
             }
         } else {
             for (RecordSet record : self) {
-                Tuple<String> tuple = new Tuple<>(record.id(), String.format("%s.%s", record.getName(), record.id()));
+                Tuple<String> tuple = new Tuple<>(record.id(), String.format("%s.%s", record.name(), record.id()));
                 result.add(tuple);
             }
         }
@@ -355,8 +330,8 @@ public class BaseModel extends MetaModel {
         // Field field = self.getField(fname);
         // }
 
-        if (self.getMeta().log_access()) {
-            IdValues towrite = self.env().all().towrite(self.getName());
+        if (self.type().log_access()) {
+            IdValues towrite = self.env().all().towrite(self.name());
             for (RecordSet record : self) {
                 towrite.set(record.id(), "write_uid", self.env().uid());
                 towrite.set(record.id(), "write_date", null);
@@ -383,7 +358,7 @@ public class BaseModel extends MetaModel {
         for (Entry<String, Object> e : vals.entrySet()) {
             String name = e.getKey();
             Object val = e.getValue();
-            if (self.getMeta().log_access() && LOG_ACCESS_COLUMNS.contains(name) && val == null)
+            if (self.type().log_access() && LOG_ACCESS_COLUMNS.contains(name) && val == null)
                 continue;
             Field field = self.getField(name);
             assert field.store();
@@ -391,7 +366,7 @@ public class BaseModel extends MetaModel {
             params.add(val);
         }
 
-        if (self.getMeta().log_access()) {
+        if (self.type().log_access()) {
             if (vals.get("write_uid") == null) {
                 columns.add("\"write_uid\"=%s");
                 params.add(self.env().uid());
@@ -414,7 +389,7 @@ public class BaseModel extends MetaModel {
                 if (cr.rowcount() != sub_ids.size())
                     throw new MissingErrorException(String.format(
                             "One of the records you are trying to modify has already been deleted (Document type: %s).",
-                            self.getMeta().description()));
+                            self.type().description()));
             }
         }
 
@@ -442,7 +417,7 @@ public class BaseModel extends MetaModel {
             recompute(self, fnames, records);
 
             if (records != null) {
-                Object to = towrite.get(self.getName());
+                Object to = towrite.get(self.name());
                 if (to == null) {
                     return;
                 }
@@ -623,7 +598,7 @@ public class BaseModel extends MetaModel {
     }
 
     public boolean check_access_rights(RecordSet self, String operation, boolean raise_exception) {
-        return self.env("ir.model.access").call(boolean.class, "check", self.getName(), operation, raise_exception);
+        return self.env("ir.model.access").call(boolean.class, "check", self.name(), operation, raise_exception);
     }
 
     private boolean valid(RecordSet self, Field field) {
@@ -659,7 +634,7 @@ public class BaseModel extends MetaModel {
     public void _fetch_field(RecordSet self, Field field) {
         check_field_access_rights(self, "read", Arrays.asList(field.getName()));
         List<Field> fields = new ArrayList<>();
-        if (Utils.Maps.get(self.context(), "prefetch_fields", true) && field.prefetch()) {
+        if (self.context().get("prefetch_fields", true) && field.prefetch()) {
             for (Field f : self.getFields()) {
                 if (f.prefetch() && !(StringUtils.hasText(f.groups) && !user_has_group(self, f.groups))
                         && !(StringUtils.hasText(f.compute) && self.env().records_to_compute(f).hasId())) {
@@ -677,12 +652,18 @@ public class BaseModel extends MetaModel {
     }
 
     public void _prepare_setup(RecordSet self) {
-
+        MetaModel cls = self.type();
+        cls._setup_done = false;
     }
 
     public void _setup_base(RecordSet self) {
+        MetaModel cls = self.type();
+        if (cls._setup_done) {
+            return;
+        }
+
         // _inherits_check(self);
-        for (String parent : self.getMeta().inherits()) {
+        for (String parent : self.type()._inherits.keySet()) {
             self.env(parent).call("_setup_base");
         }
         // _add_inherited_fields(self);
@@ -699,9 +680,9 @@ public class BaseModel extends MetaModel {
     public void _auto_init(RecordSet self) {
         Cursor cr = self.env().cr();
         boolean must_create_table = !Sql.table_exists(cr, self.table());
-        if (self.getMeta().auto()) {
+        if (self.type()._auto) {
             if (must_create_table) {
-                Sql.create_model_table(cr, self.table(), self.getMeta().description());
+                Sql.create_model_table(cr, self.table(), self.type().description());
             }
             // _check_removed_columns(self)
             Map<String, Dict> columns = Sql.table_columns(cr, self.table());
@@ -727,8 +708,8 @@ public class BaseModel extends MetaModel {
     public void _init_column(RecordSet self, String column_name) {
         Field field = self.getField(column_name);
         Object value = null;
-        if (field.default_ != null && field.default_value != null) {
-            value = field.get_default_value(self);
+        if (field.$default != null) {
+            value = field.$default.apply(self);
             value = field.convert_to_write(value, self);
             value = field.convert_to_column(value, self, null, true);
         }

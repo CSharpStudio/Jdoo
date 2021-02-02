@@ -9,7 +9,7 @@ public class api {
     @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface depends {
-        String[] value();
+        String[] value() default {};
     }
 
     @Target(ElementType.METHOD)

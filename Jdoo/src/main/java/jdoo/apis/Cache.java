@@ -48,7 +48,7 @@ public class Cache {
                 return value;
             }
         }
-        throw new CacheMissException("Cache " + record.getMeta().getName() + "." + field.getName() + " not found");
+        throw new CacheMissException("Cache " + record.type().name() + "." + field.getName() + " not found");
     }
 
     public Object get(RecordSet record, Field field, Object defalult_) {

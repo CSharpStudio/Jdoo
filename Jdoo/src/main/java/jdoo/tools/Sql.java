@@ -133,7 +133,7 @@ public class Sql {
 
     public static boolean fix_foreign_key(Cursor cr, String tablename1, String columnname1, String tablename2,
             String columnname2, String ondelete) {
-        String deltype = Utils.Maps.get(_CONFDELTYPES, ondelete.toUpperCase(), "a");
+        String deltype = Utils.get(_CONFDELTYPES, ondelete.toUpperCase(), "a");
         String query = "SELECT con.conname, c2.relname, a2.attname, con.confdeltype as deltype \n"
                 + "  FROM pg_constraint as con, pg_class as c1, pg_class as c2,           \n"
                 + "	   pg_attribute as a1, pg_attribute as a2                             \n"

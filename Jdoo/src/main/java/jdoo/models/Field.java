@@ -23,6 +23,10 @@ import jdoo.tools.IdValues;
 import jdoo.tools.Sql;
 import jdoo.util.Tuple;
 
+/**
+ * The field descriptor contains the field definition, and manages accesses and
+ * assignments of the corresponding field on records.
+ */
 public class Field extends MetaField {
     public Object get(RecordSet record) {
         if (!record.hasId()) {
@@ -61,7 +65,8 @@ public class Field extends MetaField {
                     value = convert_to_cache(null, record, false);
                     env.cache().set(record, this, value);
                 } else {
-                    RecordSet recs = this.recursive() || record.id().isBlank() ? record : record._in_cache_without(this);
+                    RecordSet recs = this.recursive() || record.id().isBlank() ? record
+                            : record._in_cache_without(this);
                     try {
                         compute_value(recs);
                     } catch (AccessErrorException e) {
@@ -151,7 +156,7 @@ public class Field extends MetaField {
             cache.set(rec, this, cache_value);
         }
         if (store()) {
-            IdValues towrite = records.env().all().towrite(records.getName());
+            IdValues towrite = records.env().all().towrite(records.name());
             RecordSet record = records.browse(records.id());
             Object write_value = convert_to_record(cache_value, record);
             Object column_value = convert_to_column(write_value, record, null, true);
@@ -166,7 +171,8 @@ public class Field extends MetaField {
         return value == null ? "" : value.toString();
     }
 
-    Object convert_to_column(Object value, RecordSet record, @Default Object values, @Default("true") boolean validate) {
+    Object convert_to_column(Object value, RecordSet record, @Default Object values,
+            @Default("true") boolean validate) {
         if (value == null)
             return null;
         return value.toString();
@@ -234,7 +240,7 @@ public class Field extends MetaField {
             update_db_index(model, column);
             return false;
         } catch (Exception e) {
-            throw new ModelException(String.format("model %s field %s update_db error", model.getName(), getName()));
+            throw new ModelException(String.format("model %s field %s update_db error", model.name(), getName()));
         }
     }
 
@@ -247,7 +253,7 @@ public class Field extends MetaField {
         if (column.get("udt_name").equals(column_type().first())) {
             return;
         }
-        if (column_cast_from().contains(column.get("udt_name"))) {
+        if (column_cast_from.contains(column.get("udt_name"))) {
             Sql.convert_column(cr, model.table(), getName(), column_type().second().toString());
         } else {
             String newname = getName() + "_moved{0}";
@@ -309,7 +315,7 @@ public class Field extends MetaField {
         return new Tuple<>(objs);
     }
 
-    public void setup_full(){
-        
+    public void setup_full() {
+
     }
 }

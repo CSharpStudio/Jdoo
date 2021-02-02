@@ -38,8 +38,8 @@ public final class RecordSet implements Iterable<RecordSet> {
         return env;
     }
 
-    String table() {
-        return meta.getName().replace('.', '_');
+    public String table() {
+        return meta.name().replace('.', '_');
     }
 
     public Dict context() {
@@ -75,7 +75,7 @@ public final class RecordSet implements Iterable<RecordSet> {
     public String id() {
         if (hasId())
             return ids.get(0);
-        throw new ModelException("Model:" + meta.getName() + " ids not set");
+        throw new ModelException("Model:" + meta.name() + " ids not set");
     }
 
     public boolean hasId() {
@@ -88,11 +88,11 @@ public final class RecordSet implements Iterable<RecordSet> {
         }
     }
 
-    public String getName() {
-        return meta.getName();
+    public String name() {
+        return meta.name();
     }
 
-    public MetaModel getMeta() {
+    public MetaModel type() {
         return meta;
     }
 
@@ -190,7 +190,7 @@ public final class RecordSet implements Iterable<RecordSet> {
 
     @Override
     public String toString() {
-        return String.format("%s%s", getName(), ids());
+        return String.format("%s%s", name(), ids());
     }
 
     public RecordSet sudo() {

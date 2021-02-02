@@ -19,7 +19,7 @@ public class Partner extends Model {
 
     public Partner() {
         _description = "Contact";
-        //_inherits = new String[] { "format.address.mixin", "image.mixin" };
+        //_inherit = Arrays.asList("format.address.mixin", "image.mixin");
         _name = "res.partner";
         _order = "display_name";
     }

@@ -1,4 +1,4 @@
-package jdoo.models;
+package jdoo.models._fields;
 
 import jdoo.util.Tuple;
 import jdoo.util.Pair;

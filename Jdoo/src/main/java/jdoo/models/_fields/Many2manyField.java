@@ -1,7 +1,8 @@
-package jdoo.models;
+package jdoo.models._fields;
 
 import java.util.Map;
 
+import jdoo.models.RecordSet;
 import jdoo.util.Dict;
 
 public class Many2manyField extends _RelationalMultiField<Many2manyField> {

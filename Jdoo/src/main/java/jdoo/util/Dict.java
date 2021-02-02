@@ -17,4 +17,12 @@ public class Dict extends HashMap<String, Object> {
     public Object setdefault(String key, Object value) {
         return Utils.setdefault(this, key, value);
     }
+
+    @SuppressWarnings("unchecked")
+    public <V> V get(Object key, V $default){
+        if (containsKey(key)) {
+            return (V) get(key);
+        }
+        return $default;
+    }
 }

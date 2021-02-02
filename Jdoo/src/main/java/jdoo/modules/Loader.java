@@ -48,9 +48,9 @@ public class Loader {
         // jdoo.base.__init__.init();
 
         // for (List<Class<?>> modules : module_to_models.values()) {
-        //     for (Class<?> clazz : modules) {
-        //         registry.register(clazz);
-        //     }
+        // for (Class<?> clazz : modules) {
+        // registry.register(clazz);
+        // }
         // }
 
         try (Cursor cr = db.cursor()) {
@@ -64,8 +64,8 @@ public class Loader {
     }
 
     public static void load_module_graph(Cursor cr, Registry registry) {
-        List<String> graph = Arrays.asList("web, base");
-        for(String $package : graph){
+        List<String> graph = Arrays.asList("base", "web");
+        for (String $package : graph) {
             registry.load(cr, $package);
         }
     }

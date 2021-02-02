@@ -9,9 +9,104 @@ import jdoo.util.Dict;
 import jdoo.util.Pair;
 import jdoo.util.Tuple;
 
+/**
+ * Meta attrs for field classes
+ */
 public abstract class MetaField {
-    private String name;
+    static int _global_seq = 0;
+    /** whether the field is a relational one */
+    protected boolean relational = false;
+    /** whether the field is translated */
+    Boolean translate;
+    /** database column type (ident, spec) */
+    protected Pair<String, Object> column_type;
+    /** placeholder for value in queries */
+    String column_format = "%s";
+    /** column types that may be cast to this */
+    protected Tuple<String> column_cast_from = Tuple.emptyTuple();
+
+    /** the field's module name */
+    String _module;
+    /** modules that define this field */
+    String _modules;
+    /** absolute ordering of the field */
+    int _sequence;
+
+    /** whether the field is automatically created ("magic" field) */
+    protected Boolean automatic;
+    /** whether the field is inherited (_inherits) */
+    boolean inherited;
+    /** the corresponding inherited field */
+    String inherited_field;
+
+    /** name of the field */
+    String name;
+    /** name of the model of this field */
+    String model_name;
+    /** name of the model of values (if relational) */
+    protected String comodel_name;
+
+    /** whether the field is stored in database */
+    protected Boolean store;
+    /** whether the field is indexed in database */
+    protected Boolean index;
+    /** whether the field is a custom field */
+    protected boolean menual;
+    /** whether the field is copied over by BaseModel.copy() */
+    protected Boolean copy;
+    /** collection of field dependencies */
+    protected String[] depends;
+    /** collection of context key dependencies */
+    protected Set<String> depends_context;
+    /** whether self depends on itself */
+    protected Boolean recursive;
+    /** compute(recs) computes field on recs */
+    protected String compute;
+    /** whether field should be recomputed as superuser */
+    protected Boolean compute_sudo;
+    /** inverse(recs) inverses field on recs */
+    protected String inverse;
+    /** search(recs, operator, value) searches on self */
+    protected String search;
+    /** sequence of field names, for related fields */
+    protected String related;
+    /** whether ``self`` is company-dependent (property field) */
+    protected Boolean company_dependent;
+    /** default(recs) returns the default value */
+    protected Function<RecordSet, Object> $default;
+
+    /** field label */
+    protected String string;
+    /** field tooltip */
+    protected String help;
+    /** whether the field is readonly */
+    protected Boolean readonly;
+    /** whether the field is required */
+    protected Boolean required;
+    /** set readonly and required depending on state */
+    protected HashMap<String, Set<State>> states;
+    /** csv list of group xml ids */
+    protected String groups;
+    /** whether the field may trigger a "user-onchange" */
+    protected Boolean change_default;
+    /** whether the field is deprecated */
+    protected Boolean deprecated;
+
+    /** corresponding related field */
+    protected Field related_field;
+    /** operator for aggregating values */
+    protected String group_operator;
+    /** name of method to expand groups in read_group() */
+    protected String group_expand;
+    /** whether the field is prefetched */
+    protected boolean prefetch = true;
+
     private MetaModel meta;
+    protected Dict context;
+
+    protected MetaField() {
+        _sequence = _global_seq++;
+    }
 
     public void setMeta(MetaModel meta) {
         this.meta = meta;
@@ -25,22 +120,6 @@ public abstract class MetaField {
         this.name = name;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof MetaField) {
-            MetaField field = (MetaField) obj;
-            return field.meta.getName() == meta.getName() && field.name == name;
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return (meta.getName() + "@" + name).hashCode();
-    }
-
-    protected Dict context;
-
     Dict context() {
         if (context == null) {
             context = new Dict();
@@ -48,83 +127,49 @@ public abstract class MetaField {
         return context;
     }
 
-    protected String column_format = "%s";
-
-    protected boolean relational = false;
-
     boolean relational() {
         return relational;
     }
-
-    protected Boolean translate;
 
     boolean translate() {
         return translate != null && translate;
     }
 
-    Tuple<String> column_cast_from;
-
-    Tuple<String> column_cast_from() {
-        if (column_cast_from == null)
-            column_cast_from = Tuple.emptyTuple();
-        return column_cast_from;
-    }
-
-    Pair<String, Object> column_type;
-
-    Pair<String, Object> column_type() {
+    public Pair<String, Object> column_type() {
         return column_type;
     }
-
-    protected String _module;
 
     String module() {
         return _module;
     }
 
-    protected Boolean automatic;
-
     boolean automatic() {
         return automatic != null && automatic;
     }
-
-    protected boolean inherited;
 
     boolean inherited() {
         return inherited;
     }
 
     public String model_name() {
-        return meta.getName();
+        return meta.name();
     }
-
-    protected String comodel_name;
-
-    protected Boolean store;
 
     boolean store() {
         return store == null || store;// default is true
     }
 
-    protected Boolean index;
-
     boolean index() {
         return index != null && index;
     }
-
-    protected boolean menual;
 
     boolean menual() {
         return menual;
     }
 
-    protected Boolean copy;
-
     boolean copy() {
         return copy == null || copy;// default is true
     }
-
-    protected String[] depends;
 
     String[] depends() {
         if (depends == null)
@@ -136,66 +181,31 @@ public abstract class MetaField {
         this.depends = depends;
     }
 
-    protected Set<String> depends_context;
-
     public Set<String> depends_context() {
         if (depends_context == null)
             depends_context = Collections.emptySet();
         return depends_context;
     }
 
-    protected Boolean recursive;
-
     boolean recursive() {
         return recursive != null && recursive;
     }
-
-    protected String compute;
-
-    protected Boolean compute_sudo;
 
     boolean compute_sudo() {
         return compute_sudo == null || compute_sudo;// default is true
     }
 
-    protected String inverse;
-
-    protected String search;
-
-    protected String related;
-
-    protected Boolean company_dependent;
-
     boolean company_dependent() {
         return company_dependent != null && company_dependent;
     }
-
-    protected Function<RecordSet, Object> default_;
-    protected Object default_value;
-
-    Object get_default_value(RecordSet self) {
-        if (default_ != null)
-            return default_.apply(self);
-        return default_value;
-    }
-
-    protected String string;
-
-    protected String help;
-
-    protected Boolean readonly;
 
     boolean readonly() {
         return readonly != null && readonly;
     }
 
-    protected Boolean required;
-
     boolean required() {
         return required != null && required;
     }
-
-    protected HashMap<String, Set<State>> states;
 
     HashMap<String, Set<State>> states() {
         if (states == null)
@@ -221,30 +231,29 @@ public abstract class MetaField {
         }
     }
 
-    protected String groups;
-
-    protected Boolean change_default;
-
     boolean change_default() {
         return change_default != null && change_default;
     }
-
-    protected Boolean deprecated;
 
     boolean deprecated() {
         return deprecated != null && deprecated;
     }
 
-    protected Field related_field;
-
-    protected String group_operator;
-
-    protected String group_expand;
-
-    protected boolean prefetch = true;
-
     boolean prefetch() {
         return prefetch;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof MetaField) {
+            MetaField field = (MetaField) obj;
+            return field.meta.name() == meta.name() && field.name == name;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return (meta.name() + "@" + name).hashCode();
+    }
 }

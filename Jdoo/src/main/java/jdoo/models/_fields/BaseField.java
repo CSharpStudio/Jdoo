@@ -1,8 +1,11 @@
-package jdoo.models;
+package jdoo.models._fields;
 
 import java.util.HashMap;
 import java.util.Set;
 import java.util.function.Function;
+
+import jdoo.models.Field;
+import jdoo.models.RecordSet;
 
 public class BaseField<T extends BaseField<T>> extends Field {
 
@@ -116,13 +119,13 @@ public class BaseField<T extends BaseField<T>> extends Field {
 
     @SuppressWarnings("unchecked")
     public T default_(Object defaultValue) {
-        this.default_value = defaultValue;
+        this.$default = self -> defaultValue;
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T default_(Function<RecordSet, Object> defaultFunc) {
-        this.default_ = defaultFunc;
+        this.$default = defaultFunc;
         return (T) this;
     }
 

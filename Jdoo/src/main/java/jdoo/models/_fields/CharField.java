@@ -1,4 +1,4 @@
-package jdoo.models;
+package jdoo.models._fields;
 
 import jdoo.data.PgVarchar;
 import jdoo.util.Tuple;
@@ -17,7 +17,7 @@ public class CharField extends StringField<CharField> {
     }
 
     @Override
-    Pair<String, Object> column_type() {
+    public Pair<String, Object> column_type() {
         if (column_type == null) {
             column_type = new Pair<>("varchar", new PgVarchar(size));
         }
