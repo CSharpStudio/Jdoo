@@ -18,7 +18,7 @@ public class PartnerCategory extends Model {
     static Field parent_id = fields.Many2one("res.partner.category").string("Parent Category").index(true)
             .ondelete("cascade");
     static Field child_ids = fields.One2many("res.partner.category", "parent_id").string("Child Tags");
-    static Field active = fields.Boolean().default_(true)
+    static Field active = fields.Boolean().$default(true)
             .help("The active field allows you to hide the category without removing it.");
     static Field parent_path = fields.Char().index(true);
     static Field partner_ids = fields.Many2many("res.partner").column1("category_id").column2("partner_id")

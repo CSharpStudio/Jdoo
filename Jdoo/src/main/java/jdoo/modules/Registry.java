@@ -27,7 +27,6 @@ public class Registry {
 
     public Registry(String tenant) {
         this.tenant = tenant;
-        registerBase();
     }
 
     public MetaModel get(String model) {
@@ -37,27 +36,12 @@ public class Registry {
         return m;
     }
 
-    public boolean contains(String model) {
-        return map.containsKey(model);
+    public void put(String name, MetaModel model) {
+        map.put(name, model);
     }
 
-    void registerBase() {
-        // Class<?> clazz = BaseModel.class;
-        // MetaModel base = new MetaModel("base", "base");
-        // ArrayList<MethodInfo> methodMetas = new ArrayList<MethodInfo>();
-        // Method[] methods = clazz.getDeclaredMethods();
-        // for (Method method : methods) {
-        //     methodMetas.add(new MethodInfo(base, method));
-        // }
-        // base.setMethods(methodMetas);
-        // map.put("base", base);
-        
-        // try {
-        //     MetaModel meta = MetaModel._build_model(BaseModel.class, "base", this, null);
-        //     map.put(meta.name(), meta);
-        // } catch (Exception e) {
-        //     throw new JdooException("register BaseModel failed", e);
-        // }
+    public boolean contains(String model) {
+        return map.containsKey(model);
     }
 
     public void setup_models(Cursor cr) {
@@ -97,11 +81,14 @@ public class Registry {
             if (Modifier.isAbstract(clazz.getModifiers()))
                 throw new ModelException("Model:" + clazz.getName() + " cannot be abstract class");
             try {
-                MetaModel meta = MetaModel._build_model(clazz, module, this, cr);
-                map.put(meta.name(), meta);
+                MetaModel._build_model(clazz, module, this, cr);
             } catch (Exception e) {
                 throw new JdooException("load module " + module + " class " + clazz.getName() + " failed", e);
             }
         }
+    }
+
+    public void post_init(){
+        
     }
 }

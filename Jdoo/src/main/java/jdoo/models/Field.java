@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import jdoo.apis.Cache;
@@ -21,6 +22,7 @@ import jdoo.exceptions.ModelException;
 import jdoo.exceptions.TypeErrorException;
 import jdoo.util.Default;
 import jdoo.util.Dict;
+import jdoo.util.Pair;
 import jdoo.tools.IdValues;
 import jdoo.tools.Sql;
 import jdoo.util.Tuple;
@@ -37,7 +39,7 @@ public class Field extends MetaField {
         }
         record.ensure_one();
         Environment env = record.env();
-        if (StringUtils.hasText(compute) && env.all().tocompute(this).contains(record.id())
+        if (StringUtils.hasText(compute()) && env.all().tocompute(this).contains(record.id())
                 && !env.is_protected(this, record)) {
             RecordSet recs = this.recursive() ? record : env.records_to_compute(this);
             try {
@@ -62,7 +64,7 @@ public class Field extends MetaField {
                             + String.format("(Record: %s, User: %s)", record, env.uid()));
                 }
                 value = env.cache().get(record, this);
-            } else if (StringUtils.hasText(compute)) {
+            } else if (StringUtils.hasText(compute())) {
                 if (env.is_protected(this, record)) {
                     value = convert_to_cache(null, record, false);
                     env.cache().set(record, this, value);
@@ -103,7 +105,7 @@ public class Field extends MetaField {
             records = records.sudo();
         }
         try {
-            records.call(compute, records);
+            records.call(compute(), records);
         } catch (Exception e) {
             throw e;
         }
@@ -147,6 +149,16 @@ public class Field extends MetaField {
         }
     }
 
+    public void read(RecordSet records) {
+        throw new UnsupportedOperationException(String.format("Method read() undefined on %s", this));
+    }
+
+    public void create(List<Pair<RecordSet, Object>> record_values) {
+        for (Pair<RecordSet, Object> p : record_values) {
+            write(p.first(), p.second());
+        }
+    }
+
     public RecordSet write(RecordSet records, Object value) {
         records.env().remove_to_compute(this, records);
         Cache cache = records.env().cache();
@@ -169,11 +181,11 @@ public class Field extends MetaField {
         return records;
     }
 
-    String convert_to_display_name(Object value, RecordSet record) {
+    public String convert_to_display_name(Object value, RecordSet record) {
         return value == null ? "" : value.toString();
     }
 
-    Object convert_to_column(Object value, RecordSet record, @Default Object values,
+    public Object convert_to_column(Object value, RecordSet record, @Default Dict values,
             @Default("true") boolean validate) {
         if (value == null)
             return null;
@@ -234,6 +246,23 @@ public class Field extends MetaField {
         return convert_to_read(record_value, record);
     }
 
+    /**
+     * Convert ``value`` from the record format to the format returned by method
+     * :meth:`BaseModel.onchange`.
+     * 
+     * @param value
+     * @param record
+     * @param names  a tree of field names (for relational fields only)
+     * @return
+     */
+    public Object convert_to_onchange(Object value, RecordSet record, Collection<String> names) {
+        return convert_to_read(value, record);
+    }
+
+    public Object convert_to_export(Object value, RecordSet record) {
+        return value == null ? "" : value;
+    }
+
     public boolean update_db(RecordSet model, Map<String, Dict> columns) {
         try {
             Dict column = columns.get(getName());
@@ -246,10 +275,10 @@ public class Field extends MetaField {
         }
     }
 
-    public void update_db_column(RecordSet model, Dict column) {
+    public void update_db_column(RecordSet model, @Nullable Dict column) {
         Cursor cr = model.env().cr();
         if (column == null) {
-            Sql.create_column(cr, model.table(), getName(), column_type().second().toString(), string);
+            Sql.create_column(cr, model.table(), getName(), column_type().second().toString(), string());
             return;
         }
         if (column.get("udt_name").equals(column_type().first())) {
@@ -267,11 +296,11 @@ public class Field extends MetaField {
                 Sql.drop_not_null(cr, model.table(), getName());
             }
             Sql.rename_column(cr, model.table(), getName(), MessageFormat.format(newname, i));
-            Sql.create_column(cr, model.table(), getName(), column_type().second().toString(), string);
+            Sql.create_column(cr, model.table(), getName(), column_type().second().toString(), string());
         }
     }
 
-    public void update_db_notnull(RecordSet model, Dict column) {
+    public void update_db_notnull(RecordSet model, @Nullable Dict column) {
         boolean has_notnull = column != null && column.get("is_nullable").equals("NO");
         if (column != null || (required() && !has_notnull)) {
             if (model.call(Boolean.class, "_table_has_rows")) {
@@ -286,7 +315,7 @@ public class Field extends MetaField {
         }
     }
 
-    public void update_db_index(RecordSet model, Dict column) {
+    public void update_db_index(RecordSet model, @Nullable Dict column) {
 
     }
 
@@ -317,11 +346,35 @@ public class Field extends MetaField {
         return new Tuple<>(objs);
     }
 
-    public void setup_full() {
+    public void setup_full(RecordSet model) {
 
     }
 
-    public void setup_base(RecordSet self, String name) {
+    public void setup_base(RecordSet model, String name) {
+        if (_setup_done != SetupState.None && related() == null) {
+            _setup_done = SetupState.Base;
+        } else {
+            _setup_attrs(model, name);
+            if (related() == null) {
+                _setup_regular_base(model);
+            }
+            _setup_done = SetupState.Base;
+        }
+    }
+
+    public void _setup_attrs(RecordSet model, String name) {
+
+    }
+
+    public void _setup_regular_base(RecordSet model) {
+
+    }
+
+    public void _setup_regular_full(RecordSet model) {
+
+    }
+
+    public void _setup_related_full(RecordSet model) {
 
     }
 

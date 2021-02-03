@@ -34,11 +34,11 @@ public class Partner extends Model {
             .domain(d.on("active", "=", true));// # force "active_test" domain to bypass _search() override
 
     static Field ref = fields.Char().string("Reference").index(true);
-    static Field lang = fields.Selection(self -> _lang_get(self)).string("Language").default_(self -> self.env().lang())
+    static Field lang = fields.Selection(self -> _lang_get(self)).string("Language").$default(self -> self.env().lang())
             .help("All the emails and documents sent to this contact will be translated in this language.");
     static Field active_lang_count = fields.Integer().compute("_compute_active_lang_count");
     static Field tz = fields.Selection(self -> _tz_get(self)).string("Timezone")
-            .default_(self -> self.context().get("tz"))
+            .$default(self -> self.context().get("tz"))
             .help("When printing documents and exporting/importing data, time values are computed according to this timezone.\n"
                     + "If the timezone is not set, UTC (Coordinated Universal Time) is used.\n"
                     + "Anywhere else, time values are computed according to the time offset of your web client.");
@@ -55,16 +55,16 @@ public class Partner extends Model {
     static Field comment = fields.Text("Notes");
 
     static Field category_id = fields.Many2many("res.partner.category").column1("partner_id").column2("category_id")
-            .string("Tags").default_(self -> _default_category(self));
+            .string("Tags").$default(self -> _default_category(self));
     static Field credit_limit = fields.Float("Credit Limit");
-    static Field active = fields.Boolean().default_(true);
+    static Field active = fields.Boolean().$default(true);
     static Field employee = fields.Boolean().help("Check this box if this contact is an Employee.");
     static Field function = fields.Char("Job Position");
     static Field type = fields
             .Selection(Arrays.asList(new Pair<>("contact", "Contact"), new Pair<>("invoice", "Invoice Address"),
                     new Pair<>("delivery", "Delivery Address"), new Pair<>("other", "Other Address"),
                     new Pair<>("private", "Private Address")))
-            .string("Address Type").default_("contact")
+            .string("Address Type").$default("contact")
             .help("Invoice & Delivery addresses are used in sales orders. Private addresses are only visible by authorized users.");
     static Field street = fields.Char();
     static Field street2 = fields.Char();
@@ -81,7 +81,7 @@ public class Partner extends Model {
             .help("Format email address \"Name <email@domain>\"");
     static Field phone = fields.Char();
     static Field mobile = fields.Char();
-    static Field is_company = fields.Boolean("Is a Company").default_(false)
+    static Field is_company = fields.Boolean("Is a Company").$default(false)
             .help("Check if the contact is a company, otherwise it is a person");
     static Field industry_id = fields.Many2one("res.partner.industry", "Industry");
 
@@ -90,7 +90,7 @@ public class Partner extends Model {
             .selection(Arrays.asList(new Pair<>("person", "Individual"), new Pair<>("company", "Company")))
             .compute("_compute_company_type").inverse("_write_company_type");
     static Field company_id = fields.Many2one("res.company", "Company").index(true);
-    static Field color = fields.Integer("Color Index").default_(0);
+    static Field color = fields.Integer("Color Index").$default(0);
     static Field user_ids = fields.One2many("res.users", "partner_id", "Users").auto_join(true);
     static Field partner_share = fields.Boolean("Share Partner").compute("_compute_partner_share").store(true).help(
             "Either customer (not a user), either shared user. Indicated the current partner is a customer without "

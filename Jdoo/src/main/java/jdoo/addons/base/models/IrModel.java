@@ -24,15 +24,15 @@ public class IrModel extends Model {
     }
 
     static Field name = fields.Char("Model Description").translate(true).required(true);
-    static Field model = fields.Char().default_("x_").required(true).index(true);
+    static Field model = fields.Char().$default("x_").required(true).index(true);
     static Field info = fields.Text().string("Information");
     static Field field_id = fields.One2many("ir.model.fields", "model_id").string("Fields").required(true).copy(true)
-            .default_("_default_field_id");
+            .$default("_default_field_id");
     static Field inherited_model_ids = fields.Many2many("ir.model").compute("_inherited_models")
             .string("Inherited models").help("The list of models that extends the current model.");
     static Field state = fields
             .Selection(Arrays.asList(new Pair<>("manual", "Custom Object"), new Pair<>("base", "Base Object")))
-            .string("Type").default_("manual").readonly(true);
+            .string("Type").$default("manual").readonly(true);
     static Field access_ids = fields.One2many("ir.model.access", "model_id").string("Access");
     static Field rule_ids = fields.One2many("ir.rule", "model_id").string("Record Rules");
     static Field $transient = fields.Boolean().string("Transient Model");

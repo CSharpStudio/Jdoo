@@ -12,127 +12,125 @@ public class BaseField<T extends BaseField<T>> extends Field {
 
     @SuppressWarnings("unchecked")
     public T automatic(boolean automatic) {
-        this.automatic = automatic;
+        set(Field.automatic, automatic);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T store(boolean store) {
-        this.store = store;
+        set(Field.store, store);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T index(boolean index) {
-        this.index = index;
+        set(Field.index, index);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T copy(boolean copy) {
-        this.copy = copy;
+        set(Field.copy, copy);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T depends(String[] depends) {
-        this.depends = depends;
+        set(Field.depends, depends);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T compute(String compute) {
-        this.compute = compute;
+        set(Field.compute, compute);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T compute_sudo(boolean compute_sudo) {
-        this.compute_sudo = compute_sudo;
+        set(Field.compute_sudo, compute_sudo);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T inverse(String inverse) {
-        this.inverse = inverse;
+        set(Field.inverse, inverse);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T search(String search) {
-        this.search = search;
+        set(Field.search, search);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T related(String related) {
-        this.related = Arrays.asList(related);
+        set(Field.related, Arrays.asList(related));
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T company_dependent(boolean company_dependent) {
-        this.company_dependent = company_dependent;
+        set(Field.company_dependent, company_dependent);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T string(String string) {
-        this.string = string;
+        set(Field.string, string);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T help(String help) {
-        this.help = help;
+        set(Field.help, help);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T readonly(boolean readonly) {
-        this.readonly = readonly;
+        set(Field.readonly, readonly);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T required(boolean required) {
-        this.required = required;
+        set(Field.required, required);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T states(HashMap<String, Set<State>> states) {
-        this.states = states;
+        set(Field.states, states);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T groups(String groups) {
-        this.groups = groups;
+        set(Field.groups, groups);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T group_operator(String group_operator) {
-        this.group_operator = group_operator;
+        set(Field.group_operator, group_operator);
         return (T) this;
     }
 
-    @SuppressWarnings("unchecked")
-    public T default_(Object defaultValue) {
-        this.$default = self -> defaultValue;
-        return (T) this;
+    public T $default(Object defaultValue) {
+        return $default(self -> defaultValue);
     }
 
     @SuppressWarnings("unchecked")
-    public T default_(Function<RecordSet, Object> defaultFunc) {
-        this.$default = defaultFunc;
+    public T $default(Function<RecordSet, Object> defaultFunc) {
+        set(Field.$default, defaultFunc);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T change_default(boolean change_default) {
-        this.change_default = change_default;
+        set(Field.change_default, change_default);
         return (T) this;
     }
 }

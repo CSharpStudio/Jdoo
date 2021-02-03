@@ -29,9 +29,12 @@ public class Sql {
             .map("SET NULL", "n").map("SET DEFAULT", "d").build();
 
     public static List<String> existing_tables(Cursor cr, Collection<String> tablenames) {
-        String query = "SELECT c.relname\n" + "  FROM pg_class c\n"
-                + "  JOIN pg_namespace n ON (n.oid = c.relnamespace)\n" + " WHERE c.relname in %s\n"
-                + "   AND c.relkind IN ('r', 'v', 'm')\n" + "   AND n.nspname = 'public'\n";
+        String query = "SELECT c.relname\n" //
+                + "  FROM pg_class c\n" //
+                + "  JOIN pg_namespace n ON (n.oid = c.relnamespace)\n"//
+                + " WHERE c.relname in %s\n" //
+                + "   AND c.relkind IN ('r', 'v', 'm')\n" //
+                + "   AND n.nspname = 'public'\n";
         cr.execute(query, new Tuple<>(tablenames));
         List<String> result = new ArrayList<>();
         for (Tuple<?> row : cr.fetchall()) {
@@ -59,7 +62,7 @@ public class Sql {
     }
 
     public static Map<String, Dict> table_columns(Cursor cr, String tablename) {
-        String query = "SELECT column_name, udt_name, character_maximum_length, is_nullable"
+        String query = "SELECT column_name, udt_name, character_maximum_length, is_nullable"//
                 + " FROM information_schema.columns WHERE table_name=%s";
         cr.execute(query, new Tuple<>(tablename));
         Map<String, Dict> result = new HashMap<>();
@@ -108,8 +111,10 @@ public class Sql {
     }
 
     public static String constraint_definition(Cursor cr, String tablename, String constraintname) {
-        String query = "SELECT COALESCE(d.description, pg_get_constraintdef(c.oid))\n" + "FROM pg_constraint c\n"
-                + "JOIN pg_class t ON t.oid = c.conrelid\n" + "LEFT JOIN pg_description d ON c.oid = d.objoid\n"
+        String query = "SELECT COALESCE(d.description, pg_get_constraintdef(c.oid))\n" //
+                + "FROM pg_constraint c\n" //
+                + "JOIN pg_class t ON t.oid = c.conrelid\n" //
+                + "LEFT JOIN pg_description d ON c.oid = d.objoid\n" //
                 + "WHERE t.relname = %s AND conname = %s;";
         cr.execute(query, new Tuple<>(tablename, constraintname));
         return cr.rowcount() > 0 ? (String) cr.fetchone().get(0) : null;
@@ -134,14 +139,14 @@ public class Sql {
     public static boolean fix_foreign_key(Cursor cr, String tablename1, String columnname1, String tablename2,
             String columnname2, String ondelete) {
         String deltype = Utils.get(_CONFDELTYPES, ondelete.toUpperCase(), "a");
-        String query = "SELECT con.conname, c2.relname, a2.attname, con.confdeltype as deltype \n"
-                + "  FROM pg_constraint as con, pg_class as c1, pg_class as c2,           \n"
-                + "	   pg_attribute as a1, pg_attribute as a2                             \n"
+        String query = "SELECT con.conname, c2.relname, a2.attname, con.confdeltype as deltype\n"//
+                + "  FROM pg_constraint as con, pg_class as c1, pg_class as c2,\n"//
+                + "	   pg_attribute as a1, pg_attribute as a2\n"//
                 + " WHERE con.contype='f' AND con.conrelid=c1.oid AND con.confrelid=c2.oid\n"
-                + "   AND array_lower(con.conkey, 1)=1 AND con.conkey[1]=a1.attnum        \n"
-                + "   AND array_lower(con.confkey, 1)=1 AND con.confkey[1]=a2.attnum      \n"
-                + "   AND a1.attrelid=c1.oid AND a2.attrelid=c2.oid                       \n"
-                + "   AND c1.relname=%s AND a1.attname=%s                                 \n";
+                + "   AND array_lower(con.conkey, 1)=1 AND con.conkey[1]=a1.attnum\n"//
+                + "   AND array_lower(con.confkey, 1)=1 AND con.confkey[1]=a2.attnum\n"//
+                + "   AND a1.attrelid=c1.oid AND a2.attrelid=c2.oid\n"//
+                + "   AND c1.relname=%s AND a1.attname=%s\n";//
         cr.execute(query, new Tuple<>(tablename1, columnname1));
         boolean found = false;
         for (Tuple<?> fk : cr.fetchall()) {

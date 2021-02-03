@@ -8,11 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Map.Entry;
+import java.util.function.Supplier;
 
 public class Utils {
 
     @SuppressWarnings("unchecked")
-    public static <T> ArrayList<T> asList(T... e){
+    public static <T> ArrayList<T> asList(T... e) {
         ArrayList<T> list = new ArrayList<>();
         for (T a : e) {
             list.add(a);
@@ -37,6 +38,14 @@ public class Utils {
         return $default;
     }
 
+    public static <T> List<T> mutli(List<T> list, int times) {
+        ArrayList<T> result = new ArrayList<>();
+        for (int i = 0; i < times; i++) {
+            result.addAll(list);
+        }
+        return result;
+    }
+
     public static <K, V> MapBuilder<K, V> map(K key, V value) {
         return new MapBuilder<K, V>().map(key, value);
     }
@@ -59,6 +68,15 @@ public class Utils {
         if (map.containsKey(key)) {
             return map.get(key);
         }
+        map.put(key, value);
+        return value;
+    }
+
+    public static <K, V> V setdefault(Map<K, V> map, K key, Supplier<? extends V> supplier) {
+        if (map.containsKey(key)) {
+            return map.get(key);
+        }
+        V value = supplier.get();
         map.put(key, value);
         return value;
     }

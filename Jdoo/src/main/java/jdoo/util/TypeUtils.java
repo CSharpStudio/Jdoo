@@ -1,5 +1,6 @@
 package jdoo.util;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -66,5 +67,49 @@ public class TypeUtils {
     @SuppressWarnings(value = "unchecked")
     public static <T> T as(Object o, Class<T> tClass) {
         return tClass.isInstance(o) ? (T) o : null;
+    }
+
+    public static boolean toBoolean(Object value) {
+        if (value == null) {
+            return false;
+        } else if (value instanceof Boolean) {
+            return (Boolean) value;
+        } else if (value instanceof String) {
+            return "true".equalsIgnoreCase((String) value) || "y".equalsIgnoreCase((String) value);
+        } else if (value instanceof Integer) {
+            return !value.equals(0);
+        }
+        return false;
+    }
+
+    public static int toInteger(Object value) {
+        if (value == null) {
+            return 0;
+        } else if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof String) {
+            return parse((String) value, Integer.class);
+        }
+        return (int) value;
+    }
+
+    public static double toDouble(Object value) {
+        if (value == null) {
+            return 0;
+        } else if (value instanceof Double) {
+            return (Double) value;
+        } else if (value instanceof String) {
+            return parse((String) value, Double.class);
+        }
+        return (double) value;
+    }
+
+    public static double round(double v, int scale) {
+        if (scale < 0) {
+            throw new IllegalArgumentException("The scale must be a positive integer or zero");
+        }
+        BigDecimal b = new BigDecimal(Double.toString(v));
+        return b.setScale(scale).doubleValue();
+
     }
 }

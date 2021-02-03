@@ -1,8 +1,8 @@
 package jdoo.models._fields;
 
 import jdoo.util.Pair;
-
-public class HtmlField extends StringField<HtmlField> {
+//todo
+public class HtmlField extends _StringField<HtmlField> {
     public HtmlField(){
         column_type = new Pair<>("text", "text");
     }

@@ -23,6 +23,7 @@ import jdoo.util.Default;
 import jdoo.util.Dict;
 import jdoo.util.Linq;
 import jdoo.util.Pair;
+import jdoo.tools.Collector;
 import jdoo.tools.IdValues;
 import jdoo.tools.Sql;
 import jdoo.util.Tuple;
@@ -163,18 +164,18 @@ public class BaseModel extends MetaModel {
                 if (field.store()) {
                     stored.put(key, val);
                 }
-                if (field.inherited) {
-                    if (inherited.containsKey(field.related_field.model_name())) {
-                        inherited.get(field.related_field.model_name()).put(key, val);
+                if (field.inherited()) {
+                    if (inherited.containsKey(field.related_field().model_name())) {
+                        inherited.get(field.related_field().model_name()).put(key, val);
                     } else {
                         Map<String, Object> m = new Dict().set(key, val);
-                        inherited.put(field.related_field.model_name(), m);
+                        inherited.put(field.related_field().model_name(), m);
                     }
-                } else if (StringUtils.hasText(field.inverse)) {
+                } else if (StringUtils.hasText(field.inverse())) {
                     inversed.put(key, val);
                     inversed_fields.add(field);
                 }
-                if (StringUtils.hasText(field.compute) && !field.readonly()) {
+                if (StringUtils.hasText(field.compute()) && !field.readonly()) {
                     protected_.add(_field_computed.getOrDefault(field, Arrays.asList(field)));
                 }
             }
@@ -239,12 +240,12 @@ public class BaseModel extends MetaModel {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            if (field.$default != null) {
-                defaults.put(name, field.$default.apply(self));
+            if (field.$default() != null) {
+                defaults.put(name, field.$default().apply(self));
                 continue;
             }
-            if (field.inherited) {
-                field = field.related_field;
+            if (field.inherited()) {
+                field = field.related_field();
                 if (parent_fields.containsKey(field.model_name())) {
                     List<String> names = new ArrayList<String>();
                     names.add(field.getName());
@@ -452,8 +453,8 @@ public class BaseModel extends MetaModel {
             for (String fname : fnames) {
                 Field field = self.getField(fname);
                 add_model_field(model_fields, field);
-                if (field.related_field != null) {
-                    add_model_field(model_fields, field.related_field);
+                if (field.related_field() != null) {
+                    add_model_field(model_fields, field.related_field());
                 }
             }
             for (String model_name : model_fields.keySet()) {
@@ -531,10 +532,10 @@ public class BaseModel extends MetaModel {
         for (Field field : _fields) {
             if (field.store()) {
                 stored_fields.add(field);
-            } else if (StringUtils.hasText(field.compute)) {
-                for (String dotname : field.depends) {
+            } else if (StringUtils.hasText(field.compute())) {
+                for (String dotname : field.depends()) {
                     Field f = self.getField(dotname.split(".")[0]);
-                    if (f.prefetch && (!StringUtils.hasText(f.groups) || user_has_group(self, f.groups))) {
+                    if (f.prefetch() && (!StringUtils.hasText(f.groups()) || user_has_group(self, f.groups()))) {
                         stored_fields.add(f);
                     }
                 }
@@ -610,8 +611,8 @@ public class BaseModel extends MetaModel {
     }
 
     private boolean valid(RecordSet self, Field field) {
-        if (StringUtils.hasText(field.groups)) {
-            return user_has_group(self, field.groups);
+        if (StringUtils.hasText(field.groups())) {
+            return user_has_group(self, field.groups());
         }
 
         return true;
@@ -644,8 +645,8 @@ public class BaseModel extends MetaModel {
         List<Field> fields = new ArrayList<>();
         if (self.context().get("prefetch_fields", true) && field.prefetch()) {
             for (Field f : self.getFields()) {
-                if (f.prefetch() && !(StringUtils.hasText(f.groups) && !user_has_group(self, f.groups))
-                        && !(StringUtils.hasText(f.compute) && self.env().records_to_compute(f).hasId())) {
+                if (f.prefetch() && !(StringUtils.hasText(f.groups()) && !user_has_group(self, f.groups()))
+                        && !(StringUtils.hasText(f.compute()) && self.env().records_to_compute(f).hasId())) {
                     fields.add(f);
                 }
             }
@@ -669,8 +670,10 @@ public class BaseModel extends MetaModel {
         if (cls._setup_done) {
             return;
         }
+        // 1. determine the proper fields of the model: the fields defined on the
+        // class and magic fields, not the inherited or custom ones
         for (Field field : Linq.orderBy(cls.$fields, f -> f._sequence)) {
-            if (!field.automatic() && !field.menual() && !field.inherited) {
+            if (!field.automatic() && !field.manual() && !field.inherited()) {
                 _add_field(self, field.name, field);
             }
         }
@@ -680,13 +683,21 @@ public class BaseModel extends MetaModel {
         // if self.pool._init_modules:
         // self.env['ir.model.fields']._add_manual_fields(self)
 
+        // 3. make sure that parent models determine their own fields, then add
+        // inherited fields to cls
         _inherits_check(self);
         for (String parent : self.type()._inherits.keySet()) {
             self.env(parent).call("_setup_base");
         }
         _add_inherited_fields(self);
 
+        // 4. initialize more field metadata
+        cls._field_computed = new Dict(); // fields computed with the same method
+        cls._field_inverses = new Collector(); // inverse fields for related fields
+
         cls._setup_done = true;
+
+        // 5. determine and validate rec_name
         if (StringUtils.hasText(cls._rec_name)) {
             assert cls._fields.containsKey(cls._rec_name)
                     : String.format("Invalid rec_name %s for model %s", cls._rec_name, cls._name);
@@ -705,12 +716,12 @@ public class BaseModel extends MetaModel {
             RecordSet parent = self.env(parent_model);
             for (Field field : parent.getFields()) {
                 fields.put(field.name, field.$new(f -> {
-                    f.inherited = true;
-                    f.inherited_field = field;
-                    f.related = new Tuple<>(parent_field, field.name);
-                    f.compute_sudo = false;
-                    f.copy = field.copy;
-                    f.readonly = field.readonly;
+                    f.set(Field.inherited, true);
+                    f.set(Field.inherited_field, field);
+                    f.set(Field.related, new Tuple<>(parent_field, field.name));
+                    f.set(Field.compute_sudo, false);
+                    f.set(Field.copy, field.copy());
+                    f.set(Field.readonly, field.readonly());
                 }));
             }
         }
@@ -784,7 +795,7 @@ public class BaseModel extends MetaModel {
                     continue;
                 }
                 boolean $new = field.update_db(self, columns);
-                if ($new && StringUtils.hasText(field.compute)) {
+                if ($new && StringUtils.hasText(field.compute())) {
                     fields_to_compute.add(field);
                 }
             }
@@ -800,8 +811,8 @@ public class BaseModel extends MetaModel {
     public void _init_column(RecordSet self, String column_name) {
         Field field = self.getField(column_name);
         Object value = null;
-        if (field.$default != null) {
-            value = field.$default.apply(self);
+        if (field.$default() != null) {
+            value = field.$default().apply(self);
             value = field.convert_to_write(value, self);
             value = field.convert_to_column(value, self, null, true);
         }

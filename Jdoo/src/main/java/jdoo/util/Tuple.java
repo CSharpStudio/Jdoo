@@ -114,6 +114,21 @@ public class Tuple<T> implements Collection<T> {
         return Arrays.copyOf(tuple, tuple.length);
     }
 
+    public Object[] toArray(int from, int to) {
+        return Arrays.copyOfRange(tuple, from, to);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <E> E[] toArray(E[] a, int from, int to) {
+        if (a.length < to - from)
+            // Make a new array of a's runtime type, but my contents:
+            return (E[]) Arrays.copyOfRange(tuple, from, to, a.getClass());
+        System.arraycopy(tuple, 0, a, from, to - from);
+        if (a.length > to - from)
+            a[to - from] = null;
+        return a;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public <E> E[] toArray(E[] a) {

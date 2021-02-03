@@ -9,13 +9,13 @@ import jdoo.models.RecordSet;
 import jdoo.util.Dict;
 import jdoo.util.Pair;
 
-public class IdField extends _BinaryField<BinaryField> {
+public class IdField extends BaseField<IdField> {
     public IdField() {
         column_type = new Pair<>("varchar", new PgVarchar(32));
-        string = "ID";
-        store = true;
-        readonly = true;
-        prefetch = false;
+        set(string, "ID");
+        set(store, true);
+        set(readonly, true);
+        set(prefetch, false);
     }
 
     @Override

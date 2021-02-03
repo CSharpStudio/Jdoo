@@ -25,7 +25,7 @@ public class ResBank extends Model {
     public static Field country = fields.Many2one("res.country");
     public static Field email = fields.Char();
     public static Field phone = fields.Char();
-    public static Field active = fields.Boolean().default_(true);
+    public static Field active = fields.Boolean().$default(true);
     public static Field bic = fields.Char("Bank Identifier Code").index(true).help("Sometimes called BIC or Swift.");
 
     // public List<Object[]> name_get(Self self) {

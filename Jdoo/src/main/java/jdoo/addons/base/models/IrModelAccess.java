@@ -15,7 +15,7 @@ public class IrModelAccess extends Model {
     }
 
     static Field name = fields.Char().required(true).index(true);
-    static Field active = fields.Boolean().default_(true).help(
+    static Field active = fields.Boolean().$default(true).help(
             "If you uncheck the active field, it will disable the ACL without deleting it (if you delete a native ACL, it will be re-created when you reload the module).");
     static Field model_id = fields.Many2one("ir.model", "Object").required(true).domain(d.on("transient", "=", false))
             .index(true).ondelete("cascade");

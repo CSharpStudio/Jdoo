@@ -5,7 +5,51 @@ import java.util.Map;
 import jdoo.models.RecordSet;
 import jdoo.util.Dict;
 
+/**
+ * Many2many field; the value of such a field is the recordset.
+ * 
+ * :param comodel_name: name of the target model (string)
+ * 
+ * The attribute ``comodel_name`` is mandatory except in the case of related
+ * fields or field extensions.
+ * 
+ * :param relation: optional name of the table that stores the relation in the
+ * database (string)
+ * 
+ * :param column1: optional name of the column referring to "these" records in
+ * the table ``relation`` (string)
+ * 
+ * :param column2: optional name of the column referring to "those" records in
+ * the table ``relation`` (string)
+ * 
+ * The attributes ``relation``, ``column1`` and ``column2`` are optional. If not
+ * given, names are automatically generated from model names, provided
+ * ``model_name`` and ``comodel_name`` are different!
+ * 
+ * Note that having several fields with implicit relation parameters on a given
+ * model with the same comodel is not accepted by the ORM, since those field
+ * would use the same table. The ORM prevents two many2many fields to use the
+ * same relation parameters, except if
+ * 
+ * - both fields use the same model, comodel, and relation parameters are
+ * explicit; or
+ * 
+ * - at least one field belongs to a model with ``_auto = False``.
+ * 
+ * :param domain: an optional domain to set on candidate values on the client
+ * side (domain or string)
+ * 
+ * :param context: an optional context to use on the client side when handling
+ * that field (dictionary)
+ * 
+ * :param limit: optional limit to use upon read (integer)
+ * 
+ * :param check_company: add default domain ``['|', ('company_id', '=', False),
+ * ('company_id', '=', company_id)]``. Mark the field to be verified in
+ * ``_check_company``.
+ */
 public class Many2manyField extends _RelationalMultiField<Many2manyField> {
+    // todo
     public Many2manyField() {
 
     }

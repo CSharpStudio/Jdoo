@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -24,6 +25,7 @@ public final class RecordSet implements Iterable<RecordSet> {
     Tuple<String> ids;
     Tuple<String> prefetchIds;
     static Map<Field, Collection<Field>> _field_computed;
+    Dict context;
 
     public Map<Field, Collection<Field>> _field_computed() {
         return _field_computed;
@@ -178,6 +180,10 @@ public final class RecordSet implements Iterable<RecordSet> {
         return new SelfIterator();
     }
 
+    public int size() {
+        return ids.size();
+    }
+
     class SelfIterator implements Iterator<RecordSet> {
         int cusor = 0;
 
@@ -202,6 +208,13 @@ public final class RecordSet implements Iterable<RecordSet> {
     }
 
     public RecordSet with_context(Dict context) {
+        this.context = context;
+        return this;
+    }
+
+    public RecordSet with_context(Consumer<Dict> func) {
+        context = new Dict();
+        func.accept(context);
         return this;
     }
 
@@ -234,8 +247,30 @@ public final class RecordSet implements Iterable<RecordSet> {
     }
 
     public RecordSet or(RecordSet other) {
+        return union(other);
+    }
+
+    public RecordSet union(RecordSet... others) {
         Collection<String> ids = new HashSet<String>(ids());
-        ids.addAll(other.ids());
+        for (RecordSet other : others) {
+            ids.addAll(other.ids());
+        }
         return browse(ids);
+    }
+
+    public RecordSet union(Collection<RecordSet> others) {
+        Collection<String> ids = new HashSet<String>(ids());
+        for (RecordSet other : others) {
+            ids.addAll(other.ids());
+        }
+        return browse(ids);
+    }
+
+    public RecordSet get(int index) {
+        return browse(ids.get(index));
+    }
+
+    public RecordSet get(int from, int to) {
+        return browse(Tuple.of(ids.toArray(new String[to - from], from, to)));
     }
 }

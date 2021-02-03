@@ -20,6 +20,8 @@ import jdoo.exceptions.ModelException;
 import jdoo.exceptions.TypeErrorException;
 import jdoo.exceptions.ValidationErrorException;
 import jdoo.modules.Registry;
+import jdoo.tools.Collector;
+import jdoo.util.Dict;
 import jdoo.util.Tuple;
 import jdoo.util.Utils;
 import jdoo.apis.Environment;
@@ -82,9 +84,17 @@ public class MetaModel {
     protected Boolean _log_access;
     static final String CONCURRENCY_CHECK_FIELD = "__last_update";
     boolean _setup_done;
+    Dict _field_computed;
+    Collector _field_inverses;
+
+    Registry pool;
 
     public String name() {
         return _name;
+    }
+
+    public Collector field_inverses() {
+        return _field_inverses;
     }
 
     public String description() {
@@ -106,12 +116,20 @@ public class MetaModel {
         return _log_access;
     }
 
+    public Registry pool() {
+        return pool;
+    }
+
     public Map<String, String> inherits() {
         return _inherits;
     }
 
     public boolean $abstract() {
         return _abstract;
+    }
+
+    public boolean is_transient() {
+        return _transient;
     }
 
     protected MetaModel() {
@@ -374,6 +392,15 @@ public class MetaModel {
         _build_model_attributes(ModelClass, pool);
 
         Util.check_pg_name(ModelClass._table);
+
+        if (ModelClass._transient) {
+            assert ModelClass._log_access : "TransientModels must have log_access turned on, "
+                    + "in order to implement their access rights policy";
+        }
+
+        // link the class to the registry, and update the registry
+        ModelClass.pool = pool;
+        pool.put(name, ModelClass);
 
         ModelClass.init(pool, cr);
 
