@@ -40,7 +40,7 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
     public static final Slot auto_join = new Slot("auto_join");
     public static final Slot limit = new Slot("limit");
     static {
-        default_slots.put(auto_join, false);
+        default_slots().put(auto_join, false);
     }
 
     public One2manyField() {

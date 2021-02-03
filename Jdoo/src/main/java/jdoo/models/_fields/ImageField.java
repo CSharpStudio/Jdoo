@@ -14,8 +14,8 @@ public class ImageField extends _BinaryField<ImageField> {
     public static final Slot max_height = new Slot("max_height");
 
     static {
-        default_slots.put(max_width, 0);
-        default_slots.put(max_height, 0);
+        default_slots().put(max_width, 0);
+        default_slots().put(max_height, 0);
     }
 
     public ImageField attachment(boolean attachment) {

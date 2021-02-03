@@ -347,15 +347,22 @@ public class Field extends MetaField {
     }
 
     public void setup_full(RecordSet model) {
-
+        if (_setup_done != SetupState.Full) {
+            if (!has(related)) {
+                _setup_regular_full(model);
+            } else {
+                _setup_related_full(model);
+            }
+            _setup_done = SetupState.Full;
+        }
     }
 
     public void setup_base(RecordSet model, String name) {
-        if (_setup_done != SetupState.None && related() == null) {
+        if (_setup_done != SetupState.None && !has(related)) {
             _setup_done = SetupState.Base;
         } else {
             _setup_attrs(model, name);
-            if (related() == null) {
+            if (!has(related)) {
                 _setup_regular_base(model);
             }
             _setup_done = SetupState.Base;
@@ -363,19 +370,67 @@ public class Field extends MetaField {
     }
 
     public void _setup_attrs(RecordSet model, String name) {
+        if (has(compute)) {
+            if (!has(store)) {
+                set(store, false);
+            }
+            if (!has(copy)) {
+                set(copy, false);
+            }
+            if (!has(readonly)) {
+                set(readonly, StringUtils.hasText(inverse()));
+            }
+        }
+        if (has(related)) {
+            if (!has(store)) {
+                set(store, false);
+            }
+            if (!has(copy)) {
+                set(copy, false);
+            }
+            if (!has(readonly)) {
+                set(readonly, true);
+            }
+        }
+        if (has(company_dependent)) {
+            set(store, false);
+            if (!has(copy)) {
+                set(copy, false);
+            }
+            //todo
+        }
 
+        if (!(store() && column_type() != null) || manual() || deprecated()) {
+            set(prefetch, false);
+        }
+
+        if (!has(string) && !has(related)) {
+            String n = name;
+            if (name.endsWith("_ids")) {
+                n = name.substring(0, name.length() - 4);
+            } else if (name.endsWith("_id")) {
+                n = name.substring(0, name.length() - 3);
+            }
+            n = n.replace('_', ' ');
+            set(string, n);
+        }
     }
 
+    /** Setup the attributes of a non-related field. */
     public void _setup_regular_base(RecordSet model) {
 
     }
 
+    /** Determine the dependencies and inverse field(s) of ``self``. */
     public void _setup_regular_full(RecordSet model) {
-
+        if (has(depends)) {
+            return;
+        }
+        // todo
     }
 
     public void _setup_related_full(RecordSet model) {
-
+        // todo
     }
 
     public Field $new(Consumer<Field> consumer) {

@@ -19,28 +19,37 @@ public abstract class MetaField {
     }
 
     Map<Slot, Object> _slots = new HashMap<>();
-    protected static Map<Slot, Object> default_slots = new HashMap<Slot, Object>() {
-        private static final long serialVersionUID = 1L;
-        {
-            put(automatic, false);
-            put(inherited, false);
-            put(store, true);
-            put(index, false);
-            put(manual, false);
-            put(copy, true);
-            put(recursive, false);
-            put(compute_sudo, true);
-            put(company_dependent, false);
-            put(readonly, false);
-            put(required, false);
-            put(change_default, false);
-            put(prefetch, true);
+
+    protected static Map<Slot, Object> default_slots() {
+        if (_default_slots == null) {
+            _default_slots = new HashMap<Slot, Object>() {
+                private static final long serialVersionUID = 1L;
+                {
+                    put(automatic, false);
+                    put(inherited, false);
+                    put(store, true);
+                    put(index, false);
+                    put(manual, false);
+                    put(copy, true);
+                    put(recursive, false);
+                    put(compute_sudo, true);
+                    put(company_dependent, false);
+                    put(readonly, false);
+                    put(required, false);
+                    put(change_default, false);
+                    put(prefetch, true);
+                    put(deprecated, false);
+                }
+            };
         }
-    };
+        return _default_slots;
+    }
+
+    private static Map<Slot, Object> _default_slots;
 
     public Object get(Slot key) {
         if (!_slots.containsKey(key)) {
-            return default_slots.get(key);
+            return default_slots().get(key);
         }
         return _slots.get(key);
     }

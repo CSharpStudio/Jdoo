@@ -45,8 +45,8 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
     /** whether self implements delegation */
     public static final Slot delegate = new Slot("delegate");
     static {
-        default_slots.put(auto_join, false);
-        default_slots.put(delegate, false);
+        default_slots().put(auto_join, false);
+        default_slots().put(delegate, false);
     }
 
     public Many2oneField() {

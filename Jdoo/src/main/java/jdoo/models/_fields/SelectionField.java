@@ -3,8 +3,6 @@ package jdoo.models._fields;
 import java.util.List;
 import java.util.function.Function;
 
-import com.sun.jdi.Field;
-
 import org.springframework.util.StringUtils;
 
 import jdoo.apis.Environment;
@@ -37,7 +35,7 @@ public class SelectionField extends BaseField<SelectionField> {
     public static final Slot selection = new Slot("selection");
     public static final Slot validate = new Slot("validate");
     static {
-        default_slots.put(validate, true);
+        default_slots().put(validate, true);
     }
 
     Function<RecordSet, Object> $selection;

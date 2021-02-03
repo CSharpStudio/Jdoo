@@ -28,7 +28,7 @@ public class CharField extends _StringField<CharField> {
     /** whether value is trimmed (only by web client) */
     public static final Slot trim = new Slot("trim");
     static {
-        default_slots.put(trim, true);
+        default_slots().put(trim, true);
     }
 
     public CharField() {

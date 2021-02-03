@@ -36,7 +36,7 @@ public class MetaModel {
     private Set<String> _inherit_children;
     private Tuple<MetaModel> _bases;
     private String _module;
-    private String _original_module;
+    String _original_module;
     Map<String, Field> _fields;
     private Map<String, MethodInfo> keyMethods;
     private Map<String, List<MethodInfo>> nameMethods;

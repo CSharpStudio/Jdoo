@@ -21,7 +21,7 @@ public class _BinaryField<T extends _BinaryField<T>> extends BaseField<T> {
     /** whether value is stored in attachment */
     public static final Slot attachment = new Slot("attachment");
     static {
-        default_slots.put(attachment, true);
+        default_slots().put(attachment, true);
     }
 
     public _BinaryField() {

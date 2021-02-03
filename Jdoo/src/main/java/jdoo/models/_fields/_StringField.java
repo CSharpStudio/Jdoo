@@ -14,7 +14,7 @@ public abstract class _StringField<T extends _StringField<T>> extends BaseField<
     /** whether the field is translated */
     public static final Slot translate = new Slot("translate");
     static {
-        default_slots.put(translate, false);
+        default_slots().put(translate, false);
     }
 
     @SuppressWarnings("unchecked")
