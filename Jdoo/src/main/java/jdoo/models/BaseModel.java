@@ -32,6 +32,7 @@ import jdoo.apis.Cache;
 import jdoo.apis.Environment;
 import jdoo.data.AsIs;
 import jdoo.exceptions.MissingErrorException;
+import jdoo.models.MetaField.Slots;
 import jdoo.models._fields.BooleanField;
 import jdoo.models._fields.Many2manyField;
 import jdoo.models._fields.One2manyField;
@@ -313,6 +314,15 @@ public class BaseModel extends MetaModel {
             }
         }
         flush(self, fnames, self);
+
+        List<Field> fields_pre = new ArrayList<>();
+        for (String name : field_names) {
+            Field field = self.getField(name);
+            if (!"id".equals(field.name)) {
+                fields_pre.add(field);
+            }
+        }
+
         Environment env = self.env();
         Cursor cr = env.cr();
         String select_clause = org.apache.tomcat.util.buf.StringUtils.join(field_names, ',');
@@ -324,7 +334,14 @@ public class BaseModel extends MetaModel {
             cr.execute(query_str, Tuple.of(sub_ids));
             result.addAll(cr.fetchall());
         }
+        RecordSet fetched;
+        if (!result.isEmpty()) {
+            // for (type var : iterable) {
 
+            // }
+        } else {
+            fetched = self.browse();
+        }
     }
 
     public boolean write(RecordSet self, Map<String, Object> vals) {
@@ -716,12 +733,12 @@ public class BaseModel extends MetaModel {
             RecordSet parent = self.env(parent_model);
             for (Field field : parent.getFields()) {
                 fields.put(field.name, field.$new(f -> {
-                    f.set(Field.inherited, true);
-                    f.set(Field.inherited_field, field);
-                    f.set(Field.related, new Tuple<>(parent_field, field.name));
-                    f.set(Field.compute_sudo, false);
-                    f.set(Field.copy, field.copy());
-                    f.set(Field.readonly, field.readonly());
+                    f.setattr(Slots.inherited, true);
+                    f.setattr(Slots.inherited_field, field);
+                    f.setattr(Slots.related, new Tuple<>(parent_field, field.name));
+                    f.setattr(Slots.compute_sudo, false);
+                    f.setattr(Slots.copy, field.copy());
+                    f.setattr(Slots.readonly, field.readonly());
                 }));
             }
         }

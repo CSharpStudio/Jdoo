@@ -27,19 +27,19 @@ public abstract class _RelationalField<T extends _RelationalField<T>> extends Ba
 
     @SuppressWarnings("unchecked")
     public T check_company(boolean check_company) {
-        set(_RelationalField.check_company, check_company);
+        setattr(_RelationalField.check_company, check_company);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T comodel_name(String comodel_name) {
-        set(_RelationalField.comodel_name, comodel_name);
+        setattr(Slots.comodel_name, comodel_name);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T domain(Domain domain) {
-        set(_RelationalField.domain, domain);
+        setattr(_RelationalField.domain, domain);
         return (T) this;
     }
 

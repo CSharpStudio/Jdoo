@@ -44,30 +44,30 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
     }
 
     public One2manyField() {
-        set(copy, false);
+        setattr(Slots.copy, false);
     }
 
     public One2manyField inverse_name(String inverse_name) {
-        set(One2manyField.inverse_name, inverse_name);
+        setattr(One2manyField.inverse_name, inverse_name);
         return this;
     }
 
     public One2manyField limit(int limit) {
-        set(One2manyField.limit, limit);
+        setattr(One2manyField.limit, limit);
         return this;
     }
 
     public One2manyField auto_join(boolean auto_join) {
-        set(One2manyField.auto_join, auto_join);
+        setattr(One2manyField.auto_join, auto_join);
         return this;
     }
 
     @Override
     public void _setup_regular_full(RecordSet model) {
         super._setup_regular_full(model);
-        if (has(inverse_name) && StringUtils.hasText(get(String.class, inverse_name))) {
+        if (hasattr(inverse_name) && StringUtils.hasText(getattr(String.class, inverse_name))) {
             RecordSet comodel = model.env(comodel_name());
-            Field invf = comodel.getField(get(String.class, inverse_name));
+            Field invf = comodel.getField(getattr(String.class, inverse_name));
             if (invf instanceof Many2oneField || invf instanceof Many2oneReferenceField) {
                 model.type().field_inverses().add(this, invf);
             }
@@ -79,9 +79,9 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
     public boolean update_db(RecordSet model, Map<String, Dict> columns) {
         if (model.type().pool().contains(comodel_name())) {
             RecordSet comodel = model.env(comodel_name());
-            if (!comodel.hasField(get(String.class, inverse_name))) {
+            if (!comodel.hasField(getattr(String.class, inverse_name))) {
                 throw new UserErrorException(
-                        String.format("No inverse field %r found for %s", get(inverse_name), comodel_name()));
+                        String.format("No inverse field %r found for %s", getattr(inverse_name), comodel_name()));
             }
         }
         return true;

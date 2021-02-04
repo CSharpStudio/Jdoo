@@ -29,9 +29,265 @@ import jdoo.util.Tuple;
 
 /**
  * The field descriptor contains the field definition, and manages accesses and
- * assignments of the corresponding field on records.
+ * assignments of the corresponding field on records. The following attributes
+ * may be provided when instanciating a field:
+ * 
+ * <p>
+ * :param string: the label of the field seen by users (string); if not set, the
+ * ORM takes the field name in the class (capitalized).
+ * </p>
+ * 
+ * <p>
+ * :param help: the tooltip of the field seen by users (string)
+ * </p>
+ * 
+ * <p>
+ * :param readonly: whether the field is readonly (boolean, by default
+ * ``False``)
+ * </p>
+ * 
+ * <p>
+ * :param required: whether the value of the field is required (boolean, by
+ * default ``False``)
+ * </p>
+ * 
+ * <p>
+ * :param index: whether the field is indexed in database. Note: no effect on
+ * non-stored and virtual fields. (boolean, by default ``False``)
+ * </p>
+ * 
+ * <p>
+ * :param default: the default value for the field; this is either a static
+ * value, or a function taking a recordset and returning a value; use
+ * ``default=None`` to discard default values for the field
+ * </p>
+ * 
+ * <p>
+ * :param states: a dictionary mapping state values to lists of UI
+ * attribute-value pairs; possible attributes are: 'readonly', 'required',
+ * 'invisible'. Note: Any state-based condition requires the ``state`` field
+ * value to be available on the client-side UI. This is typically done by
+ * including it in the relevant views, possibly made invisible if not relevant
+ * for the end-user.
+ * </p>
+ * 
+ * <p>
+ * :param groups: comma-separated list of group xml ids (string); this restricts
+ * the field access to the users of the given groups only
+ * </p>
+ * 
+ * <p>
+ * :param bool copy: whether the field value should be copied when the record is
+ * duplicated (default: ``True`` for normal fields, ``False`` for ``one2many``
+ * and computed fields, including property fields and related fields)
+ * </p>
+ * 
+ * .. _field-computed:
+ * 
+ * .. rubric:: Computed fields
+ * 
+ * <p>
+ * One can define a field whose value is computed instead of simply being read
+ * from the database. The attributes that are specific to computed fields are
+ * given below. To define such a field, simply provide a value for the attribute
+ * ``compute``.
+ * </p>
+ * 
+ * <p>
+ * :param compute: name of a method that computes the field
+ * </p>
+ * 
+ * <p>
+ * :param inverse: name of a method that inverses the field (optional)
+ * </p>
+ * 
+ * <p>
+ * :param search: name of a method that implement search on the field (optional)
+ * </p>
+ * 
+ * <p>
+ * :param store: whether the field is stored in database (boolean, by default
+ * ``False`` on computed fields)
+ * </p>
+ * 
+ * <p>
+ * :param compute_sudo: whether the field should be recomputed as superuser to
+ * bypass access rights (boolean, by default ``True``)
+ * </p>
+ * 
+ * <p>
+ * The methods given for ``compute``, ``inverse`` and ``search`` are model
+ * methods. Their signature is shown in the following example::
+ * </p>
+ * <blockquote>
+ * 
+ * <pre>
+ * Field upper = fields.Char()compute("_compute_upper").inverse("_inverse_upper").search("_search_upper");
+ * 
+ * &#64;api.depends('name')
+ * void _compute_upper(RecordSet self){
+ *      for(RecordSet rec : self){
+ *          rec.upper = rec.name != null ? rec.name.upper() : null;
+ *      }
+ * } 
+ * 
+ * void _inverse_upper(RecordSet self){
+ *      for(RecordSet rec : self){
+ *          rec.name = rec.upper != null ? rec.upper.lower() : null;
+ *      }
+ * } 
+ * 
+ * List<Tuple<Object>> _search_upper(RecordSet self, String operator, Object value){
+ *      if(operator == "like")
+ *          operator = "ilike";
+ *      return Arrays.asList(new Tuple<>("name", operator, value));
+ * }
+ * 
+ * </pre>
+ * 
+ * </blockquote>
+ * <p>
+ * The compute method has to assign the field on all records of the invoked
+ * recordset. The decorator :meth:`odoo.api.depends` must be applied on the
+ * compute method to specify the field dependencies; those dependencies are used
+ * to determine when to recompute the field; recomputation is automatic and
+ * guarantees cache/database consistency. Note that the same method can be used
+ * for several fields, you simply have to assign all the given fields in the
+ * method; the method will be invoked once for all those fields.
+ * </p>
+ * 
+ * <p>
+ * By default, a computed field is not stored to the database, and is computed
+ * on-the-fly. Adding the attribute ``store=True`` will store the field's values
+ * in the database. The advantage of a stored field is that searching on that
+ * field is done by the database itself. The disadvantage is that it requires
+ * database updates when the field must be recomputed.
+ * </p>
+ * 
+ * <p>
+ * The inverse method, as its name says, does the inverse of the compute method:
+ * the invoked records have a value for the field, and you must apply the
+ * necessary changes on the field dependencies such that the computation gives
+ * the expected value. Note that a computed field without an inverse method is
+ * readonly by default.
+ * </p>
+ * 
+ * <p>
+ * The search method is invoked when processing domains before doing an actual
+ * search on the model. It must return a domain equivalent to the condition:
+ * ``field operator value``.
+ * </p>
+ * 
+ * <p>
+ * .. _field-related:
+ * </p>
+ * 
+ * <p>
+ * .. rubric:: Related fields
+ * </p>
+ * 
+ * <p>
+ * The value of a related field is given by following a sequence of relational
+ * fields and reading a field on the reached model. The complete sequence of
+ * fields to traverse is specified by the attribute
+ * </p>
+ * 
+ * <p>
+ * :param related: sequence of field names
+ * </p>
+ * 
+ * <p>
+ * Some field attributes are automatically copied from the source field if they
+ * are not redefined: ``string``, ``help``, ``readonly``, ``required`` (only if
+ * all fields in the sequence are required), ``groups``, ``digits``, ``size``,
+ * ``translate``, ``sanitize``, ``selection``, ``comodel_name``, ``domain``,
+ * ``context``. All semantic-free attributes are copied from the source field.
+ * </p>
+ * 
+ * <p>
+ * By default, the values of related fields are not stored to the database. Add
+ * the attribute ``store=True`` to make it stored, just like computed fields.
+ * Related fields are automatically recomputed when their dependencies are
+ * modified.
+ * </p>
+ * 
+ * </p>
+ * .. _field-company-dependent:
+ * </p>
+ * 
+ * </p>
+ * .. rubric:: Company-dependent fields
+ * </p>
+ * 
+ * <p>
+ * Formerly known as 'property' fields, the value of those fields depends on the
+ * company. In other words, users that belong to different companies may see
+ * different values for the field on a given record.
+ * </p>
+ * 
+ * .. warning::
+ * 
+ * <p>
+ * Company-dependent fields aren't stored in the table of the model they're
+ * defined on, instead, they are stored in the ``ir.property`` model's table.
+ * </p>
+ * 
+ * <p>
+ * :param company_dependent: whether the field is company-dependent (boolean)
+ * </p>
+ * 
+ * <p>
+ * .. _field-incremental-definition:
+ * </p>
+ * 
+ * <p>
+ * .. rubric:: Incremental definition
+ * </p>
+ * 
+ * <p>
+ * A field is defined as class attribute on a model class. If the model is
+ * extended (see :class:`~odoo.models.Model`), one can also extend the field
+ * definition by redefining a field with the same name and same type on the
+ * subclass. In that case, the attributes of the field are taken from the parent
+ * class and overridden by the ones given in subclasses.
+ * </p>
+ * 
+ * <p>
+ * For instance, the second class below only adds a tooltip on the field
+ * ``state``::
+ * </p>
+ * <blockquote>
+ * 
+ * <pre>
+ * class First extends Model{
+ *      public First(){
+ *          _name = 'foo'
+ *      }
+ *      static Field state = fields.Selection([...]).required(true);
+ * } 
+ * 
+ * class Second extends Model{
+ *      public First(){
+ *          _inherit = 'foo'
+ *      }
+ *      static Field state = fields.Selection().help("Blah blah blah");
+ * }
+ * </pre>
+ * 
+ * </blockquote>
  */
 public class Field extends MetaField {
+
+    public Field $new(Consumer<Field> consumer) {
+        try {
+            Field field = (Field) getClass().getConstructor().newInstance();
+            consumer.accept(field);
+            return field;
+        } catch (Exception e) {
+            throw new TypeErrorException(String.format("new field %s error", getClass().getName()), e);
+        }
+    }
+
     public Object get(RecordSet record) {
         if (!record.hasId()) {
             Object value = convert_to_cache(null, record, false);
@@ -348,7 +604,7 @@ public class Field extends MetaField {
 
     public void setup_full(RecordSet model) {
         if (_setup_done != SetupState.Full) {
-            if (!has(related)) {
+            if (!hasattr(Slots.related)) {
                 _setup_regular_full(model);
             } else {
                 _setup_related_full(model);
@@ -358,11 +614,11 @@ public class Field extends MetaField {
     }
 
     public void setup_base(RecordSet model, String name) {
-        if (_setup_done != SetupState.None && !has(related)) {
+        if (_setup_done != SetupState.None && !hasattr(Slots.related)) {
             _setup_done = SetupState.Base;
         } else {
             _setup_attrs(model, name);
-            if (!has(related)) {
+            if (!hasattr(Slots.related)) {
                 _setup_regular_base(model);
             }
             _setup_done = SetupState.Base;
@@ -370,41 +626,41 @@ public class Field extends MetaField {
     }
 
     public void _setup_attrs(RecordSet model, String name) {
-        if (has(compute)) {
-            if (!has(store)) {
-                set(store, false);
+        if (hasattr(Slots.compute)) {
+            if (!hasattr(Slots.store)) {
+                setattr(Slots.store, false);
             }
-            if (!has(copy)) {
-                set(copy, false);
+            if (!hasattr(Slots.copy)) {
+                setattr(Slots.copy, false);
             }
-            if (!has(readonly)) {
-                set(readonly, StringUtils.hasText(inverse()));
-            }
-        }
-        if (has(related)) {
-            if (!has(store)) {
-                set(store, false);
-            }
-            if (!has(copy)) {
-                set(copy, false);
-            }
-            if (!has(readonly)) {
-                set(readonly, true);
+            if (!hasattr(Slots.readonly)) {
+                setattr(Slots.readonly, StringUtils.hasText(inverse()));
             }
         }
-        if (has(company_dependent)) {
-            set(store, false);
-            if (!has(copy)) {
-                set(copy, false);
+        if (hasattr(Slots.related)) {
+            if (!hasattr(Slots.store)) {
+                setattr(Slots.store, false);
             }
-            //todo
+            if (!hasattr(Slots.copy)) {
+                setattr(Slots.copy, false);
+            }
+            if (!hasattr(Slots.readonly)) {
+                setattr(Slots.readonly, true);
+            }
+        }
+        if (hasattr(Slots.company_dependent)) {
+            setattr(Slots.store, false);
+            if (!hasattr(Slots.copy)) {
+                setattr(Slots.copy, false);
+            }
+            // todo
         }
 
         if (!(store() && column_type() != null) || manual() || deprecated()) {
-            set(prefetch, false);
+            setattr(Slots.prefetch, false);
         }
 
-        if (!has(string) && !has(related)) {
+        if (!hasattr(Slots.string) && !hasattr(Slots.related)) {
             String n = name;
             if (name.endsWith("_ids")) {
                 n = name.substring(0, name.length() - 4);
@@ -412,7 +668,7 @@ public class Field extends MetaField {
                 n = name.substring(0, name.length() - 3);
             }
             n = n.replace('_', ' ');
-            set(string, n);
+            setattr(Slots.string, n);
         }
     }
 
@@ -423,7 +679,7 @@ public class Field extends MetaField {
 
     /** Determine the dependencies and inverse field(s) of ``self``. */
     public void _setup_regular_full(RecordSet model) {
-        if (has(depends)) {
+        if (hasattr(Slots.depends)) {
             return;
         }
         // todo
@@ -431,15 +687,5 @@ public class Field extends MetaField {
 
     public void _setup_related_full(RecordSet model) {
         // todo
-    }
-
-    public Field $new(Consumer<Field> consumer) {
-        try {
-            Field field = (Field) getClass().getConstructor().newInstance();
-            consumer.accept(field);
-            return field;
-        } catch (Exception e) {
-            throw new TypeErrorException(String.format("new field %s error", getClass().getName()), e);
-        }
     }
 }

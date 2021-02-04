@@ -12,10 +12,10 @@ import jdoo.util.Pair;
 public class IdField extends BaseField<IdField> {
     public IdField() {
         column_type = new Pair<>("varchar", new PgVarchar(32));
-        set(string, "ID");
-        set(store, true);
-        set(readonly, true);
-        set(prefetch, false);
+        setattr(Slots.string, "ID");
+        setattr(Slots.store, true);
+        setattr(Slots.readonly, true);
+        setattr(Slots.prefetch, false);
     }
 
     @Override

@@ -38,25 +38,25 @@ public class CharField extends _StringField<CharField> {
     @Override
     public Pair<String, Object> column_type() {
         if (column_type == null) {
-            column_type = new Pair<>("varchar", new PgVarchar(get(Integer.class, size)));
+            column_type = new Pair<>("varchar", new PgVarchar(getattr(Integer.class, size)));
         }
         return column_type;
     }
 
     public CharField size(int size) {
-        set(CharField.size, size);
+        setattr(CharField.size, size);
         return this;
     }
 
     public CharField trim(boolean trim) {
-        set(CharField.trim, trim);
+        setattr(CharField.trim, trim);
         return this;
     }
 
     @Override
     public void update_db_column(RecordSet model, Dict column) {
         if (column != null && "varchar".equals(column.get("udt_name")) && column.get("character_maximum_length") != null
-                && (!has(size) || (int) column.get("character_maximum_length") < get(Integer.class, size))) {
+                && (!hasattr(size) || (int) column.get("character_maximum_length") < getattr(Integer.class, size))) {
             // the column's varchar size does not match self.size; convert it
             Sql.convert_column(model.env().cr(), model.table(), getName(), column_type().second().toString());
         }
@@ -69,8 +69,8 @@ public class CharField extends _StringField<CharField> {
             return null;
         }
         String str = value.toString().replace("'", "''");
-        if(has(size)){
-            str = str.substring(0, get(Integer.class, size));
+        if(hasattr(size)){
+            str = str.substring(0, getattr(Integer.class, size));
         }
         return str;
     }
@@ -81,8 +81,8 @@ public class CharField extends _StringField<CharField> {
             return null;
         }
         String str = value.toString().replace("'", "''");
-        if(has(size)){
-            str = str.substring(0, get(Integer.class, size));
+        if(hasattr(size)){
+            str = str.substring(0, getattr(Integer.class, size));
         }
         return str;
     }

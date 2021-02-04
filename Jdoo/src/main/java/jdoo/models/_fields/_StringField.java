@@ -19,13 +19,13 @@ public abstract class _StringField<T extends _StringField<T>> extends BaseField<
 
     @SuppressWarnings("unchecked")
     public T translate(boolean translate) {
-        set(_StringField.translate, translate);
+        setattr(_StringField.translate, translate);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T translate(BiConsumer<Consumer<Object>, Object> translate) {
-        set(_StringField.translate, translate);
+        setattr(_StringField.translate, translate);
         return (T) this;
     }
 

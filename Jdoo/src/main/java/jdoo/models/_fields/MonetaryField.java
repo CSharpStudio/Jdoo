@@ -18,26 +18,26 @@ public class MonetaryField extends BaseField<MonetaryField> {
     public static final Slot currency_field = new Slot("currency_field");
 
     public MonetaryField() {
-        set(group_operator, "sum");
+        setattr(Slots.group_operator, "sum");
         column_type = new Pair<>("numeric", "numeric");
         column_cast_from = new Tuple<>("float8");
     }
 
     public MonetaryField currency_field(String currency_field) {
-        set(MonetaryField.currency_field, currency_field);
+        setattr(MonetaryField.currency_field, currency_field);
         return this;
     }
 
     void _setup_currency_field(RecordSet model) {
-        if (!has(currency_field)) {
+        if (!hasattr(currency_field)) {
             if (model.hasField("currency_id")) {
-                set(currency_field, "currency_id");
+                setattr(currency_field, "currency_id");
             } else if (model.hasField("x_currency_id")) {
-                set(currency_field, "x_currency_id");
+                setattr(currency_field, "x_currency_id");
             }
         }
-        assert model.hasField(get(String.class, currency_field))
-                : String.format("Field %s with unknown currency_field %s", toString(), get(currency_field));
+        assert model.hasField(getattr(String.class, currency_field))
+                : String.format("Field %s with unknown currency_field %s", toString(), getattr(currency_field));
     }
 
     @Override
@@ -50,14 +50,14 @@ public class MonetaryField extends BaseField<MonetaryField> {
     public void _setup_related_full(RecordSet model) {
         super._setup_related_full(model);
         if (inherited()) {
-            set(currency_field, related_field().get(currency_field));
+            setattr(currency_field, related_field().getattr(currency_field));
         }
         _setup_currency_field(model);
     }
 
     @Override
     public Object convert_to_column(Object value, RecordSet record, Dict values, boolean validate) {
-        String _currency_field = get(String.class, currency_field);
+        String _currency_field = getattr(String.class, currency_field);
         RecordSet currency;
         if (values != null && values.containsKey(_currency_field)) {
             Field field = record.getField(_currency_field);
@@ -76,7 +76,7 @@ public class MonetaryField extends BaseField<MonetaryField> {
     @Override
     public Object convert_to_cache(Object value, RecordSet record, boolean validate) {
         value = TypeUtils.toDouble(value);
-        String _currency_field = get(String.class, currency_field);
+        String _currency_field = getattr(String.class, currency_field);
         RecordSet currency = record.get(RecordSet.class, _currency_field);
         if (validate && currency != null && currency.hasId()) {
             value = currency.call("round", value);

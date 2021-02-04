@@ -54,25 +54,25 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
     }
 
     public Many2oneField ondelete(String ondelete) {
-        set(Many2oneField.ondelete, ondelete);
+        setattr(Many2oneField.ondelete, ondelete);
         return this;
     }
 
     public Many2oneField delegate(boolean delegate) {
-        set(Many2oneField.delegate, delegate);
+        setattr(Many2oneField.delegate, delegate);
         return this;
     }
 
     public Many2oneField auto_join(boolean auto_join) {
-        set(Many2oneField.auto_join, auto_join);
+        setattr(Many2oneField.auto_join, auto_join);
         return this;
     }
 
     @Override
     public void _setup_attrs(RecordSet model, String name) {
         super._setup_attrs(model, name);
-        if (!get(Boolean.class, delegate)) {
-            set(delegate, model.type().inherits().values().contains(getName()));
+        if (!getattr(Boolean.class, delegate)) {
+            setattr(delegate, model.type().inherits().values().contains(getName()));
         }
     }
 
@@ -84,15 +84,15 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
         // 2) The ondelete attribute is defined and its definition makes sense
         // 3) The ondelete attribute is explicitly defined as 'set null' for a required
         // m2o, this is considered a programming error.
-        if (!has(ondelete)) {
+        if (!hasattr(ondelete)) {
             RecordSet comodel = model.env(comodel_name());
             if (model.type().is_transient() && !comodel.type().is_transient()) {
-                set(ondelete, required() ? "cascade" : "set null");
+                setattr(ondelete, required() ? "cascade" : "set null");
             } else {
-                set(ondelete, required() ? "restrict" : "set null");
+                setattr(ondelete, required() ? "restrict" : "set null");
             }
         }
-        if ("set null".equals(get(String.class, ondelete)) && required()) {
+        if ("set null".equals(getattr(String.class, ondelete)) && required()) {
             throw new ValueErrorException(String.format(
                     "The m2o field %s of model %s is required but declares its ondelete policy "
                             + "as being 'set null'. Only 'restrict' and 'cascade' make sense.",

@@ -7,7 +7,7 @@ import jdoo.util.TypeUtils;
 
 public class IntegerField extends BaseField<IntegerField> {
     public IntegerField() {
-        set(group_operator, "sum");
+        setattr(Slots.group_operator, "sum");
         column_type = new Pair<>("int4", "int4");
     }
 

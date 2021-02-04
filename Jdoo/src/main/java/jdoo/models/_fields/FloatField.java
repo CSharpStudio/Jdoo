@@ -19,14 +19,14 @@ public class FloatField extends BaseField<FloatField> {
     public static final Slot _digits = new Slot("_digits");
 
     public FloatField() {
-        set(group_operator, "sum");
+        setattr(Slots.group_operator, "sum");
         column_cast_from = new Tuple<>("int4", "numeric", "float8");
     }
 
     @Override
     public Pair<String, Object> column_type() {
         if (column_type == null) {
-            if (has(_digits))
+            if (hasattr(_digits))
                 column_type = new Pair<>("numeric", "numeric");
             else
                 column_type = new Pair<>("float8", "double precision");
@@ -36,7 +36,7 @@ public class FloatField extends BaseField<FloatField> {
 
     @SuppressWarnings("unchecked")
     public Pair<Integer, Integer> get_digits(Environment env) {
-        Object digits = get(_digits);
+        Object digits = getattr(_digits);
         if (digits instanceof String) {
             int precision = env.get("decimal.precision").call(Integer.class, "precision_get", digits);
             return new Pair<>(16, precision);
@@ -45,17 +45,17 @@ public class FloatField extends BaseField<FloatField> {
     }
 
     public FloatField digits(String digits) {
-        set(_digits, digits);
+        setattr(_digits, digits);
         return this;
     }
 
     public FloatField digits(Pair<Integer, Integer> digits) {
-        set(_digits, digits);
+        setattr(_digits, digits);
         return this;
     }
 
     public FloatField digits(int precision, int scale) {
-        set(_digits, new Pair<>(precision, scale));
+        setattr(_digits, new Pair<>(precision, scale));
         return this;
     }
 

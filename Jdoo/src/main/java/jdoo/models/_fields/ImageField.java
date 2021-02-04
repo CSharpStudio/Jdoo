@@ -19,17 +19,17 @@ public class ImageField extends _BinaryField<ImageField> {
     }
 
     public ImageField attachment(boolean attachment) {
-        set(BinaryField.attachment, attachment);
+        setattr(BinaryField.attachment, attachment);
         return this;
     }
 
     public ImageField max_width(int max_width) {
-        set(ImageField.max_width, max_width);
+        setattr(ImageField.max_width, max_width);
         return this;
     }
 
     public ImageField max_height(int max_height) {
-        set(ImageField.max_height, max_height);
+        setattr(ImageField.max_height, max_height);
         return this;
     }
 

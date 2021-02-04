@@ -45,12 +45,12 @@ public class SelectionField extends BaseField<SelectionField> {
     }
 
     public SelectionField selection(String selection) {
-        set(SelectionField.selection, selection);
+        setattr(SelectionField.selection, selection);
         return this;
     }
 
     public SelectionField selection(List<Pair<String, String>> selection) {
-        set(SelectionField.selection, selection);
+        setattr(SelectionField.selection, selection);
         return this;
     }
 
@@ -60,25 +60,25 @@ public class SelectionField extends BaseField<SelectionField> {
     }
 
     public SelectionField selection(Function<RecordSet, Object> func) {
-        set(SelectionField.selection, func);
+        setattr(SelectionField.selection, func);
         return this;
     }
 
     public SelectionField validate(boolean validate) {
-        set(SelectionField.validate, validate);
+        setattr(SelectionField.validate, validate);
         return this;
     }
 
     @Override
     public void _setup_regular_base(RecordSet model) {
         super._setup_regular_base(model);
-        assert has(selection) : String.format("Field %s with non-str value in selection", this);
+        assert hasattr(selection) : String.format("Field %s with non-str value in selection", this);
     }
 
     @Override
     public void _setup_regular_full(RecordSet model) {
         super._setup_regular_full(model);
-        SelectionField field = get(SelectionField.class, related_field);
+        SelectionField field = getattr(SelectionField.class, Slots.related_field);
         $selection = m -> field._description_selection(model.env());
     }
 
@@ -90,7 +90,7 @@ public class SelectionField extends BaseField<SelectionField> {
 
     @SuppressWarnings("unchecked")
     Object _description_selection(Environment env) {
-        Object _selection = get(selection);
+        Object _selection = getattr(selection);
         if (_selection instanceof String) {
             return env.get(model_name()).call((String) _selection);
         } else if (_selection instanceof Function) {
@@ -105,7 +105,7 @@ public class SelectionField extends BaseField<SelectionField> {
 
     @Override
     public Object convert_to_column(Object value, RecordSet record, Dict values, boolean validate) {
-        if (validate && get(Boolean.class, SelectionField.validate)) {
+        if (validate && getattr(Boolean.class, SelectionField.validate)) {
             value = convert_to_cache(value, record, true);
         }
         return super.convert_to_column(value, record, values, validate);

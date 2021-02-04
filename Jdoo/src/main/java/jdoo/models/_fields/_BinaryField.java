@@ -25,19 +25,19 @@ public class _BinaryField<T extends _BinaryField<T>> extends BaseField<T> {
     }
 
     public _BinaryField() {
-        set(prefetch, false);// not prefetched by default
-        set(depends_context, new Tuple<>("bin_size"));// depends on context (content or size)
+        setattr(Slots.prefetch, false);// not prefetched by default
+        setattr(Slots.depends_context, new Tuple<>("bin_size"));// depends on context (content or size)
     }
 
     @SuppressWarnings("unchecked")
     public T attachment(boolean attachment) {
-        set(BinaryField.attachment, attachment);
+        setattr(BinaryField.attachment, attachment);
         return (T) this;
     }
 
     @Override
     public Pair<String, Object> column_type() {
-        return get(Boolean.class, attachment) ? null : new Pair<>("bytea", "bytea");
+        return getattr(Boolean.class, attachment) ? null : new Pair<>("bytea", "bytea");
     }
 
     @Override
@@ -96,7 +96,7 @@ public class _BinaryField<T extends _BinaryField<T>> extends BaseField<T> {
 
     @Override
     public RecordSet write(RecordSet records, Object value) {
-        if (!get(Boolean.class, attachment)) {
+        if (!getattr(Boolean.class, attachment)) {
             return super.write(records, value);
         }
         records.env().remove_to_compute(this, records);

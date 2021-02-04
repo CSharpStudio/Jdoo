@@ -12,109 +12,109 @@ public class BaseField<T extends BaseField<T>> extends Field {
 
     @SuppressWarnings("unchecked")
     public T automatic(boolean automatic) {
-        set(Field.automatic, automatic);
+        setattr(Slots.automatic, automatic);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T store(boolean store) {
-        set(Field.store, store);
+        setattr(Slots.store, store);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T index(boolean index) {
-        set(Field.index, index);
+        setattr(Slots.index, index);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T copy(boolean copy) {
-        set(Field.copy, copy);
+        setattr(Slots.copy, copy);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T depends(String[] depends) {
-        set(Field.depends, depends);
+        setattr(Slots.depends, depends);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T compute(String compute) {
-        set(Field.compute, compute);
+        setattr(Slots.compute, compute);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T compute_sudo(boolean compute_sudo) {
-        set(Field.compute_sudo, compute_sudo);
+        setattr(Slots.compute_sudo, compute_sudo);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T inverse(String inverse) {
-        set(Field.inverse, inverse);
+        setattr(Slots.inverse, inverse);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T search(String search) {
-        set(Field.search, search);
+        setattr(Slots.search, search);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T related(String related) {
-        set(Field.related, Arrays.asList(related));
+        setattr(Slots.related, Arrays.asList(related));
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T company_dependent(boolean company_dependent) {
-        set(Field.company_dependent, company_dependent);
+        setattr(Slots.company_dependent, company_dependent);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T string(String string) {
-        set(Field.string, string);
+        setattr(Slots.string, string);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T help(String help) {
-        set(Field.help, help);
+        setattr(Slots.help, help);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T readonly(boolean readonly) {
-        set(Field.readonly, readonly);
+        setattr(Slots.readonly, readonly);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T required(boolean required) {
-        set(Field.required, required);
+        setattr(Slots.required, required);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T states(HashMap<String, Set<State>> states) {
-        set(Field.states, states);
+        setattr(Slots.states, states);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T groups(String groups) {
-        set(Field.groups, groups);
+        setattr(Slots.groups, groups);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T group_operator(String group_operator) {
-        set(Field.group_operator, group_operator);
+        setattr(Slots.group_operator, group_operator);
         return (T) this;
     }
 
@@ -124,13 +124,13 @@ public class BaseField<T extends BaseField<T>> extends Field {
 
     @SuppressWarnings("unchecked")
     public T $default(Function<RecordSet, Object> defaultFunc) {
-        set(Field.$default, defaultFunc);
+        setattr(Slots.$default, defaultFunc);
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T change_default(boolean change_default) {
-        set(Field.change_default, change_default);
+        setattr(Slots.change_default, change_default);
         return (T) this;
     }
 }
