@@ -439,12 +439,14 @@ public class MetaModel {
     static void _build_model_attributes(MetaModel cls, Registry pool) {
         cls._description = cls._name;
         cls._table = cls._name.replace('.', '_');
-        cls._log_access = cls._auto;
+        //cls._log_access = cls._auto;
         cls._inherits = new HashMap<>();
         Map<String, Tuple<String>> _sql_constraints = new HashMap<>();
         for (int i = cls._bases.size(); i > 0; i--) {
             MetaModel base = cls._bases.get(i - 1);
             if (base.pool == null) {
+                cls._auto = base._auto;
+                cls._log_access = cls._auto;
                 if (StringUtils.hasText(base._description)) {
                     cls._description = base._description;
                 }

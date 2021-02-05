@@ -81,7 +81,7 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
             RecordSet comodel = model.env(comodel_name());
             if (!comodel.hasField(getattr(String.class, inverse_name))) {
                 throw new UserErrorException(
-                        String.format("No inverse field %r found for %s", getattr(inverse_name), comodel_name()));
+                        String.format("No inverse field %s found for %s", getattr(inverse_name), comodel_name()));
             }
         }
         return true;

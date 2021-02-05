@@ -26,8 +26,8 @@ public class IrModel extends Model {
     static Field name = fields.Char("Model Description").translate(true).required(true);
     static Field model = fields.Char().$default("x_").required(true).index(true);
     static Field info = fields.Text().string("Information");
-    static Field field_id = fields.One2many("ir.model.fields", "model_id").string("Fields").required(true).copy(true)
-            .$default("_default_field_id");
+    // static Field field_id = fields.One2many("ir.model.fields", "model_id").string("Fields").required(true).copy(true)
+    //         .$default("_default_field_id");
     static Field inherited_model_ids = fields.Many2many("ir.model").compute("_inherited_models")
             .string("Inherited models").help("The list of models that extends the current model.");
     static Field state = fields

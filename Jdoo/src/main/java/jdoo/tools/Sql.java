@@ -179,7 +179,7 @@ public class Sql {
 
     public static void drop_index(Cursor cr, String indexname, String tablename) {
         cr.execute(MessageFormat.format("DROP INDEX IF EXISTS \"{0}\"", indexname));
-        _schema.debug("Table %r: dropped index %r", tablename, indexname);
+        _schema.debug("Table {}: dropped index {}", tablename, indexname);
     }
 
     public static void drop_view_if_exists(Cursor cr, String viewname) {
