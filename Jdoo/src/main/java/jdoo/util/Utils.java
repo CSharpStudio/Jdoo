@@ -2,6 +2,7 @@ package jdoo.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -28,14 +29,6 @@ public class Utils {
             set.add(a);
         }
         return set;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <K, V> V get(Map<K, ?> map, K key, V $default) {
-        if (map.containsKey(key)) {
-            return (V) map.get(key);
-        }
-        return $default;
     }
 
     public static <T> List<T> mutli(List<T> list, int times) {
@@ -81,16 +74,24 @@ public class Utils {
         return value;
     }
 
+    public static <T, V> Map<T, V> toMap(Collection<Pair<T, V>> pairs) {
+        Map<T, V> map = new HashMap<>();
+        for (Pair<T, V> p : pairs) {
+            map.put(p.first(), p.second());
+        }
+        return map;
+    }
+
     public static List<Tuple<Object>> zip(Collection<?>... collections) {
         List<Tuple<Object>> result = new ArrayList<>();
         List<Iterator<?>> all = new ArrayList<>(collections.length);
         for (Collection<?> c : collections) {
             all.add(c.iterator());
         }
-        for (int i = 0; i < collections.length; i++) {
+        boolean exist = false;
+        while (!exist) {
             Object[] objs = new Object[collections.length];
             int index = 0;
-            boolean exist = false;
             for (Iterator<?> iterator : all) {
                 if (iterator.hasNext()) {
                     objs[index++] = iterator.next();

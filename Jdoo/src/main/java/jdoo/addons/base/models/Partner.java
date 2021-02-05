@@ -3,6 +3,7 @@ package jdoo.addons.base.models;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -14,12 +15,13 @@ import jdoo.models.d;
 import jdoo.models.fields;
 import jdoo.util.Dict;
 import jdoo.util.Pair;
+import jdoo.util.Utils;
 
 public class Partner extends Model {
 
     public Partner() {
         _description = "Contact";
-        //_inherit = Arrays.asList("format.address.mixin", "image.mixin");
+        // _inherit = Arrays.asList("format.address.mixin", "image.mixin");
         _name = "res.partner";
         _order = "display_name";
     }
@@ -27,7 +29,7 @@ public class Partner extends Model {
     static Field name = fields.Char().index(true);
     static Field display_name = fields.Char().compute("_compute_display_name").store(true).index(true);
     static Field date = fields.Date().index(true);
-    //static Field title = fields.Many2one("res.partner.title");
+    // static Field title = fields.Many2one("res.partner.title");
     static Field parent_id = fields.Many2one("res.partner").string("Related Company").index(true);
     static Field parent_name = fields.Char().related("parent_id.name").readonly(true).string("Parent name");
     static Field child_ids = fields.One2many("res.partner", "parent_id").string("Contact")
@@ -71,9 +73,11 @@ public class Partner extends Model {
     static Field zip = fields.Char().change_default(true);
     static Field city = fields.Char();
 
-//     static Field state_id = fields.Many2one("res.country.state", "State").ondelete("restrict")
-//             .domain(d.on("[('country_id', '=?', country_id)]"));
-//     static Field country_id = fields.Many2one("res.country", "Country").ondelete("restrict");
+    // static Field state_id = fields.Many2one("res.country.state",
+    // "State").ondelete("restrict")
+    // .domain(d.on("[('country_id', '=?', country_id)]"));
+    // static Field country_id = fields.Many2one("res.country",
+    // "Country").ondelete("restrict");
     static Field partner_latitude = fields.Float("Geo Latitude").digits(16, 5);
     static Field partner_longitude = fields.Float("Geo Longitude").digits(16, 5);
     static Field email = fields.Char();
@@ -83,13 +87,15 @@ public class Partner extends Model {
     static Field mobile = fields.Char();
     static Field is_company = fields.Boolean("Is a Company").$default(false)
             .help("Check if the contact is a company, otherwise it is a person");
-    //static Field industry_id = fields.Many2one("res.partner.industry", "Industry");
+    // static Field industry_id = fields.Many2one("res.partner.industry",
+    // "Industry");
 
     // # company_type is only an interface field, do not use it in business logic
     static Field company_type = fields.Selection().string("Company Type")
             .selection(Arrays.asList(new Pair<>("person", "Individual"), new Pair<>("company", "Company")))
             .compute("_compute_company_type").inverse("_write_company_type");
-    //static Field company_id = fields.Many2one("res.company", "Company").index(true);
+    // static Field company_id = fields.Many2one("res.company",
+    // "Company").index(true);
     static Field color = fields.Integer("Color Index").$default(0);
     static Field user_ids = fields.One2many("res.users", "partner_id", "Users").auto_join(true);
     static Field partner_share = fields.Boolean("Share Partner").compute("_compute_partner_share").store(true).help(
@@ -111,10 +117,9 @@ public class Partner extends Model {
     @api.depends({ "is_company", "name", "parent_id.name", "type", "company_name" })
     @api.depends_context({ "show_address", "show_address_only", "show_email", "html_format", "show_vat" })
     public void _compute_display_name(RecordSet self) {
-        // diff = dict(show_address=None, show_address_only=None, show_email=None,
-        // html_format=None, show_vat=None)
-        // names = dict(self.with_context(**diff).name_get())
-        Dict names = self.call(Dict.class, "name_get");
+        Dict diff = new Dict().set("show_address", null).set("show_address_only", null).set("show_email", null)
+                .set("html_format", null).set("show_vat", null);
+        Map<Object, Object> names = Utils.toMap(self.with_context(diff).name_get());
         for (RecordSet partner : self)
             partner.set(display_name, names.get(partner.id()));
     }

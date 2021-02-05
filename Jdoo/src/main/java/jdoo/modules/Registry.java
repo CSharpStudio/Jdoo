@@ -17,13 +17,18 @@ import jdoo.exceptions.ModelException;
 public class Registry {
     HashMap<String, MetaModel> map = new HashMap<String, MetaModel>();
     String tenant;
+    boolean ready;
+
+    public Registry(String tenant) {
+        this.tenant = tenant;
+    }
 
     public String tenant() {
         return tenant;
     }
 
-    public Registry(String tenant) {
-        this.tenant = tenant;
+    public boolean ready() {
+        return ready;
     }
 
     public MetaModel get(String model) {

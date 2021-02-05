@@ -5,17 +5,18 @@ import java.util.HashMap;
 import java.util.Set;
 
 public class IdValues {
-    HashMap<String, HashMap<String, Object>> data = new HashMap<String, HashMap<String, Object>>();
+    // HashMap<id, HashMap<field, value>>
+    HashMap<Object, HashMap<String, Object>> data = new HashMap<Object, HashMap<String, Object>>();
 
-    public Set<String> ids(){
+    public Set<Object> ids() {
         return data.keySet();
     }
 
-    public Collection<HashMap<String, Object>> values(){
+    public Collection<HashMap<String, Object>> values() {
         return data.values();
     }
 
-    public boolean contains(String id, String field) {
+    public boolean contains(Object id, String field) {
         if (data.containsKey(id)) {
             HashMap<String, Object> values = data.get(id);
             return values.containsKey(field);
@@ -23,11 +24,11 @@ public class IdValues {
         return false;
     }
 
-    public HashMap<String, Object> get(String id){
+    public HashMap<String, Object> get(Object id) {
         return data.get(id);
     }
 
-    public Object get(String id, String field) {
+    public Object get(Object id, String field) {
         if (data.containsKey(id)) {
             HashMap<String, Object> values = data.get(id);
             if (values.containsKey(field)) {
@@ -38,7 +39,7 @@ public class IdValues {
         return null;
     }
 
-    public void set(String id, String field, Object value) {
+    public void set(Object id, String field, Object value) {
         HashMap<String, Object> values;
         if (data.containsKey(id)) {
             values = data.get(id);

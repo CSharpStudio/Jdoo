@@ -115,22 +115,22 @@ public class Environment {
     }
 
     public boolean is_protected(Field field, RecordSet record) {
-        StackMap<Field, Collection<String>> $protected = all.$protected;
-        Collection<String> ids = $protected.get(field, Tuple.emptyTuple());
+        StackMap<Field, Collection<Object>> $protected = all.$protected;
+        Collection<Object> ids = $protected.get(field, Tuple.emptyTuple());
         return ids.contains(record.id());
     }
 
     public RecordSet $protected(Field field) {
-        StackMap<Field, Collection<String>> $protected = all.$protected;
+        StackMap<Field, Collection<Object>> $protected = all.$protected;
         return get(field.model_name()).browse($protected.get(field, Tuple.emptyTuple()));
     }
 
     public Protecting protecting(Collection<Field> fields, RecordSet records) {
-        StackMap<Field, Collection<String>> $protected = all.$protected;
-        Map<Field, Collection<String>> map = $protected.pushmap();
+        StackMap<Field, Collection<Object>> $protected = all.$protected;
+        Map<Field, Collection<Object>> map = $protected.pushmap();
         for (Field field : fields) {
-            Set<String> ids_ = new HashSet<String>();
-            Collection<String> ids = $protected.get(field, Tuple.emptyTuple());
+            Set<Object> ids_ = new HashSet<>();
+            Collection<Object> ids = $protected.get(field, Tuple.emptyTuple());
             ids_.addAll(ids);
             ids_.addAll(records.ids());
             map.put(field, ids_);
@@ -184,8 +184,8 @@ public class Environment {
     public RecordSet company() {
         return lazy_property("company", () -> {
             if (context.containsKey("allowed_company_ids")) {
-                Tuple<String> company_ids = (Tuple<String>) context.get("allowed_company_ids");
-                String company_id = company_ids.get(0);
+                Tuple<Object> company_ids = (Tuple<Object>) context.get("allowed_company_ids");
+                Object company_id = company_ids.get(0);
                 if (user().get(RecordSet.class, "company_ids").ids().contains(company_id)) {
                     return get("res.company").browse(company_id);
                 }
@@ -197,11 +197,11 @@ public class Environment {
     @SuppressWarnings("unchecked")
     public RecordSet companies() {
         return lazy_property("companies", () -> {
-            List<String> allowed_company_ids = new ArrayList<>();
+            List<Object> allowed_company_ids = new ArrayList<>();
             if (context.containsKey("allowed_company_ids")) {
-                Tuple<String> company_ids = (Tuple<String>) context.get("allowed_company_ids");
-                Collection<String> users_company_ids = user().get(RecordSet.class, "company_ids").ids();
-                for (String company_id : company_ids) {
+                Tuple<Object> company_ids = (Tuple<Object>) context.get("allowed_company_ids");
+                Collection<?> users_company_ids = user().get(RecordSet.class, "company_ids").ids();
+                for (Object company_id : company_ids) {
                     if (users_company_ids.contains(company_id)) {
                         allowed_company_ids.add(company_id);
                     }

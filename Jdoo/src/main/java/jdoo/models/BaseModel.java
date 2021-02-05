@@ -1,5 +1,6 @@
 package jdoo.models;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,6 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.Map.Entry;
 
+import com.bestvike.linq.Linq;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import org.apache.logging.log4j.LogManager;
@@ -20,23 +22,30 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.util.StringUtils;
 
 import jdoo.util.Default;
+import jdoo.util.DefaultDict;
 import jdoo.util.Dict;
-import jdoo.util.Linq;
 import jdoo.util.Pair;
 import jdoo.tools.Collector;
 import jdoo.tools.IdValues;
 import jdoo.tools.Sql;
+import jdoo.tools.Tools;
 import jdoo.util.Tuple;
+import jdoo.util.Utils;
 import jdoo.data.Cursor;
+import jdoo.init;
 import jdoo.apis.Cache;
 import jdoo.apis.Environment;
 import jdoo.data.AsIs;
+import jdoo.exceptions.AccessErrorException;
 import jdoo.exceptions.MissingErrorException;
 import jdoo.models.MetaField.Slots;
+import jdoo.models._fields.BinaryField;
 import jdoo.models._fields.BooleanField;
 import jdoo.models._fields.Many2manyField;
+import jdoo.models._fields.MonetaryField;
 import jdoo.models._fields.One2manyField;
 import jdoo.apis.api;
+import jdoo.apis.Environment.Protecting;
 
 public class BaseModel extends MetaModel {
     private static Logger _logger = LogManager.getLogger(BaseModel.class);
@@ -273,7 +282,7 @@ public class BaseModel extends MetaModel {
         return defaults;
     }
 
-    public Tuple<String> name_create(RecordSet self, String name) {
+    public Pair<Object, Object> name_create(RecordSet self, String name) {
         String rec_name = self.type().rec_name();
         if (StringUtils.hasText(rec_name)) {
             RecordSet record = create(self, new Dict().set(rec_name, name));
@@ -282,20 +291,20 @@ public class BaseModel extends MetaModel {
         return null;
     }
 
-    public List<Tuple<String>> name_get(RecordSet self) {
-        List<Tuple<String>> result = new ArrayList<>();
+    public List<Pair<Object, Object>> name_get(RecordSet self) {
+        List<Pair<Object, Object>> result = new ArrayList<>();
         String rec_name = self.type().rec_name();
         Field field = self.type().findField(rec_name);
         if (field != null) {
             for (RecordSet record : self) {
-                Tuple<String> tuple = new Tuple<>(record.id(),
+                Pair<Object, Object> pair = new Pair<>(record.id(),
                         field.convert_to_display_name(record.get(field), record));
-                result.add(tuple);
+                result.add(pair);
             }
         } else {
             for (RecordSet record : self) {
-                Tuple<String> tuple = new Tuple<>(record.id(), String.format("%s.%s", record.name(), record.id()));
-                result.add(tuple);
+                Pair<Object, Object> pair = new Pair<>(record.id(), String.format("%s.%s", record.name(), record.id()));
+                result.add(pair);
             }
         }
         return result;
@@ -305,27 +314,47 @@ public class BaseModel extends MetaModel {
         if (fields.isEmpty())
             return;
         check_access_rights(self, "read", true);
-        List<String> fnames = new ArrayList<String>();
-        List<String> field_names = new ArrayList<String>();
+        List<String> fnames = new ArrayList<>();
+        List<Field> field_list = new ArrayList<>();
+        List<Field> inherited_field_list = new ArrayList<>();
         for (Field field : fields) {
             fnames.add(field.getName());
             if (field.store()) {
-                field_names.add(field.getName());
+                field_list.add(field);
+            } else if (field.base_field().store()) {
+                inherited_field_list.add(field);
             }
         }
+
         flush(self, fnames, self);
 
         List<Field> fields_pre = new ArrayList<>();
-        for (String name : field_names) {
-            Field field = self.getField(name);
-            if (!"id".equals(field.name)) {
-                fields_pre.add(field);
+        for (Field field : Linq.of(field_list).union(Linq.of(inherited_field_list))) {
+            Field base_field = field.base_field();
+            if (!"id".equals(field.name) && base_field.store() && base_field.column_type() != null) {
+                if (!(field.inherited() && base_field.translate())) {
+                    fields_pre.add(field);
+                }
             }
         }
 
         Environment env = self.env();
         Cursor cr = env.cr();
-        String select_clause = org.apache.tomcat.util.buf.StringUtils.join(field_names, ',');
+        Dict context = env.context();
+
+        List<String> qual_names = new ArrayList<>();
+        qual_names.add("id");
+        for (Field field : fields_pre) {
+            // todo qualify
+            if (field instanceof BinaryField
+                    && (context.containsKey("bin_size") || context.containsKey("bin_size_" + field.name))) {
+                // todo
+            } else {
+                qual_names.add(field.name);
+            }
+        }
+
+        String select_clause = org.apache.tomcat.util.buf.StringUtils.join(qual_names, ',');
         String from_clause = self.table();
         String where_clause = "id in %s";
         String query_str = String.format("SELECT %s FROM %s WHERE %s", select_clause, from_clause, where_clause);
@@ -336,11 +365,41 @@ public class BaseModel extends MetaModel {
         }
         RecordSet fetched;
         if (!result.isEmpty()) {
-            // for (type var : iterable) {
-
-            // }
+            List<Tuple<Object>> cols = Utils.zip(result.toArray(new Tuple[0]));
+            Tuple<Object> ids = cols.get(0);
+            fetched = self.browse(ids);
+            int i = 1;
+            for (Field field : fields_pre) {
+                Tuple<Object> values = cols.get(i++);
+                if (context.containsKey("lang") && !field.inherited() && field.translate()) {
+                    // todo translate
+                }
+                env.cache().update(fetched, field, values);
+            }
+            for (Field field : field_list) {
+                if (field.column_type() == null) {
+                    field.read(fetched);
+                }
+                if (field.deprecated()) {
+                    _logger.warn("Field {} is deprecated", field);
+                }
+            }
         } else {
             fetched = self.browse();
+        }
+
+        RecordSet missing = self.subtract(fetched);
+        if (missing.hasId()) {
+            RecordSet extras = fetched.subtract(self);
+            if (extras.hasId()) {
+                throw new AccessErrorException(MessageFormat.format(
+                        "Database fetch misses ids ({0}) and has extra ids ({1}), may be caused by a type incoherence in a previous request",
+                        missing.ids, extras.ids));
+            }
+            RecordSet forbidden = exists(missing);
+            if (forbidden.hasId()) {
+                // todo raise self.env['ir.rule']._make_access_error('read', forbidden)
+            }
         }
     }
 
@@ -351,28 +410,97 @@ public class BaseModel extends MetaModel {
         check_access_rights(self, "write");
         check_field_access_rights(self, "write", vals.keySet());
         check_access_rule(self, "write");
+        Environment env = self.env();
 
-        // for (String fname : vals.keySet()) {
-        // Field field = self.getField(fname);
-        // }
+        List<String> bad_names = Utils.asList("id", "parent_path");
 
         if (self.type().log_access()) {
-            IdValues towrite = self.env().all().towrite(self.name());
-            for (RecordSet record : self) {
-                towrite.set(record.id(), "write_uid", self.env().uid());
-                towrite.set(record.id(), "write_date", null);
+            // the superuser can set log_access fields while loading registry
+            if (!(self.env().uid() == init.SUPERUSER_ID && !self.type().pool().ready())) {
+                bad_names.addAll(LOG_ACCESS_COLUMNS);
             }
-            self.env().cache().invalidate(Arrays.asList(new Pair<>(self.getField("write_date"), self.ids()),
-                    new Pair<>(self.getField("write_uid"), self.ids())));
         }
+
+        DefaultDict<String, List<Field>> determine_inverses = new DefaultDict<>(List.class);
+        Map<Field, RecordSet> records_to_inverse = new HashMap<>();
+        List<String> relational_names = new ArrayList<>();
+        Set<Field> $protected = new HashSet<>();
+        boolean check_company = false;
 
         for (String fname : vals.keySet()) {
             Field field = self.getField(fname);
-            field.write(self, vals.get(fname));
+            String inverse = field.inverse();
+            if (StringUtils.hasText(inverse)) {
+                determine_inverses.get(inverse).add(field);
+            }
         }
-        // self.modified(vals)
 
+        // protect fields being written against recomputation
+        try (Protecting protecting = env.protecting($protected, self)) {
+            RecordSet real_recs = self.filtered("id");
+
+            // If there are only fields that do not trigger _write (e.g. only
+            // determine inverse), the below ensures that `write_date` and
+            // `write_uid` are updated (`test_orm.py`, `test_write_date`)
+            if (self.type().log_access()) {
+                IdValues towrite = self.env().all().towrite(self.name());
+                for (RecordSet record : self) {
+                    towrite.set(record.id(), "write_uid", self.env().uid());
+                    towrite.set(record.id(), "write_date", null);
+                }
+                self.env().cache().invalidate(Arrays.asList(new Pair<>(self.getField("write_date"), self.ids()),
+                        new Pair<>(self.getField("write_uid"), self.ids())));
+            }
+
+            // for monetary field, their related currency field must be cached
+            // before the amount so it can be rounded correctly
+            for (Field field : Linq.of(self.getFields()).orderBy(f -> f instanceof MonetaryField)) {
+                if (bad_names.contains(field.name)) {
+                    continue;
+                }
+                field.write(self, vals.get(field.name));
+            }
+            modified(self, vals.keySet(), false);
+
+            if (self.type()._parent_store && vals.containsKey(self.type()._parent_name)) {
+                flush(self, Arrays.asList(self.type()._parent_name));
+            }
+
+            // validate non-inversed fields first
+            List<String> inverse_fields = Linq.of(determine_inverses.values()).selectMany(c -> Linq.of(c))
+                    .select(f -> f.name).toList();
+            List<String> to_validate_fields = new ArrayList<>(vals.keySet());
+            for (String f : inverse_fields) {
+                to_validate_fields.remove(f);
+            }
+            _validate_fields(real_recs, to_validate_fields);
+
+            for (List<Field> fields : determine_inverses.values()) {
+                try {
+                    fields.get(0).determine_inverse(real_recs);
+                } catch (AccessErrorException e) {
+                    if (fields.get(0).inherited()) {
+                        // todo description = self.env['ir.model']._get(self._name).name
+                        String description = self.type().description();
+                        throw new AccessErrorException(String.format("%s\n\nImplicitly accessed through '%s' (%s).",
+                                e.getMessage(), description, self.name()));
+                    }
+                    throw e;
+                }
+            }
+
+            // validate inversed fields
+            _validate_fields(real_recs, inverse_fields);
+        }
+
+        if (check_company && self.type()._check_company_auto) {
+            _check_company(self, null);
+        }
         return true;
+    }
+
+    public void _check_company(RecordSet self, @Default Collection<String> fnames) {
+        // todo
     }
 
     protected boolean _write(RecordSet self, Map<String, Object> vals) {
@@ -533,7 +661,7 @@ public class BaseModel extends MetaModel {
     }
 
     private void flush_process(RecordSet model, IdValues id_values) {
-        for (String id : id_values.ids()) {
+        for (Object id : id_values.ids()) {
             RecordSet recs = model.browse(id);
             try {
                 _write(recs, id_values.get(id));
@@ -640,21 +768,26 @@ public class BaseModel extends MetaModel {
     }
 
     public RecordSet exists(RecordSet self) {
-        // TODO
-        // ids, new_ids = [], []
-        // for i in self._ids:
-        // (ids if isinstance(i, int) else new_ids).append(i)
-        // if not ids:
-        // return self
-        // query = """SELECT id FROM "%s" WHERE id IN %%s""" % self._table
-        // self._cr.execute(query, [tuple(ids)])
-        // ids = [r[0] for r in self._cr.fetchall()]
-        // return self.browse(ids + new_ids)
-        return self.browse();
+        List<Object> ids = new ArrayList<>();
+        List<Object> new_ids = new ArrayList<>();
+        for (Object i : self.ids) {
+            if (Tools.hasId(i)) {
+                ids.add(i);
+            } else {
+                new_ids.add(i);
+            }
+        }
+        if (ids.isEmpty()) {
+            return self;
+        }
+        String query = String.format("SELECT id FROM \"%s\" WHERE id IN %%s", self.table());
+        self.cr().execute(query, Arrays.asList(ids));
+        ids = Linq.of(self.cr().fetchall()).select(p -> (Object) p.get(0)).union(Linq.of(new_ids)).toList();
+        return self.browse(ids);
     }
 
     public void modified(RecordSet self, Collection<String> fnames, @Default("false") boolean create) {
-
+        // todo
     }
 
     public void _fetch_field(RecordSet self, Field field) {
@@ -689,7 +822,8 @@ public class BaseModel extends MetaModel {
         }
         // 1. determine the proper fields of the model: the fields defined on the
         // class and magic fields, not the inherited or custom ones
-        for (Field field : Linq.orderBy(cls.$fields, f -> f._sequence)) {
+
+        for (Field field : Linq.of(cls.$fields).orderBy(f -> f._sequence)) {
             if (!field.automatic() && !field.manual() && !field.inherited()) {
                 _add_field(self, field.name, field);
             }
@@ -709,7 +843,7 @@ public class BaseModel extends MetaModel {
         _add_inherited_fields(self);
 
         // 4. initialize more field metadata
-        cls._field_computed = new Dict(); // fields computed with the same method
+        cls._field_computed = new HashMap<>(); // fields computed with the same method
         cls._field_inverses = new Collector(); // inverse fields for related fields
 
         cls._setup_done = true;
@@ -866,5 +1000,20 @@ public class BaseModel extends MetaModel {
             }
             record.set(CONCURRENCY_CHECK_FIELD, date);
         }
+    }
+
+    public void _compute_field_value(RecordSet self, Field field) {
+        self.call(field.compute());
+        if (field.store() && self.hasId()) {
+            List<String> fnames = new ArrayList<>();
+            for (Field f : self.type()._field_computed.get(field)) {
+                fnames.add(f.name);
+            }
+            self.call("_validate_fields", fnames);
+        }
+    }
+
+    public void _validate_fields(RecordSet self, Collection<String> field_names) {
+        // todo
     }
 }

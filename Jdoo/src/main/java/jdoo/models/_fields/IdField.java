@@ -25,7 +25,7 @@ public class IdField extends BaseField<IdField> {
 
     @Override
     public Object get(RecordSet record) {
-        Collection<String> ids = record.ids();
+        Collection<?> ids = record.ids();
         if (ids.size() == 0) {
             return null;
         } else if (ids.size() == 1) {

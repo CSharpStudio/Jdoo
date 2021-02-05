@@ -6,6 +6,7 @@ import java.util.Map;
 import jdoo.exceptions.ValueErrorException;
 import jdoo.models.RecordSet;
 import jdoo.tools.Slot;
+import jdoo.tools.Tools;
 import jdoo.util.Dict;
 import jdoo.util.Pair;
 
@@ -158,7 +159,7 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
 
     @Override
     public Object convert_to_onchange(Object value, RecordSet record, Collection<String> names) {
-        if (value == null || ((RecordSet) value).id().isEmpty()) {
+        if (value == null || !Tools.hasId(((RecordSet) value).id())) {
             return null;
         }
         return super.convert_to_onchange(value, record, names);
@@ -166,7 +167,7 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
 
     @Override
     public RecordSet write(RecordSet records, Object value) {
-        //todo
+        // todo
         return records;
     }
 }

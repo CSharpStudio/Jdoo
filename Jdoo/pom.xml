@@ -34,6 +34,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.bestvike</groupId>
+      <artifactId>linq</artifactId>
+      <version>5.0.0</version>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>

@@ -21,7 +21,6 @@ import jdoo.exceptions.TypeErrorException;
 import jdoo.exceptions.ValidationErrorException;
 import jdoo.modules.Registry;
 import jdoo.tools.Collector;
-import jdoo.util.Dict;
 import jdoo.util.Tuple;
 import jdoo.util.Utils;
 import jdoo.apis.Environment;
@@ -84,7 +83,7 @@ public class MetaModel {
     protected Boolean _log_access;
     static final String CONCURRENCY_CHECK_FIELD = "__last_update";
     boolean _setup_done;
-    Dict _field_computed;
+    Map<Field, List<Field>> _field_computed;
     Collector _field_inverses;
 
     Registry pool;
@@ -268,7 +267,7 @@ public class MetaModel {
         return true;
     }
 
-    public RecordSet browse(Environment env, Collection<String> ids, Collection<String> prefetchIds) {
+    public RecordSet browse(Environment env, Collection<?> ids, Collection<?> prefetchIds) {
         RecordSet m = new RecordSet(this, env);
         m.ids = Tuple.fromCollection(ids);
         m.prefetchIds = Tuple.fromCollection(prefetchIds);
@@ -445,14 +444,16 @@ public class MetaModel {
         Map<String, Tuple<String>> _sql_constraints = new HashMap<>();
         for (int i = cls._bases.size(); i > 0; i--) {
             MetaModel base = cls._bases.get(i - 1);
-            if (StringUtils.hasText(base._description)) {
-                cls._description = base._description;
-            }
-            if (StringUtils.hasText(base._table)) {
-                cls._table = base._table;
-            }
-            if (base._log_access != null) {
-                cls._log_access = base._log_access;
+            if (base.pool == null) {
+                if (StringUtils.hasText(base._description)) {
+                    cls._description = base._description;
+                }
+                if (StringUtils.hasText(base._table)) {
+                    cls._table = base._table;
+                }
+                if (base._log_access != null) {
+                    cls._log_access = base._log_access;
+                }
             }
             Utils.update(cls._inherits, base._inherits);
             for (Tuple<String> cons : base._sql_constraints) {

@@ -17,11 +17,12 @@ import jdoo.util.Tuple;
 import jdoo.util.Utils;
 
 public class Cache {
-    HashMap<Field, HashMap<String, Object>> _data = new HashMap<Field, HashMap<String, Object>>();
+    //HashMap<field, HashMap<id, value>>
+    HashMap<Field, Map<Object, Object>> _data = new HashMap<>();
 
     public boolean contains(RecordSet record, Field field) {
         if (_data.containsKey(field)) {
-            HashMap<String, Object> values = _data.get(field);
+            Map<?, ?> values = _data.get(field);
             if (!field.depends_context().isEmpty()) {
                 if (values.containsKey(record.id())) {
                     Object key = field.cache_key(record.env());
@@ -37,7 +38,7 @@ public class Cache {
 
     public Object get(RecordSet record, Field field) {
         if (_data.containsKey(field)) {
-            HashMap<String, Object> values = _data.get(field);
+            Map<?, ?> values = _data.get(field);
             if (values.containsKey(record.id())) {
                 Object value = values.get(record.id());
                 if (!field.depends_context().isEmpty()) {
@@ -53,7 +54,7 @@ public class Cache {
 
     public Object get(RecordSet record, Field field, Object defalult_) {
         if (_data.containsKey(field)) {
-            HashMap<String, Object> values = _data.get(field);
+            Map<?, ?> values = _data.get(field);
             if (values.containsKey(record.id())) {
                 Object value = values.get(record.id());
                 if (!field.depends_context().isEmpty()) {
@@ -68,16 +69,16 @@ public class Cache {
     }
 
     public void set(RecordSet record, Field field, Object value) {
-        HashMap<String, Object> values;
+        Map<Object, Object> values;
         if (_data.containsKey(field)) {
             values = _data.get(field);
         } else {
-            values = new HashMap<String, Object>();
+            values = new HashMap<>();
             _data.put(field, values);
         }
         if (!field.depends_context().isEmpty()) {
             Object key = field.cache_key(record.env());
-            Map<Object, Object> map = new HashMap<>();
+            Map<? super Object, ? super Object> map = new HashMap<>();
             map.put(key, value);
             values.put(record.id(), map);
         } else {
@@ -87,11 +88,11 @@ public class Cache {
 
     @SuppressWarnings("unchecked")
     public void update(RecordSet records, Field field, Collection<Object> values) {
-        HashMap<String, Object> field_cache;
+        Map<Object, Object> field_cache;
         if (_data.containsKey(field)) {
             field_cache = _data.get(field);
         } else {
-            field_cache = new HashMap<String, Object>();
+            field_cache = new HashMap<>();
             _data.put(field, field_cache);
         }
         if (!field.depends_context().isEmpty()) {
@@ -110,14 +111,14 @@ public class Cache {
             }
         } else {
             for (Tuple<Object> t : Utils.zip(records.ids(), values)) {
-                field_cache.put((String) t.get(0), t.get(1));
+                field_cache.put(t.get(0), t.get(1));
             }
         }
     }
 
     public Object remove(RecordSet record, Field field) {
         if (_data.containsKey(field)) {
-            HashMap<String, Object> values = _data.get(field);
+            Map<Object, Object> values = _data.get(field);
             return values.remove(record.id());
         }
         return null;
@@ -126,8 +127,8 @@ public class Cache {
     public Collection<Object> get_values(RecordSet records, Field field) {
         List<Object> values = new ArrayList<>();
         if (_data.containsKey(field)) {
-            HashMap<String, Object> field_cache = _data.get(field);
-            for (String recrod_id : records.ids()) {
+            Map<Object, Object> field_cache = _data.get(field);
+            for (Object recrod_id : records.ids()) {
                 if (field_cache.containsKey(recrod_id)) {
                     Object value = field_cache.get(recrod_id);
                     if (!field.depends_context().isEmpty()) {
@@ -143,9 +144,9 @@ public class Cache {
     }
 
     public RecordSet get_records_different_from(RecordSet records, Field field, Object value) {
-        List<String> ids = new ArrayList<String>();
-        HashMap<String, Object> field_cache = _data.get(field);
-        for (String record_id : records.ids()) {
+        List<Object> ids = new ArrayList<>();
+        Map<Object, Object> field_cache = _data.get(field);
+        for (Object record_id : records.ids()) {
             if (field_cache != null && field_cache.containsKey(record_id)) {
                 Object val = field_cache.get(record_id);
                 if (!ObjectUtils.nullSafeEquals(val, value)) {
@@ -168,7 +169,7 @@ public class Cache {
             if (!_data.containsKey(field)) {
                 continue;
             }
-            HashMap<String, Object> field_cache = _data.get(field);
+            Map<Object, Object> field_cache = _data.get(field);
             if (!field_cache.containsKey(record.id())) {
                 continue;
             }
@@ -186,20 +187,20 @@ public class Cache {
 
     public RecordSet get_records(RecordSet model, Field field) {
         if (_data.containsKey(field)) {
-            HashMap<String, Object> field_cache = _data.get(field);
+            Map<Object, Object> field_cache = _data.get(field);
             return model.browse(field_cache.keySet());
         } else {
             return model.browse();
         }
     }
 
-    public Collection<String> get_missing_ids(RecordSet records, Field field) {
+    public Collection<Object> get_missing_ids(RecordSet records, Field field) {
         if (!_data.containsKey(field)) {
             return Collections.emptyList();
         }
-        HashMap<String, Object> field_cache = _data.get(field);
-        Collection<String> result = new ArrayList<>();
-        for (String id : records.ids()) {
+        Map<Object, Object> field_cache = _data.get(field);
+        Collection<Object> result = new ArrayList<>();
+        for (Object id : records.ids()) {
             if (!field_cache.containsKey(id)) {
                 result.add(id);
             }
@@ -211,14 +212,14 @@ public class Cache {
         _data.clear();
     }
 
-    public void invalidate(List<Pair<Field, Collection<String>>> spec) {
-        for (Pair<Field, Collection<String>> tuple : spec) {
-            if (tuple.second().isEmpty()) {
-                _data.remove(tuple.first());
+    public void invalidate(List<Pair<Field, Collection<?>>> spec) {
+        for (Pair<Field, Collection<?>> pair : spec) {
+            if (pair.second().isEmpty()) {
+                _data.remove(pair.first());
             } else {
-                HashMap<String, Object> field_cache = _data.get(tuple.first());
+                Map<Object, Object> field_cache = _data.get(pair.first());
                 if (field_cache != null) {
-                    for (String id : tuple.second()) {
+                    for (Object id : pair.second()) {
                         field_cache.remove(id);
                     }
                 }

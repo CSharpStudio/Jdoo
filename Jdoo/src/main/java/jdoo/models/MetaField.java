@@ -150,7 +150,7 @@ public abstract class MetaField {
 
     @SuppressWarnings("unchecked")
     Function<RecordSet, Object> $default() {
-        return (Function<RecordSet, Object>) getattr(Slots.related_field);
+        return (Function<RecordSet, Object>) getattr(Slots.$default);
     }
 
     @SuppressWarnings("unchecked")
@@ -225,7 +225,7 @@ public abstract class MetaField {
 
     public boolean prefetch() {
         return getattr(Boolean.class, Slots.prefetch);
-    }
+    } 
 
     public static class Slots {
         /** the field's module name */

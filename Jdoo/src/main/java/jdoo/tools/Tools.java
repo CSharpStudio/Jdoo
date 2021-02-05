@@ -1,5 +1,7 @@
 package jdoo.tools;
 
+import java.util.Collection;
+
 import jdoo.util.Tuple;
 
 public class Tools {
@@ -20,5 +22,23 @@ public class Tools {
             i++;
         }
         return String.format("%0.2f %s", s, units.get(i));
+    }
+
+    public static boolean hasId(Object id) {
+        if (id instanceof String) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean hasValue(Object obj) {
+        if (obj == null) {
+            return false;
+        } else if (obj instanceof Collection<?>) {
+            return ((Collection<?>) obj).size() > 0;
+        } else if (obj instanceof String) {
+            return !((String) obj).isEmpty();
+        }
+        return true;
     }
 }
