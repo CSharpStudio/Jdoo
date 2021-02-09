@@ -54,6 +54,11 @@ public class TypeUtils {
                 return (T) Float.valueOf(str);
             } else if (clazz.equals(double.class) || clazz.equals(Double.class)) {
                 return (T) Double.valueOf(str);
+            } else if (clazz.equals(char.class) || clazz.equals(Character.class)) {
+                if (str.length() > 0) {
+                    return (T) Character.valueOf(str.charAt(0));
+                }
+                return (T) Character.valueOf('\0');
             } else if (clazz.equals(Date.class)) {
                 return (T) dateFormat.parse(str);
             }
@@ -85,7 +90,7 @@ public class TypeUtils {
     public static int toInteger(Object value) {
         if (value == null) {
             return 0;
-        } else if (value instanceof Integer) {
+        } else if (Integer.class.isInstance(value)) {
             return (Integer) value;
         } else if (value instanceof String) {
             return parse((String) value, Integer.class);
@@ -96,12 +101,35 @@ public class TypeUtils {
     public static double toDouble(Object value) {
         if (value == null) {
             return 0;
-        } else if (value instanceof Double) {
+        } else if (Double.class.isInstance(value)) {
             return (Double) value;
         } else if (value instanceof String) {
             return parse((String) value, Double.class);
         }
         return (double) value;
+    }
+
+    public static boolean isInstance(Class<?> clazz, Object obj) {
+        if (clazz.isPrimitive()) {
+            if (clazz.equals(boolean.class)) {
+                return obj instanceof Boolean;
+            } else if (clazz.equals(byte.class)) {
+                return obj instanceof Byte;
+            } else if (clazz.equals(short.class)) {
+                return obj instanceof Short;
+            } else if (clazz.equals(int.class)) {
+                return obj instanceof Integer;
+            } else if (clazz.equals(long.class)) {
+                return obj instanceof Long;
+            } else if (clazz.equals(float.class)) {
+                return obj instanceof Float;
+            } else if (clazz.equals(double.class)) {
+                return obj instanceof Double;
+            } else if (clazz.equals(char.class)) {
+                return obj instanceof Character;
+            }
+        }
+        return clazz.isInstance(obj);
     }
 
     public static double round(double v, int scale) {
@@ -110,6 +138,5 @@ public class TypeUtils {
         }
         BigDecimal b = new BigDecimal(Double.toString(v));
         return b.setScale(scale).doubleValue();
-
     }
 }

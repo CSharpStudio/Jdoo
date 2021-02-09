@@ -11,7 +11,7 @@ public class IrDefault extends Model {
         public IrDefault() {
                 _name = "ir.default";
                 _description = "Default Values";
-                _rec_name = "field_id";
+                //_rec_name = "field_id";
         }
 
         // public static Field field_id = fields.Many2one("ir.model.fields").string("Field").required(true)

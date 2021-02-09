@@ -283,10 +283,12 @@ import jdoo.util.Tuple;
 public class Field extends MetaField {
     protected static Logger _schema = LogManager.getLogger("jdoo.schema");
 
-    public Field $new(Consumer<Field> consumer) {
+    public Field $new(@Nullable Consumer<Field> consumer) {
         try {
             Field field = (Field) getClass().getConstructor().newInstance();
-            consumer.accept(field);
+            if (consumer != null) {
+                consumer.accept(field);
+            }
             return field;
         } catch (Exception e) {
             throw new TypeErrorException(String.format("new field %s error", getClass().getName()), e);

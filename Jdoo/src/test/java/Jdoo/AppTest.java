@@ -27,6 +27,7 @@ public class AppTest {
     public void test_linq() {
         String last = Linq.of(Arrays.asList("a", "b", "c", "c1", "c5", "c3")).where(p -> p.startsWith("c"))
                 .orderBy(p -> p).last();
+        assertEquals("c5", last);
     }
 
     @Test

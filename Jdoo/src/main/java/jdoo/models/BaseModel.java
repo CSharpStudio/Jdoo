@@ -463,7 +463,7 @@ public class BaseModel extends MetaModel {
             modified(self, vals.keySet(), false);
 
             if (self.type()._parent_store && vals.containsKey(self.type()._parent_name)) {
-                flush(self, Arrays.asList(self.type()._parent_name));
+                flush(self, Arrays.asList(self.type()._parent_name), null);
             }
 
             // validate non-inversed fields first
@@ -550,13 +550,13 @@ public class BaseModel extends MetaModel {
         return true;
     }
 
-    public void flush(RecordSet self) {
-        flush(self, null, null);
-    }
+    // public void flush(RecordSet self) {
+    // flush(self, null, null);
+    // }
 
-    public void flush(RecordSet self, Collection<String> fnames) {
-        flush(self, fnames, null);
-    }
+    // public void flush(RecordSet self, Collection<String> fnames) {
+    // flush(self, fnames, null);
+    // }
 
     public void flush(RecordSet self, @Default Collection<String> fnames, @Default RecordSet records) {
         HashMap<String, IdValues> towrite = self.env().all().towrite();
@@ -823,9 +823,17 @@ public class BaseModel extends MetaModel {
         // 1. determine the proper fields of the model: the fields defined on the
         // class and magic fields, not the inherited or custom ones
 
-        for (Field field : Linq.of(cls.$fields).orderBy(f -> f._sequence)) {
-            if (!field.automatic() && !field.manual() && !field.inherited()) {
-                _add_field(self, field.name, field);
+        for (int i = cls._bases.size() - 1; i >= 0; i--) {
+            MetaModel base = cls._bases.get(i);
+            for (Field field : Linq.of(base.$fields).orderBy(f -> f._sequence)) {
+                if (!field.automatic() && !field.manual() && !field.inherited()) {
+                    Field new_field = self.type().findField(field.name);
+                    if (new_field == null) {
+                        new_field = field.$new(null);
+                    }
+                    new_field._slots.putAll(field._slots);
+                    _add_field(self, field.name, new_field);
+                }
             }
         }
         _add_magic_fields(self);

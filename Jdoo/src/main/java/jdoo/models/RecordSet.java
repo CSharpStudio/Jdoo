@@ -258,11 +258,7 @@ public final class RecordSet implements Iterable<RecordSet> {
     //
 
     public Object call(String method, Object... args) {
-        try {
-            return meta.invoke(method, getArgs(args));
-        } catch (Exception e) {
-            throw new JdooException("call method:'" + method + "' failed", e);
-        }
+        return meta.invoke(method, getArgs(args));
     }
 
     /** call method define in {@code Model}. */
@@ -274,14 +270,6 @@ public final class RecordSet implements Iterable<RecordSet> {
     @SuppressWarnings("unchecked")
     public <T> T call(TypeReference<T> ref, String method, Object... args) {
         return (T) call(method, args);
-    }
-
-    public Object callSuper(String method, Object... args) {
-        // todo
-        InvokeResult result = meta.tryInvoke(method, getArgs(args));
-        if (result.getSuccess())
-            return result.getResult();
-        return null;
     }
 
     private Object[] getArgs(Object[] args) {

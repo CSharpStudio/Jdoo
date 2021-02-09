@@ -16,6 +16,8 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import javax.el.MethodNotFoundException;
 import org.springframework.util.StringUtils;
+
+import jdoo.exceptions.InvocationException;
 import jdoo.exceptions.ModelException;
 import jdoo.exceptions.TypeErrorException;
 import jdoo.exceptions.ValidationErrorException;
@@ -33,7 +35,7 @@ public class MetaModel {
 
     private List<String> _inherits_children;
     private Set<String> _inherit_children;
-    private Tuple<MetaModel> _bases;
+    Tuple<MetaModel> _bases;
     private String _module;
     String _original_module;
     Map<String, Field> _fields;
@@ -202,33 +204,43 @@ public class MetaModel {
         }
     }
 
-    public InvokeResult tryInvoke(String method, Object[] args) {
-        for (MethodInfo meta : getMethods()) {
-            Method m = meta.getMethod();
-            Class<?>[] parameters = m.getParameterTypes();
-            if (m.getName() == method && parameters.length == args.length) {
-                // TODO check parameter types match the args types
-                Object result;
-                try {
-                    result = meta.invoke(args);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return new InvokeResult(false, e);
+    public Object callSuper(String method, Object... args) {
+        if (nameMethods.containsKey(method)) {
+            List<MethodInfo> methods = nameMethods.get(method);
+            Class<?>[] parameterTypes = null;
+            Class<?> clazz = getClass();
+            for (int i = methods.size() - 1; i >= 0; i--) {
+                MethodInfo meta = methods.get(i);
+                if (meta.getMethod().getDeclaringClass() == clazz && meta.isParameterMatch(args)) {
+                    parameterTypes = meta.getMethod().getParameterTypes();
+                    continue;
                 }
-                return new InvokeResult(true, result);
+                if (parameterTypes != null && meta.isParameterMatch(parameterTypes)) {
+                    try {
+                        return meta.invokeThis(args);
+                    } catch (Exception e) {
+                        throw new InvocationException("invoke method:'" + method + "' failed", e);
+                    }
+                }
             }
         }
-        return new InvokeResult(false, "method not found");
+        StringBuilder sb = new StringBuilder();
+        org.apache.tomcat.util.buf.StringUtils.join(args, ',', o -> o == null ? "null" : o.getClass().getName(), sb);
+        throw new MethodNotFoundException("call super method:" + method + "(" + sb.toString() + ") not found");
     }
 
-    public Object invoke(String method, Object[] args)
-            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        for (MethodInfo meta : getMethods()) {
-            Method m = meta.getMethod();
-            Class<?>[] parameters = m.getParameterTypes();
-            if (m.getName() == method && parameters.length == args.length) {
-                // TODO check parameter types match the args types
-                return meta.invoke(args);
+    public Object invoke(String method, Object[] args) {
+        if (nameMethods.containsKey(method)) {
+            List<MethodInfo> methods = nameMethods.get(method);
+            for (int i = methods.size() - 1; i >= 0; i--) {
+                MethodInfo meta = methods.get(i);
+                if (meta.isParameterMatch(args)) {
+                    try {
+                        return meta.invoke(args);
+                    } catch (Exception e) {
+                        throw new InvocationException("invoke method:'" + method + "' failed", e);
+                    }
+                }
             }
         }
         StringBuilder sb = new StringBuilder();
@@ -242,12 +254,10 @@ public class MetaModel {
         Class<?> type = method.getDeclaringClass();
         if (nameMethods.containsKey(key)) {
             List<MethodInfo> methods = nameMethods.get(key);
-            for (int i = methods.size() - 1; i > 0; i--) {
+            for (int i = methods.size() - 1; i >= 0; i--) {
                 MethodInfo meta = methods.get(i);
-                Method m = meta.getMethod();
-                Class<?>[] parameters = m.getParameterTypes();
-                if (isParameterMatch(parameterTypes, parameters)) {
-                    if (m.getDeclaringClass() == type) {
+                if (meta.isParameterMatch(parameterTypes)) {
+                    if (meta.getMethod().getDeclaringClass() == type) {
                         return null;
                     }
                     return meta;
@@ -255,16 +265,6 @@ public class MetaModel {
             }
         }
         return null;
-    }
-
-    boolean isParameterMatch(Class<?>[] x, Class<?>[] y) {
-        if (x.length != y.length)
-            return false;
-        for (int i = 0; i < x.length; i++) {
-            if (x[i] != y[i])
-                return false;
-        }
-        return true;
     }
 
     public RecordSet browse(Environment env, Collection<?> ids, Collection<?> prefetchIds) {
@@ -295,11 +295,32 @@ public class MetaModel {
 
     }
 
+    private static MetaModel newInstance(Class<?> clazz) throws InstantiationException, IllegalAccessException,
+            IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+        MetaModel cls = (MetaModel) clazz.getDeclaredConstructor().newInstance();
+        if (cls.$fields == null) {
+            cls.$fields = new ArrayList<>();
+        }
+        for (java.lang.reflect.Field field : clazz.getDeclaredFields()) {
+            if (!Modifier.isStatic(field.getModifiers()) || !Field.class.isAssignableFrom(field.getType())) {
+                continue;
+            }
+            field.setAccessible(true);
+            Field f = (Field) field.get(null);
+            f.name = field.getName();
+            if (f.name.startsWith("$")) {
+                f.name = f.name.substring(1);
+            }
+            cls.$fields.add(f);
+        }
+        return cls;
+    }
+
     @SuppressWarnings("unchecked")
     public static MetaModel _build_model(Class<?> clazz, String module, Registry pool, Cursor cr)
             throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
             NoSuchMethodException, SecurityException {
-        MetaModel cls = (MetaModel) clazz.getDeclaredConstructor().newInstance();
+        MetaModel cls = newInstance(clazz);
         cls._module = module;
         List<String> parents = new ArrayList<>();
         if (cls._inherit instanceof String) {
@@ -355,23 +376,12 @@ public class MetaModel {
                 parent_class._inherit_children.add(name);
             }
         }
-        ModelClass._bases = Tuple.fromCollection(bases);
+        // ModelClass.__bases__ = tuple(bases)
+        set_bases(ModelClass, bases);
 
-        for (java.lang.reflect.Field field : clazz.getDeclaredFields()) {
-            if (!Modifier.isStatic(field.getModifiers()) || !Field.class.isAssignableFrom(field.getType())) {
-                continue;
-            }
-            field.setAccessible(true);
-            Field f = (Field) field.get(null);
-            f.name = field.getName();
-            if (f.name.startsWith("$")) {
-                f.name = f.name.substring(1);
-            }
-            ModelClass.$fields.add(f);
-        }
         List<MethodInfo> method_list = new ArrayList<>();
-        for (int i = ModelClass._bases.size(); i > 0; i--) {
-            MetaModel base = ModelClass._bases.get(i - 1);
+        for (int i = ModelClass._bases.size() - 1; i >= 0; i--) {
+            MetaModel base = ModelClass._bases.get(i);
             for (List<MethodInfo> values : base.getNameMethods().values()) {
                 for (MethodInfo v : values) {
                     method_list.add(new MethodInfo(ModelClass, v.getMethod()));
@@ -436,17 +446,42 @@ public class MetaModel {
         }
     }
 
+    static void set_bases(MetaModel cls, List<MetaModel> bases) {
+        cls._bases = Tuple.fromCollection(bases);
+        if (bases.size() > 0) {
+            MetaModel base = bases.get(0);
+            cls._auto = base._auto;
+            // cls._register = base._register;
+            cls._abstract = base._abstract;
+            cls._transient = base._transient;
+            // cls._name = base._name;
+            cls._description = base._description;
+            cls._custom = base._custom;
+            cls._inherit = base._inherit;
+            cls._inherits = base._inherits;
+            cls._table = base._table;
+            cls._sql_constraints = base._sql_constraints;
+            cls._rec_name = base._rec_name;
+            cls._order = base._order;
+            cls._parent_name = base._parent_name;
+            cls._parent_store = base._parent_store;
+            cls._date_name = base._date_name;
+            cls._fold_name = base._fold_name;
+            cls._needaction = base._needaction;
+            cls._translate = base._translate;
+            cls._check_company_auto = base._check_company_auto;
+        }
+    }
+
     static void _build_model_attributes(MetaModel cls, Registry pool) {
         cls._description = cls._name;
         cls._table = cls._name.replace('.', '_');
-        //cls._log_access = cls._auto;
+        cls._log_access = cls._auto;
         cls._inherits = new HashMap<>();
         Map<String, Tuple<String>> _sql_constraints = new HashMap<>();
-        for (int i = cls._bases.size(); i > 0; i--) {
-            MetaModel base = cls._bases.get(i - 1);
+        for (int i = cls._bases.size() - 1; i >= 0; i--) {
+            MetaModel base = cls._bases.get(i);
             if (base.pool == null) {
-                cls._auto = base._auto;
-                cls._log_access = cls._auto;
                 if (StringUtils.hasText(base._description)) {
                     cls._description = base._description;
                 }
