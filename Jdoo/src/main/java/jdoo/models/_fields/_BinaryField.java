@@ -35,6 +35,10 @@ public class _BinaryField<T extends _BinaryField<T>> extends BaseField<T> {
         return (T) this;
     }
 
+    public boolean attachment() {
+        return getattr(Boolean.class, BinaryField.attachment);
+    }
+
     @Override
     public Pair<String, Object> column_type() {
         return getattr(Boolean.class, attachment) ? null : new Pair<>("bytea", "bytea");

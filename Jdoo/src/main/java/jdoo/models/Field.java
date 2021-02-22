@@ -391,7 +391,16 @@ public class Field extends MetaField {
     // Setup of related fields
 
     public void _setup_related_full(RecordSet model) {
-        // todo
+        RecordSet target = model;
+        Field field = null;
+        for (String name : related()) {
+            field = target.getField(name);
+            field.setup_full(target);
+            Object v = target.get(name);
+            target = v instanceof RecordSet ? (RecordSet) v : null;
+        }
+        setattr(Slots.related_field, field);
+        // TODO
     }
 
     public void _compute_related(RecordSet records) {

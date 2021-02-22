@@ -2,41 +2,43 @@ package jdoo.models;
 
 import java.util.ArrayList;
 
-public class Domain {
-    
-    ArrayList<Object> list = new ArrayList<Object>();
+import jdoo.util.Tuple;
 
-    public Domain on(String property, String op, Object value){
-        list.add(new Criteria(property, op, value));
+public class Domain extends ArrayList<Object> {
+    private static final long serialVersionUID = 1L;
+
+    public Domain on(String property, String op, Object value) {
+        add(new Tuple<>(property, op, value));
         return this;
     }
-    
-    public Domain and(){
-        list.add(new Group("&"));
+
+    public Domain and() {
+        add("&");
         return this;
     }
-    
-    public Domain or(){
-        list.add(new Group("|"));
+
+    public Domain or() {
+        add("|");
         return this;
     }
-}
 
-class Criteria {
-    String property;
-    String op;
-    Object value;
+    public class Criteria {
+        String property;
+        String op;
+        Object value;
 
-    public Criteria(String property, String op, Object value) {
-        this.property = property;
-        this.op = op;
-        this.value = value;
+        public Criteria(String property, String op, Object value) {
+            this.property = property;
+            this.op = op;
+            this.value = value;
+        }
     }
-}
 
-class Group {
-    String group;
-    public Group(String group){
-        this.group = group;
+    public class Group {
+        String group;
+
+        public Group(String group) {
+            this.group = group;
+        }
     }
 }

@@ -64,6 +64,10 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
         return this;
     }
 
+    public boolean auto_join() {
+        return getattr(Boolean.class, Many2oneField.auto_join);
+    }
+
     public Many2oneField auto_join(boolean auto_join) {
         setattr(Many2oneField.auto_join, auto_join);
         return this;

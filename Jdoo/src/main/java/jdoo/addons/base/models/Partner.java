@@ -52,7 +52,7 @@ public class Partner extends Model {
             "The Tax Identification Number. Complete it if the contact is subjected to government taxes. Used in some legal statements.");
     static Field same_vat_partner_id = fields.Many2one("res.partner", "Partner with same Tax ID")
             .compute("_compute_same_vat_partner_id").store(false);
-    static Field bank_ids = fields.One2many("res.partner.bank", "partner_id", "Banks");
+    //static Field bank_ids = fields.One2many("res.partner.bank", "partner_id", "Banks");
     static Field website = fields.Char("Website Link");
     static Field comment = fields.Text("Notes");
 
@@ -97,7 +97,7 @@ public class Partner extends Model {
     // static Field company_id = fields.Many2one("res.company",
     // "Company").index(true);
     static Field color = fields.Integer("Color Index").$default(0);
-    //static Field user_ids = fields.One2many("res.users", "partner_id", "Users").auto_join(true);
+    static Field user_ids = fields.One2many("res.users", "partner_id", "Users").auto_join(true);
     static Field partner_share = fields.Boolean("Share Partner").compute("_compute_partner_share").store(true).help(
             "Either customer (not a user), either shared user. Indicated the current partner is a customer without "
                     + "access or with a limited access created for sharing data.");

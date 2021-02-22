@@ -66,7 +66,7 @@ public class BaseField<T extends BaseField<T>> extends Field {
 
     @SuppressWarnings("unchecked")
     public T related(String related) {
-        setattr(Slots.related, Arrays.asList(related));
+        setattr(Slots.related, Arrays.asList(related.split("\\.")));
         return (T) this;
     }
 
@@ -131,6 +131,12 @@ public class BaseField<T extends BaseField<T>> extends Field {
     @SuppressWarnings("unchecked")
     public T change_default(boolean change_default) {
         setattr(Slots.change_default, change_default);
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T inherited(boolean inherited) {
+        setattr(Slots.inherited, inherited);
         return (T) this;
     }
 }

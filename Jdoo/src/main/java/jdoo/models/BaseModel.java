@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import com.bestvike.linq.Linq;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -38,12 +39,16 @@ import jdoo.apis.Environment;
 import jdoo.data.AsIs;
 import jdoo.exceptions.AccessErrorException;
 import jdoo.exceptions.MissingErrorException;
+import jdoo.exceptions.UserErrorException;
 import jdoo.models.MetaField.Slots;
 import jdoo.models._fields.BinaryField;
 import jdoo.models._fields.BooleanField;
 import jdoo.models._fields.Many2manyField;
+import jdoo.models._fields.Many2oneField;
 import jdoo.models._fields.MonetaryField;
 import jdoo.models._fields.One2manyField;
+import jdoo.osv.Expression;
+import jdoo.osv.Query;
 import jdoo.apis.api;
 import jdoo.apis.Environment.Protecting;
 
@@ -228,11 +233,12 @@ public class BaseModel extends MetaModel {
     }
 
     public Dict default_get(RecordSet self, Collection<String> fields_list) {
+        // TODO self.view_init(fields_list)
         Dict defaults = new Dict();
         Map<String, Object> ir_defaults = self.env("ir.default").call(new TypeReference<Map<String, Object>>() {
         }, "get_model_defaults", self.name(), false);
 
-        Map<String, List<String>> parent_fields = new HashMap<String, List<String>>();
+        Map<String, List<String>> parent_fields = new DefaultDict<>(() -> new ArrayList<>());
 
         for (String name : fields_list) {
             String key = "default_" + name;
@@ -256,14 +262,7 @@ public class BaseModel extends MetaModel {
             }
             if (field.inherited()) {
                 field = field.related_field();
-                if (parent_fields.containsKey(field.model_name())) {
-                    List<String> names = new ArrayList<String>();
-                    names.add(field.getName());
-                    parent_fields.put(field.model_name(), names);
-                } else {
-                    List<String> names = parent_fields.get(field.model_name());
-                    names.add(field.getName());
-                }
+                parent_fields.get(field.model_name()).add(field.name);
             }
         }
 
@@ -282,6 +281,20 @@ public class BaseModel extends MetaModel {
         return defaults;
     }
 
+    /**
+     * name_create(name) -> record
+     * 
+     * Create a new record by calling :meth:`create` with only one value provided:
+     * the display name of the new record.
+     * 
+     * The new record will be initialized with any default values applicable to this
+     * model, or provided through the context. The usual behavior of :meth:`create`
+     * applies.
+     * 
+     * @param self
+     * @param name display name of the record to create
+     * @return
+     */
     public Pair<Object, Object> name_create(RecordSet self, String name) {
         String rec_name = self.type().rec_name();
         if (StringUtils.hasText(rec_name)) {
@@ -289,6 +302,223 @@ public class BaseModel extends MetaModel {
             return name_get(record).get(0);
         }
         return null;
+    }
+
+    // @api.returns("self");
+    public Object search(RecordSet self, List<Object> args, @Default("0") int offset, @Default Integer limit,
+            @Default String order, @Default("false") boolean count) {
+        Object res = _search(self, args, offset, limit, order, count, null);
+        return count ? res : self.browse(res);
+    }
+
+    public Object _search(RecordSet self, List<Object> args, @Default("0") int offset, @Default Integer limit,
+            @Default String order, @Default("false") boolean count, @Default String access_rights_uid) {
+        RecordSet model = StringUtils.hasText(access_rights_uid) ? self.with_user(access_rights_uid) : self;
+        check_access_rights(model, "read");
+        if (Expression.is_false(args)) {
+            return count ? 0 : Collections.emptyList();
+        }
+        // self._flush_search(args, order=order)
+        Query query = _where_calc(self, args, true);
+        // _apply_ir_rules(self ,query, "read");
+        String order_by = _generate_order_by(self, order, query);
+        Query.Sql sql = query.get_sql();
+        String where_str = sql.where_clause();
+        Cursor cr = self.cr();
+        if (StringUtils.hasText(where_str)) {
+            where_str = "WHERE " + where_str;
+        }
+        if (count) {
+            String query_str = "SELECT count(1) FROM " + sql.from_clause() + where_str;
+            cr.execute(query_str, sql.params());
+            return cr.fetchone().get(0);
+        } else {
+            String limit_str = limit > 0 ? " limit " + limit : "";
+            String offset_str = offset > 0 ? " offset " + offset : "";
+            String query_str = "SELECT \"" + self.table() + "\".id FROM " + sql.from_clause() + where_str + order_by
+                    + limit_str + offset_str;
+            cr.execute(query_str, sql.params());
+            List<Tuple<?>> res = cr.fetchall();
+            Set<Object> seen = new HashSet<>();
+            for (Tuple<?> tuple : res) {
+                seen.add(tuple.get(0));
+            }
+            return new ArrayList<>(seen);
+        }
+    }
+
+    String _generate_order_by(RecordSet self, String order_spec, Query query) {
+        String order_by_clause = "";
+        if (!StringUtils.hasText(order_spec)) {
+            order_spec = self.type()._order;
+        }
+        if (StringUtils.hasText(order_spec)) {
+            List<String> order_by_elements = _generate_order_by_inner(self, self.table(), order_spec, query, false,
+                    null);
+            if (!order_by_elements.isEmpty())
+                order_by_clause = String.join(",", order_by_elements);
+        }
+        return StringUtils.hasText(order_by_clause) ? " ORDER BY " + order_by_clause : "";
+    }
+
+    List<String> _generate_m2o_order_by(RecordSet self, String alias, String order_field, Query query,
+            @Default("false") boolean reverse_direction, @Default Set<Object> seen) {
+        Field field = self.getField(order_field);
+        if (field.inherited()) {
+            String qualified_field = _inherits_join_calc(self, alias, order_field, query, true, false);
+            String[] sp = qualified_field.replace("\"", "").split("\\.", 2);
+            alias = sp[0];
+            order_field = sp[1];
+            field = field.base_field();
+        }
+
+        assert field instanceof Many2oneField : "Invalid field passed to _generate_m2o_order_by()";
+
+        if (!field.store()) {
+            _logger.warn(
+                    "Many2one function/related fields must be stored to be used as ordering fields! Ignoring sorting for {}.{}",
+                    self.name(), order_field);
+            return Collections.emptyList();
+        }
+
+        RecordSet dest_model = self.env(field.comodel_name());
+        String m2o_order = dest_model.type()._order;
+        Tuple<String> join = new Tuple<>(alias, dest_model.table(), order_field, "id", order_field);
+        String dest_alias = query.add_join(join, false, true, null, Collections.emptyList()).first();
+        return _generate_order_by_inner(dest_model, dest_alias, m2o_order, query, reverse_direction, seen);
+    }
+
+    List<String> _generate_order_by_inner(RecordSet self, String alias, String order_spec, Query query,
+            @Default("false") boolean reverse_direction, @Default Set<Object> seen) {
+        if (seen == null) {
+            seen = new HashSet<>();
+        }
+
+        _check_qorder(self, order_spec);
+
+        List<String> order_by_elements = new ArrayList<>();
+        for (String order_part : order_spec.split(",")) {
+            String[] order_split = order_part.trim().split(" ");
+            String order_field = order_split[0].trim();
+            String order_direction = order_split.length == 2 ? order_split[1].trim().toUpperCase() : "";
+            if (reverse_direction) {
+                order_direction = "DESC".equals(order_direction) ? "ASC" : "DESC";
+            }
+            boolean do_reverse = "DESC".equals(order_direction);
+            Field field = self.getField(order_field);
+            if ("id".equals(order_field)) {
+                order_by_elements.add(String.format("\"%s\".\"%s\" %s", alias, order_field, order_direction));
+            } else {
+                if (field.inherited()) {
+                    field = field.base_field();
+                }
+                if (field.store() && field instanceof Many2oneField) {
+                    Tuple<Object> key = new Tuple<>(field.model_name, field.comodel_name(), order_field);
+                    if (!seen.contains(key)) {
+                        seen.add(key);
+                        order_by_elements
+                                .addAll(_generate_m2o_order_by(self, alias, order_field, query, do_reverse, seen));
+                    }
+                } else if (field.store() && field.column_type() != null) {
+                    String qualifield_name = _inherits_join_calc(self, alias, order_field, query, false, true);
+                    if (field instanceof BooleanField) {
+                        qualifield_name = String.format("COALESCE(%s, false)", qualifield_name);
+                    }
+                    order_by_elements.add(String.format("%s %s", qualifield_name, order_direction));
+                } else {
+                    _logger.warn("Model {} cannot be sorted on field {} (not a column)", self.name(), order_field);
+                    continue;
+                }
+            }
+        }
+        return order_by_elements;
+    }
+
+    String _inherits_join_calc(RecordSet self, String alias, String fname, Query query,
+            @Default("true") boolean implicit, @Default("false") boolean outer) {
+        RecordSet model = self;
+        Field field = self.getField(fname);
+        while (field.inherited()) {
+            RecordSet parent_model = self.env(field.related_field().model_name());
+            String parent_fname = field.related().iterator().next();
+
+            Pair<String, String> pair = query.add_join(
+                    new Tuple<String>(alias, parent_model.table(), parent_fname, "id", parent_fname), implicit, outer,
+                    null, Collections.emptyList());
+            model = parent_model;
+            alias = pair.first();
+            field = field.related_field();
+        }
+        if (field.translate()) {
+            return _generate_translated_field(model, alias, fname, query);
+        } else {
+            return String.format("\"%s\".\"%s\"", alias, fname);
+        }
+    }
+
+    String _generate_translated_field(RecordSet self, String table_alias, String field, Query query) {
+        if (StringUtils.hasText(self.env().lang())) {
+            Pair<String, String> join = query.add_join(
+                    new Tuple<>(table_alias, "ir_translation", "id", "res_id", field), false, true,
+                    "\"{rhs}\".\"type\" = 'model' AND \"{rhs}\".\"name\" = %s AND \"{rhs}\".\"lang\" = %s AND \"{rhs}\".\"value\" != %s",
+                    Arrays.asList(String.format("%s,%s", self.name(), field), self.env().lang(), ""));
+            return String.format("COALESCE(\"%s\".\"%s\", \"%s\".\"%s\")", join.first(), "value", table_alias, field);
+        } else {
+            return String.format("\"%s\".\"%s\"", table_alias, field);
+        }
+    }
+
+    static Pattern regex_order = Pattern.compile("^(\s*([a-z0-9:_]+|\"[a-z0-9:_]+\")(\s+(desc|asc))?\s*(,|$))+(?<!,)$",
+            Pattern.CASE_INSENSITIVE);
+
+    void _check_qorder(RecordSet self, String word) {
+        if (!regex_order.matcher(word).matches())
+            throw new UserErrorException(
+                    "Invalid \"order\" specified. A valid \"order\" specification is a comma-separated list of valid field names (optionally followed by asc/desc for the direction)");
+    }
+
+    public Query _where_calc(RecordSet self, List<Object> domain, @Default("true") boolean active_test) {
+        if (!domain.isEmpty()) {
+            Expression e = new Expression(domain, self);
+            List<String> tables = e.get_tables();
+            Pair<String, List<Object>> pair = e.to_sql();
+            List<String> where_clause = new ArrayList<>();
+            if (StringUtils.hasText(pair.first())) {
+                where_clause.add(pair.first());
+            }
+            List<Object> where_params = pair.second();
+            return new Query(tables, where_clause, where_params);
+        } else {
+            return new Query(Collections.emptyList(), Collections.emptyList(),
+                    Arrays.asList("\"" + self.table() + "\""));
+        }
+    }
+    // public int _search_count(){
+
+    // }
+
+    public List<Pair<Object, Object>> name_search(RecordSet self, @Default("") String name, @Default List<Object> args,
+            @Default("ilike") String operator, @Default("100") int limit) {
+        return _name_search(self, name, args, operator, limit, null);
+    }
+
+    public List<Pair<Object, Object>> _name_search(RecordSet self, @Default("") String name, @Default List<Object> args,
+            @Default("ilike") String operator, @Default("100") int limit, @Default String name_get_uid) {
+        if (args == null) {
+            args = new ArrayList<>();
+        } else {
+            args = new ArrayList<>(args);
+        }
+        String _rec_name = self.type().rec_name();
+        if (!StringUtils.hasText(_rec_name)) {
+            _logger.warn("Cannot execute name_search, no _rec_name defined on {}", self.name());
+        } else if (!(name == "" && operator == "ilike")) {
+            args.add(new Tuple<>(_rec_name, operator, name));
+        }
+        String access_rights_uid = StringUtils.hasText(name_get_uid) ? name_get_uid : self.env().uid();
+        Collection<Object> ids = (Collection<Object>) _search(self, args, 0, limit, null, false, access_rights_uid);
+        RecordSet recs = self.browse(ids);
+        return recs.with_user(access_rights_uid).name_get();
     }
 
     public List<Pair<Object, Object>> name_get(RecordSet self) {
@@ -341,6 +571,10 @@ public class BaseModel extends MetaModel {
         Environment env = self.env();
         Cursor cr = env.cr();
         Dict context = env.context();
+        Object param_ids = new Object();
+        Query query = new Query(Arrays.asList("\"" + table() + "\""), Arrays.asList("\"" + table() + "\".id IN %s"),
+                Arrays.asList(param_ids));
+        // todo _apply_ir_rules(self, query, "read");
 
         List<String> qual_names = new ArrayList<>();
         qual_names.add("id");
@@ -355,12 +589,17 @@ public class BaseModel extends MetaModel {
         }
 
         String select_clause = org.apache.tomcat.util.buf.StringUtils.join(qual_names, ',');
-        String from_clause = self.table();
-        String where_clause = "id in %s";
+        Query.Sql sql = query.get_sql();
+        String from_clause = sql.from_clause();
+        String where_clause = sql.where_clause();
+        List<Object> params = sql.params();
         String query_str = String.format("SELECT %s FROM %s WHERE %s", select_clause, from_clause, where_clause);
+        int param_pos = params.indexOf(param_ids);
+
         List<Tuple<?>> result = new ArrayList<>();
         for (Tuple<?> sub_ids : cr.split_for_in_conditions(self.ids())) {
-            cr.execute(query_str, Tuple.of(sub_ids));
+            params.set(param_pos, sub_ids);
+            cr.execute(query_str, params);
             result.addAll(cr.fetchall());
         }
         RecordSet fetched;
@@ -679,7 +918,7 @@ public class BaseModel extends MetaModel {
                 stored_fields.add(field);
             } else if (StringUtils.hasText(field.compute())) {
                 for (String dotname : field.depends()) {
-                    Field f = self.getField(dotname.split(".")[0]);
+                    Field f = self.getField(dotname.split("\\.")[0]);
                     if (f.prefetch() && (!StringUtils.hasText(f.groups()) || user_has_group(self, f.groups()))) {
                         stored_fields.add(f);
                     }
@@ -932,11 +1171,19 @@ public class BaseModel extends MetaModel {
     }
 
     public void _setup_fields(RecordSet self) {
-
+        MetaModel cls = self.type();
+        for (Field field : cls.getFields()) {
+            try {
+                field.setup_full(self);
+            } catch (Exception e) {
+                throw e;
+            }
+        }
+        // TODO
     }
 
     public void _setup_complete(RecordSet self) {
-
+        // TODO
     }
 
     public void _auto_init(RecordSet self) {

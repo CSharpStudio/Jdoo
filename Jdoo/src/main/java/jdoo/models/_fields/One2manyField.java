@@ -52,9 +52,17 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
         return this;
     }
 
+    public String inverse_name() {
+        return getattr(String.class, One2manyField.inverse_name);
+    }
+
     public One2manyField limit(int limit) {
         setattr(One2manyField.limit, limit);
         return this;
+    }
+
+    public boolean auto_join() {
+        return getattr(Boolean.class, Many2oneField.auto_join);
     }
 
     public One2manyField auto_join(boolean auto_join) {
@@ -92,5 +100,5 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
         // TODO Auto-generated method stub
         super.read(records);
     }
-    //todo
+    // todo
 }

@@ -6,8 +6,13 @@ import jdoo.TransactionCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import jdoo.models.RecordSet;
+import jdoo.models.d;
 import jdoo.util.Dict;
+import jdoo.util.Pair;
 
 public class TestPartner extends TransactionCase {
     @Test
@@ -16,12 +21,12 @@ public class TestPartner extends TransactionCase {
 
         RecordSet test_user = env("res.users").create(new Dict().set("name", "Vlad the Impaler").set("login", "vlad")
                 .set("email", "vlad.the.impaler@example.com"));
-        // ns_res = self.env['res.partner'].name_search('Vlad', operator='ilike')
+        //List<Pair<Object, Object>> ns_res = env("res.partner").name_search("Vlad");
+
         // assertEquals(set(i[0] for i in ns_res), set((test_partner |
         // test_user.partner_id).ids))
 
-        // ns_res = self.env['res.partner'].name_search('Vlad', args=[('user_ids.email',
-        // 'ilike', 'vlad')])
+        List<Pair<Object, Object>> ns_res = env("res.partner").name_search("Vlad", d.on("user_ids.email", "ilike", "vlad"));
         // assertEquals(set(i[0] for i in ns_res), set(test_user.partner_id.ids))
 
         assertTrue(true);

@@ -34,7 +34,7 @@ public class IrModel extends Model {
             .Selection(Arrays.asList(new Pair<>("manual", "Custom Object"), new Pair<>("base", "Base Object")))
             .string("Type").$default("manual").readonly(true);
     static Field access_ids = fields.One2many("ir.model.access", "model_id").string("Access");
-    static Field rule_ids = fields.One2many("ir.rule", "model_id").string("Record Rules");
+    //static Field rule_ids = fields.One2many("ir.rule", "model_id").string("Record Rules");
     static Field $transient = fields.Boolean().string("Transient Model");
     static Field modules = fields.Char().compute("_in_modules").string("In Apps")
             .help("List of modules in which the object is defined or inherited");

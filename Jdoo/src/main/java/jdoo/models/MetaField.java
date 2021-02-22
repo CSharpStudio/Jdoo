@@ -108,7 +108,7 @@ public abstract class MetaField {
         return relational;
     }
 
-    boolean translate() {
+    public boolean translate() {
         return translate != null && translate;
     }
 
@@ -146,6 +146,10 @@ public abstract class MetaField {
 
     String string() {
         return getattr(String.class, Slots.string);
+    }
+
+    public String column_format() {
+        return column_format;
     }
 
     @SuppressWarnings("unchecked")

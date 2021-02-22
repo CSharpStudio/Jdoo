@@ -15,7 +15,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import org.springframework.lang.Nullable;
 
-import jdoo.exceptions.JdooException;
 import jdoo.exceptions.ModelException;
 import jdoo.exceptions.ValueErrorException;
 import jdoo.tools.Tools;
@@ -198,6 +197,10 @@ public final class RecordSet implements Iterable<RecordSet> {
     public RecordSet with_context(Consumer<Dict> func) {
         context = new Dict();
         func.accept(context);
+        return this;
+    }
+
+    public RecordSet with_user(Object uid) {
         return this;
     }
 
@@ -450,7 +453,7 @@ public final class RecordSet implements Iterable<RecordSet> {
         }
         if (func instanceof String) {
             RecordSet recs = this;
-            for (String name : ((String) func).split(".")) {
+            for (String name : ((String) func).split("\\.")) {
                 recs = (RecordSet) _mapped_func(rec -> rec.get(name));
             }
             return recs;
@@ -508,5 +511,36 @@ public final class RecordSet implements Iterable<RecordSet> {
 
     public RecordSet exists() {
         return call(RecordSet.class, "exists", this);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Pair<Object, Object>> name_search(String name, List<Object> args, String operator, Integer limit) {
+        return (List<Pair<Object, Object>>) call("name_search", name, args, operator, limit);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Pair<Object, Object>> name_search(String name) {
+        return (List<Pair<Object, Object>>) call("name_search", name);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Pair<Object, Object>> name_search(String name, List<Object> args) {
+        return (List<Pair<Object, Object>>) call("name_search", name, args);
+    }
+
+    public RecordSet search(List<Object> args) {
+        return (RecordSet) call("search", args, 0, null, null, false);
+    }
+
+    public RecordSet search(List<Object> args, int offset, Integer limit) {
+        return (RecordSet) call("search", args, offset, limit, null, false);
+    }
+
+    public RecordSet search(List<Object> args, int offset, Integer limit, String order) {
+        return (RecordSet) call("search", args, offset, limit, order, false);
+    }
+
+    public Object search(List<Object> args, int offset, Integer limit, String order, boolean count) {
+        return call("search", args, offset, limit, order, count);
     }
 }

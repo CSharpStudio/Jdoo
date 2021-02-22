@@ -10,20 +10,23 @@ import jdoo.modules.Registry;
 import jdoo.util.Dict;
 import jdoo.data.Database;
 
-public class TransactionCase {    
+public class TransactionCase {
     protected Environment env;
-    protected RecordSet env(String model){
+
+    protected RecordSet env(String model) {
         return env.get(model);
     }
+
     @Before
-    public void setUp(){
+    public void setUp() {
         Registry registry = Loader.getRegistry("test");
         Database db = new Database("config/dbcp.properties");
         env = Environment.create(registry, db.cursor(), "uid", new Dict(), false);
+        // env.cr().setAutoCommit(true);
     }
 
     @After
     public void tearDown() {
-        //env.cr().commit();
+        // env.cr().commit();
     }
 }

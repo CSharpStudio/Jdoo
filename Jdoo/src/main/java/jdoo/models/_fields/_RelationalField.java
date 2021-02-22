@@ -1,7 +1,9 @@
 package jdoo.models._fields;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import jdoo.models.Domain;
 import jdoo.models.RecordSet;
@@ -41,6 +43,24 @@ public abstract class _RelationalField<T extends _RelationalField<T>> extends Ba
     public T domain(Domain domain) {
         setattr(_RelationalField.domain, domain);
         return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T domain(Function<RecordSet, Domain> domain) {
+        setattr(_RelationalField.domain, domain);
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Object> get_domain_list(RecordSet model) {
+        Object d = getattr(_RelationalField.domain);
+        if (d instanceof Function) {
+            return ((Function<RecordSet, List<Object>>) d).apply(model);
+        }
+        if (d instanceof List) {
+            return (List<Object>) d;
+        }
+        return Collections.emptyList();
     }
 
     @Override
