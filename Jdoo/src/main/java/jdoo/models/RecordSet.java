@@ -9,8 +9,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-import com.bestvike.linq.Linq;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import org.springframework.lang.Nullable;
@@ -360,7 +361,7 @@ public final class RecordSet implements Iterable<RecordSet> {
      */
     public RecordSet subtract(RecordSet other) {
         Collection<Object> other_ids = new HashSet<>(other.ids());
-        return browse(Linq.of(ids()).where(id -> !other_ids.contains(id)).toList());
+        return browse(ids().stream().filter(id -> !other_ids.contains(id)).collect(Collectors.toList()));
     }
 
     /**
@@ -385,7 +386,7 @@ public final class RecordSet implements Iterable<RecordSet> {
      */
     public RecordSet and(RecordSet other) {
         Collection<Object> other_ids = new HashSet<>(other.ids());
-        return browse(Linq.of(ids()).where(id -> other_ids.contains(id)).toList());
+        return browse(ids().stream().filter(id -> other_ids.contains(id)).collect(Collectors.toList()));
     }
 
     /**
@@ -431,9 +432,11 @@ public final class RecordSet implements Iterable<RecordSet> {
 
     Object _mapped_func(Function<RecordSet, Object> func) {
         if (hasId()) {
-            List<Object> vals = Linq.of(this).select(rec -> func.apply(rec)).toList();
+            List<Object> vals = StreamSupport.stream(this.spliterator(), false).map(rec -> func.apply(rec))
+                    .collect(Collectors.toList());
             if (vals.get(0) instanceof RecordSet) {
-                return ((RecordSet) vals.get(0)).union(Linq.of(vals).ofType(RecordSet.class).toList());
+                return ((RecordSet) vals.get(0))
+                        .union(vals.stream().map(v -> (RecordSet) v).collect(Collectors.toList()));
             }
             return vals;
         } else {
@@ -471,7 +474,8 @@ public final class RecordSet implements Iterable<RecordSet> {
     }
 
     public RecordSet filtered(Predicate<RecordSet> func) {
-        return browse(Linq.of(this).where(rec -> func.test(rec)).select(rec -> rec.id()).toList());
+        return browse(StreamSupport.stream(this.spliterator(), false).filter(rec -> func.test(rec)).map(rec -> rec.id())
+                .collect(Collectors.toList()));
     }
 
     // =================================================================================

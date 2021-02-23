@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,8 +15,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import com.bestvike.linq.Linq;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import org.apache.logging.log4j.LogManager;
@@ -238,7 +240,7 @@ public class BaseModel extends MetaModel {
         Map<String, Object> ir_defaults = self.env("ir.default").call(new TypeReference<Map<String, Object>>() {
         }, "get_model_defaults", self.name(), false);
 
-        Map<String, List<String>> parent_fields = new DefaultDict<>(() -> new ArrayList<>());
+        Map<String, List<String>> parent_fields = new DefaultDict<>(ArrayList::new);
 
         for (String name : fields_list) {
             String key = "default_" + name;
@@ -468,8 +470,8 @@ public class BaseModel extends MetaModel {
         }
     }
 
-    static Pattern regex_order = Pattern.compile("^(\s*([a-z0-9:_]+|\"[a-z0-9:_]+\")(\s+(desc|asc))?\s*(,|$))+(?<!,)$",
-            Pattern.CASE_INSENSITIVE);
+    static Pattern regex_order = Pattern.compile(
+            "^(\\s*([a-z0-9:_]+|\"[a-z0-9:_]+\")(\\s+(desc|asc))?\\s*(,|$))+(?<!,)$", Pattern.CASE_INSENSITIVE);
 
     void _check_qorder(RecordSet self, String word) {
         if (!regex_order.matcher(word).matches())
@@ -559,14 +561,14 @@ public class BaseModel extends MetaModel {
         flush(self, fnames, self);
 
         List<Field> fields_pre = new ArrayList<>();
-        for (Field field : Linq.of(field_list).union(Linq.of(inherited_field_list))) {
+        Stream.of(field_list, inherited_field_list).flatMap(Collection<Field>::stream).forEach(field -> {
             Field base_field = field.base_field();
             if (!"id".equals(field.name) && base_field.store() && base_field.column_type() != null) {
                 if (!(field.inherited() && base_field.translate())) {
                     fields_pre.add(field);
                 }
             }
-        }
+        });
 
         Environment env = self.env();
         Cursor cr = env.cr();
@@ -693,12 +695,11 @@ public class BaseModel extends MetaModel {
 
             // for monetary field, their related currency field must be cached
             // before the amount so it can be rounded correctly
-            for (Field field : Linq.of(self.getFields()).orderBy(f -> f instanceof MonetaryField)) {
-                if (bad_names.contains(field.name)) {
-                    continue;
+            self.getFields().stream().sorted(Comparator.comparing(f -> f instanceof MonetaryField)).forEach(field -> {
+                if (!bad_names.contains(field.name)) {
+                    field.write(self, vals.get(field.name));
                 }
-                field.write(self, vals.get(field.name));
-            }
+            });
             modified(self, vals.keySet(), false);
 
             if (self.type()._parent_store && vals.containsKey(self.type()._parent_name)) {
@@ -706,8 +707,8 @@ public class BaseModel extends MetaModel {
             }
 
             // validate non-inversed fields first
-            List<String> inverse_fields = Linq.of(determine_inverses.values()).selectMany(c -> Linq.of(c))
-                    .select(f -> f.name).toList();
+            List<String> inverse_fields = determine_inverses.values().stream().flatMap(Collection<Field>::stream)
+                    .map(f -> f.name).collect(Collectors.toList());
             List<String> to_validate_fields = new ArrayList<>(vals.keySet());
             for (String f : inverse_fields) {
                 to_validate_fields.remove(f);
@@ -1021,7 +1022,8 @@ public class BaseModel extends MetaModel {
         }
         String query = String.format("SELECT id FROM \"%s\" WHERE id IN %%s", self.table());
         self.cr().execute(query, Arrays.asList(ids));
-        ids = Linq.of(self.cr().fetchall()).select(p -> (Object) p.get(0)).union(Linq.of(new_ids)).toList();
+        ids = Stream.concat(self.cr().fetchall().stream().map(p -> (Object) p.get(0)), new_ids.stream())
+                .collect(Collectors.toList());
         return self.browse(ids);
     }
 
@@ -1064,7 +1066,7 @@ public class BaseModel extends MetaModel {
 
         for (int i = cls._bases.size() - 1; i >= 0; i--) {
             MetaModel base = cls._bases.get(i);
-            for (Field field : Linq.of(base.$fields).orderBy(f -> f._sequence)) {
+            base.$fields.stream().sorted(Comparator.comparing(f -> f._sequence)).forEach(field -> {
                 if (!field.automatic() && !field.manual() && !field.inherited()) {
                     Field new_field = self.type().findField(field.name);
                     if (new_field == null) {
@@ -1073,7 +1075,7 @@ public class BaseModel extends MetaModel {
                     new_field._slots.putAll(field._slots);
                     _add_field(self, field.name, new_field);
                 }
-            }
+            });
         }
         _add_magic_fields(self);
 
@@ -1222,7 +1224,7 @@ public class BaseModel extends MetaModel {
             value = field.convert_to_write(value, self);
             value = field.convert_to_column(value, self, null, true);
         }
-        boolean necessary = (field instanceof BooleanField) ? value != null : (Boolean) value;
+        boolean necessary = !(field instanceof BooleanField) ? value != null : Boolean.TRUE.equals(value);
         if (necessary) {
             _logger.debug("Table '{}': setting default value of new column {} to {}", self.table(), column_name, value);
             String query = String.format("UPDATE \"%s\" SET \"%s\"=%s WHERE \"%s\" IS NULL", self.table(), column_name,

@@ -6,10 +6,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 
-import com.bestvike.linq.Linq;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,9 +23,7 @@ import jdoo.https.json.RpcId;
 public class AppTest {
     @Test
     public void test_linq() {
-        String last = Linq.of(Arrays.asList("a", "b", "c", "c1", "c5", "c3")).where(p -> p.startsWith("c"))
-                .orderBy(p -> p).last();
-        assertEquals("c5", last);
+        
     }
 
     @Test

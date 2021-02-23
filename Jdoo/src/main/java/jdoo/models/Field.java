@@ -584,7 +584,7 @@ public class Field extends MetaField {
             update_db_index(model, column);
             return column == null;
         } catch (Exception e) {
-            throw new ModelException(String.format("model %s field %s update_db error", model.name(), getName()));
+            throw new ModelException(String.format("model %s field %s update_db error", model.name(), getName()), e);
         }
     }
 

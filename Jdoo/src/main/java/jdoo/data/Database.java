@@ -17,7 +17,7 @@ public class Database {
         if (!databases.containsKey(tenant)) {
             synchronized (Database.class) {
                 if (!databases.containsKey(tenant)) {
-                    Database db = new Database("config/dbcp.properties");// db shoud be get from tenant
+                    Database db = new Database("E:/github/Jdoo/WebApi/WebApi/config/dbcp.properties");// db shoud be get from tenant
                     databases.put(tenant, db);
                     return db;
                 }

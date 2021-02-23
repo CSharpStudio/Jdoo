@@ -15,6 +15,9 @@ public class Loader {
     static {
         Package[] pkgs = Package.getPackages();
         for (Package pkg : pkgs) {
+            if (pkg.getName().startsWith("jdoo")) {
+                System.out.println(pkg.getName());
+            }
             Import imp = pkg.getAnnotation(Import.class);
             if (imp != null) {
                 Manifest manifest = pkg.getAnnotation(Manifest.class);

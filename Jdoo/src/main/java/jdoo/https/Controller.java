@@ -20,12 +20,12 @@ public class Controller {
     }
 
     public Environment env(){
-        Cursor cr = new Cursor(new Database("config/dbcp.properties"));
+        Cursor cr = new Cursor(Database.get("key"));
         return Environment.create("key", cr, "uid", new Dict(), false);
     }
 
     public RecordSet env(String model){
-        Cursor cr = new Cursor(new Database("config/dbcp.properties"));
+        Cursor cr = new Cursor(Database.get("key"));
         return Environment.create("key", cr, "uid", new Dict(), false).get(model);
     }
 

@@ -14,7 +14,7 @@ import jdoo.util.Default;
 @org.springframework.stereotype.Controller
 public class DataSetController extends Controller {
 
-    @RequestMapping(value = { "/call_kw", "/call_kw/**" }, method = RequestMethod.POST)
+    @RequestMapping(value = { "/web/dataset/call_kw", "/call_kw/**" }, method = RequestMethod.POST)
     @http.Route(auth = "user", type = "json")
     public Object call_kw(String model, String method, List<?> args, Map<String, ?> kwargs) throws JsonRpcException {
         return env(model).call(method, args.toArray());

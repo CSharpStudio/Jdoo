@@ -148,7 +148,7 @@ public class Environment {
         if (!records.hasId()) {
             return;
         }
-        List<String> ids = all.tocompute().get(field);
+        Collection<String> ids = all.tocompute().get(field);
         if (ids == null) {
             return;
         }

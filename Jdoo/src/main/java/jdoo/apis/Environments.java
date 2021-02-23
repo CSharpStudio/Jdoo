@@ -6,21 +6,22 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import jdoo.models.Field;
 import jdoo.tools.IdValues;
 import jdoo.tools.StackMap;
+import jdoo.util.DefaultDict;
 
 public class Environments implements Iterable<Environment> {
     Set<WeakReference<Environment>> envs = new HashSet<WeakReference<Environment>>();// weak set of environments
     Cache cache = new Cache();// cache for all records
     StackMap<Field, Collection<Object>> $protected = new StackMap<>();// fields to protect {field: ids, ...}
-    Map<Field, List<String>> tocompute = new HashMap<Field, List<String>>();// recomputations {field: ids}
+    Map<Field, Set<String>> tocompute = new DefaultDict<>(HashSet::new);// recomputations
+    // {field: ids}
     // updates {model: {id: {field: value}}}
-    HashMap<String, IdValues> towrite = new HashMap<String, IdValues>();
+    HashMap<String, IdValues> towrite = new DefaultDict<>(IdValues.class);
 
     public Cache cache() {
         return cache;
@@ -34,11 +35,11 @@ public class Environments implements Iterable<Environment> {
         return towrite;
     }
 
-    public Map<Field, List<String>> tocompute() {
+    public Map<Field, Set<String>> tocompute() {
         return tocompute;
     }
 
-    public List<String> tocompute(Field field) {
+    public Collection<String> tocompute(Field field) {
         if (!tocompute.containsKey(field)) {
             return Collections.emptyList();
         }
