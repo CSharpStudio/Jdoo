@@ -31,7 +31,7 @@ import jdoo.models._fields.Many2manyField;
 import jdoo.models._fields.Many2oneField;
 import jdoo.models._fields.One2manyField;
 import jdoo.util.Default;
-import jdoo.util.MapBuilder;
+import jdoo.util.Dict;
 import jdoo.util.Pair;
 import jdoo.util.Tuple;
 import jdoo.util.Utils;
@@ -49,25 +49,23 @@ public class Expression {
 
     public static Tuple<String> NEGATIVE_TERM_OPERATORS = Tuple.of("!=", "not like", "not ilike", "not in");
 
-    public static Map<String, String> DOMAIN_OPERATORS_NEGATION = new MapBuilder<String, String>()
-            .map(AND_OPERATOR, OR_OPERATOR)//
-            .map(OR_OPERATOR, AND_OPERATOR)//
-            .build();
+    public static Map<String, String> DOMAIN_OPERATORS_NEGATION = new Dict<>(
+            d -> d.set(AND_OPERATOR, OR_OPERATOR)//
+                    .set(OR_OPERATOR, AND_OPERATOR));
 
-    public static Map<String, String> TERM_OPERATORS_NEGATION = new MapBuilder<String, String>()//
-            .map("<", ">=")//
-            .map(">", "<=")//
-            .map("<=", ">")//
-            .map(">=", "<")//
-            .map("=", "!=")//
-            .map("!=", "=")//
-            .map("in", "not in")//
-            .map("like", "not like")//
-            .map("ilike", "not ilike")//
-            .map("not in", "in")//
-            .map("not like", "like")//
-            .map("not ilike", "ilike")//
-            .build();
+    public static Map<String, String> TERM_OPERATORS_NEGATION = new Dict<>(d -> d//
+            .set("<", ">=")//
+            .set(">", "<=")//
+            .set("<=", ">")//
+            .set(">=", "<")//
+            .set("=", "!=")//
+            .set("!=", "=")//
+            .set("in", "not in")//
+            .set("like", "not like")//
+            .set("ilike", "not ilike")//
+            .set("not in", "in")//
+            .set("not like", "like")//
+            .set("not ilike", "ilike"));
 
     public static Tuple<Object> TRUE_LEAF = new Tuple<>(1, "=", 1);
     public static Tuple<Object> FALSE_LEAF = new Tuple<>(0, "=", 1);
@@ -216,8 +214,8 @@ public class Expression {
         }
         List<Object> result = new ArrayList<>();
         int expected = 1;
-        Map<String, Integer> op_arity = new MapBuilder<String, Integer>().map(NOT_OPERATOR, 1).map(AND_OPERATOR, 2)
-                .map(OR_OPERATOR, 3).build();
+        Map<String, Integer> op_arity = new Dict<>(
+                d -> d.set(NOT_OPERATOR, 1).set(AND_OPERATOR, 2).set(OR_OPERATOR, 3));
 
         for (Object token : domain) {
             if (expected == 0) {
@@ -280,8 +278,8 @@ public class Expression {
             } else if (NOT_OPERATOR.equals(leaf.leaf)) {
                 stack.add(String.format("(NOT (%s))", stack.pop()));
             } else {
-                Map<String, String> ops = new MapBuilder<String, String>().map(AND_OPERATOR, "AND")
-                        .map(OR_OPERATOR, "OR").build();
+                Map<String, String> ops = new Dict<>(
+                        d -> d.set(AND_OPERATOR, "AND").set(OR_OPERATOR, "OR"));
                 String q1 = stack.pop();
                 String q2 = stack.pop();
                 stack.add(String.format("(%s %s %s)", q1, ops.get(leaf.leaf), q2));

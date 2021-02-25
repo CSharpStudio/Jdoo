@@ -3,13 +3,13 @@ package jdoo.addons.base.models;
 import jdoo.models.Field;
 import jdoo.models.Model;
 import jdoo.models.fields;
-import jdoo.util.MapBuilder;
+import jdoo.util.Dict;
 
 public class ResUsers extends Model {
         public ResUsers() {
                 _name = "res.users";
                 _description = "Users";
-                _inherits = new MapBuilder<String, String>().map("res.partner", "partner_id").build();
+                _inherits = new Dict<>(d->d.put("res.partner", "partner_id"));
                 _order = "name, login";
         }
 

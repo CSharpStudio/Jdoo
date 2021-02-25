@@ -16,17 +16,24 @@ import org.springframework.util.StringUtils;
 
 import jdoo.data.Cursor;
 import jdoo.util.Default;
+import jdoo.util.Dict;
 import jdoo.util.Kvalues;
 import jdoo.util.Tuple;
-import jdoo.util.Utils;
 
 public class Sql {
     private static Logger _schema = LogManager.getLogger("jdoo.schema");
-    static Map<String, String> _TABLE_KIND = Utils.map("BASE TABLE", "r").map("VIEW", "v").map("FOREIGN TABLE", "f")
-            .map("LOCAL TEMPORARY", "t").build();
+    static Map<String, String> _TABLE_KIND = new Dict<>(d -> d//
+            .set("BASE TABLE", "r")//
+            .set("VIEW", "v")//
+            .set("FOREIGN TABLE", "f")//
+            .set("LOCAL TEMPORARY", "t"));
 
-    static Map<String, String> _CONFDELTYPES = Utils.map("RESTRICT", "r").map("NO ACTION", "a").map("CASCADE", "c")
-            .map("SET NULL", "n").map("SET DEFAULT", "d").build();
+    static Map<String, String> _CONFDELTYPES = new Dict<>(d -> d//
+            .set("RESTRICT", "r")//
+            .set("NO ACTION", "a")//
+            .set("CASCADE", "c")//
+            .set("SET NULL", "n")//
+            .set("SET DEFAULT", "d"));
 
     public static List<String> existing_tables(Cursor cr, Collection<String> tablenames) {
         String query = "SELECT c.relname\n" //

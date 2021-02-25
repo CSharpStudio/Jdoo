@@ -39,10 +39,6 @@ public class Utils {
         return result;
     }
 
-    public static <K, V> MapBuilder<K, V> map(K key, V value) {
-        return new MapBuilder<K, V>().map(key, value);
-    }
-
     public static <K, V> void update(Map<K, V> old, Map<K, V> $new) {
         old.putAll($new);
     }
