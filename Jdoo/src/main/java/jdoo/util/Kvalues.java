@@ -11,8 +11,10 @@ public class Kvalues extends HashMap<String, Object> {
     public Kvalues() {
     }
 
-    public Kvalues(Map<String, Object> args){
-        putAll(args);
+    public Kvalues(Map<String, Object> args) {
+        if (args != null) {
+            putAll(args);
+        }
     }
 
     public Kvalues(Consumer<Kvalues> consumer) {

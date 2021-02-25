@@ -44,14 +44,13 @@ public class Expression {
     public static String AND_OPERATOR = "&";
     public static List<String> DOMAIN_OPERATORS = Arrays.asList(NOT_OPERATOR, OR_OPERATOR, AND_OPERATOR);
 
-    public static Tuple<String> TERM_OPERATORS = Tuple.of("=", "!=", "<=", "<", ">", ">=", "=?", "=like", "=ilike",
+    public static Tuple<String> TERM_OPERATORS = new Tuple<>("=", "!=", "<=", "<", ">", ">=", "=?", "=like", "=ilike",
             "like", "not like", "ilike", "not ilike", "in", "not in", "child_of", "parent_of");
 
-    public static Tuple<String> NEGATIVE_TERM_OPERATORS = Tuple.of("!=", "not like", "not ilike", "not in");
+    public static Tuple<String> NEGATIVE_TERM_OPERATORS = new Tuple<>("!=", "not like", "not ilike", "not in");
 
-    public static Map<String, String> DOMAIN_OPERATORS_NEGATION = new Dict<>(
-            d -> d.set(AND_OPERATOR, OR_OPERATOR)//
-                    .set(OR_OPERATOR, AND_OPERATOR));
+    public static Map<String, String> DOMAIN_OPERATORS_NEGATION = new Dict<>(d -> d.set(AND_OPERATOR, OR_OPERATOR)//
+            .set(OR_OPERATOR, AND_OPERATOR));
 
     public static Map<String, String> TERM_OPERATORS_NEGATION = new Dict<>(d -> d//
             .set("<", ">=")//
@@ -192,17 +191,11 @@ public class Expression {
             INTERNAL_OPS.add("not inselect");
         }
 
-        if (element instanceof Tuple) {
-            Tuple<?> e = (Tuple<?>) element;
-            return e.size() == 3 && INTERNAL_OPS.contains(e.get(1))
-                    && (e.get(0) instanceof String && StringUtils.hasText((String) e.get(0)) || TRUE_LEAF.equals(e)
-                            || FALSE_LEAF.equals(e));
-        }
-
         if (element instanceof List) {
             List<?> e = (List<?>) element;
             return e.size() == 3 && INTERNAL_OPS.contains(e.get(1))
-                    && (e.get(0) instanceof String && StringUtils.hasText((String) e.get(0)));
+                    && (e.get(0) instanceof String && StringUtils.hasText((String) e.get(0)) || TRUE_LEAF.equals(e)
+                            || FALSE_LEAF.equals(e));
         }
 
         return false;
@@ -215,7 +208,7 @@ public class Expression {
         List<Object> result = new ArrayList<>();
         int expected = 1;
         Map<String, Integer> op_arity = new Dict<>(
-                d -> d.set(NOT_OPERATOR, 1).set(AND_OPERATOR, 2).set(OR_OPERATOR, 3));
+                d -> d.set(NOT_OPERATOR, 1).set(AND_OPERATOR, 2).set(OR_OPERATOR, 2));
 
         for (Object token : domain) {
             if (expected == 0) {
@@ -223,7 +216,7 @@ public class Expression {
                 expected = 1;
             }
             result.add(token);
-            if (token instanceof List || token instanceof Tuple) {
+            if (token instanceof List) {
                 expected -= 1;
             } else {
                 expected += op_arity.getOrDefault(token, 0) - 1;
@@ -265,6 +258,7 @@ public class Expression {
     public Pair<String, List<Object>> to_sql() {
         Stack<String> stack = new Stack<>();
         List<Object> params = new ArrayList<>();
+        Map<String, String> ops = new Dict<>(d -> d.set(AND_OPERATOR, "AND").set(OR_OPERATOR, "OR"));
         for (int i = result.size() - 1; i >= 0; i--) {
             ExtendedLeaf leaf = result.get(i);
             if (leaf.is_leaf(true)) {
@@ -278,8 +272,6 @@ public class Expression {
             } else if (NOT_OPERATOR.equals(leaf.leaf)) {
                 stack.add(String.format("(NOT (%s))", stack.pop()));
             } else {
-                Map<String, String> ops = new Dict<>(
-                        d -> d.set(AND_OPERATOR, "AND").set(OR_OPERATOR, "OR"));
                 String q1 = stack.pop();
                 String q2 = stack.pop();
                 stack.add(String.format("(%s %s %s)", q1, ops.get(leaf.leaf), q2));
@@ -490,7 +482,7 @@ public class Expression {
                         }
                         if ("in".equals(sql_operator)) {
                             if (!(right instanceof Collection)) {
-                                right = Tuple.of(right);
+                                right = new Tuple<>(right);
                             }
                         }
 
@@ -539,7 +531,7 @@ public class Expression {
             } else {
                 for (Tuple<?> subids : cr.split_for_in_conditions(where_ids)) {
                     cr.execute(String.format("SELECT \"%s\" FROM \"%s\" WHERE \"%s\" IN %%s", select_field, from_table,
-                            where_field), Tuple.of(subids));
+                            where_field), new Tuple<>(subids));
                     for (Tuple<?> tuple : cr.fetchall()) {
                         res.add(tuple.get(0));
                     }
@@ -599,7 +591,7 @@ public class Expression {
                     query = String.format("(%s.\"%s\" IS NULL)", table_alias, left);
                 }
                 params = Collections.emptyList();
-            } else if (right instanceof Tuple || right instanceof List) {
+            } else if (right instanceof List) {
                 Collection<Object> col = (Collection<Object>) right;
                 params = new ArrayList<>();
                 for (Object o : col) {
@@ -797,7 +789,7 @@ class ExtendedLeaf {
         if (!Expression.is_leaf(element, false)) {
             return element;
         }
-        Tuple<Object> tuple = (Tuple<Object>) element;
+        List<Object> tuple = (List<Object>) element;
         Object left = tuple.get(0);
         String operator = (String) tuple.get(1);
         Object right = tuple.get(2);
@@ -810,7 +802,7 @@ class ExtendedLeaf {
                     new Tuple<>(left, original, right));
             operator = "in".equals(operator) ? "=" : "!=";
         }
-        if ((right instanceof List || right instanceof Tuple) || (operator.equals("=") || operator.equals("!="))) {
+        if ((right instanceof List) && (operator.equals("=") || operator.equals("!="))) {
             _logger.warn("The domain term '{}' should use the 'in' or 'not in' operator.",
                     new Tuple<>(left, original, right));
             operator = "=".equals(operator) ? "in" : "not in";

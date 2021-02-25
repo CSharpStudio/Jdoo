@@ -10,20 +10,22 @@ import jdoo.https.Controller;
 import jdoo.https.json.JsonRpcException;
 import jdoo.https.http;
 import jdoo.util.Default;
+import jdoo.util.Kwargs;
 
 @org.springframework.stereotype.Controller
 public class DataSetController extends Controller {
 
-    @RequestMapping(value = { "/web/dataset/call_kw", "/call_kw/**" }, method = RequestMethod.POST)
+    @RequestMapping(value = { "/web/dataset/call_kw", "/web/dataset/call_kw/**" }, method = RequestMethod.POST)
     @http.Route(auth = "user", type = "json")
-    public Object call_kw(String model, String method, List<?> args, Map<String, ?> kwargs) throws JsonRpcException {
-        return env(model).call(method, args.toArray());
+    public Object call_kw(String model, String method, List<Object> args, Map<String, Object> kwargs)
+            throws JsonRpcException {
+        return env(model).call(method, args, new Kwargs(kwargs));
     }
 
     @RequestMapping(value = "/web/dataset/search_read", method = RequestMethod.POST)
     @http.Route(auth = "user", type = "json")
-    public Object search_read(String model, List<String> fields, @Default int offset, int limit,
-            List<Object> domain, String sort) {
+    public Object search_read(String model, List<String> fields, @Default int offset, int limit, List<Object> domain,
+            String sort) {
         return env(model).call("web_search_read", domain, fields, offset, limit, sort);
     }
 }

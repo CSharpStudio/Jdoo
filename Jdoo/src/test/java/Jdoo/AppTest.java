@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -13,6 +14,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Test;
+
+import jdoo.util.Tuple;
 import jdoo.util.TypeUtils;
 import jdoo.https.json.JsonRpcRequest;
 import jdoo.https.json.RpcId;
@@ -23,7 +26,7 @@ import jdoo.https.json.RpcId;
 public class AppTest {
     @Test
     public void test_linq() {
-        
+        Tuple<?> a = Tuple.fromCollection(Arrays.asList(1,2));
     }
 
     @Test

@@ -2,6 +2,7 @@ package jdoo.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -16,9 +17,7 @@ public class Utils {
     @SuppressWarnings("unchecked")
     public static <T> ArrayList<T> asList(T... e) {
         ArrayList<T> list = new ArrayList<>();
-        for (T a : e) {
-            list.add(a);
-        }
+        Collections.addAll(list, e);
         return list;
     }
 
@@ -54,11 +53,11 @@ public class Utils {
     }
 
     // public static <K, V> V setdefault(Map<K, V> map, K key, V value) {
-    //     if (map.containsKey(key)) {
-    //         return map.get(key);
-    //     }
-    //     map.put(key, value);
-    //     return value;
+    // if (map.containsKey(key)) {
+    // return map.get(key);
+    // }
+    // map.put(key, value);
+    // return value;
     // }
 
     public static <K, V> V setdefault(Map<K, V> map, K key, Supplier<? extends V> supplier) {

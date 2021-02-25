@@ -4,9 +4,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.lang.Nullable;
 
 import jdoo.util.Default;
+import jdoo.util.Kwargs;
+import jdoo.util.Tuple;
 import jdoo.util.TypeUtils;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
@@ -44,49 +50,66 @@ public class MethodInfo {
         return parameters;
     }
 
-    public Object invoke(Object[] args)
+    public Object invoke(Object[] args, @Nullable Kwargs kwargs)
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         BaseModel obj = getProxy();
-        args = getArgs(args);
+        args = getArgs(args, kwargs);
         return method.invoke(obj, args);
     }
 
-    public Object invokeThis(Object[] args)
+    Object invokeThis(Object[] args)
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         MethodInfo.callingThis.set(true);
-        return invoke(args);
+        return invoke(args, null);
     }
 
-    Object[] getArgs(Object[] args) throws IllegalArgumentException {
-        if (args.length > parameters.size()) {
+    Object[] getArgs(Object[] args, @Nullable Kwargs kwargs) throws IllegalArgumentException {
+        if (args.length >= parameters.size()) {
             return args;
         }
+        Map<String, Object> kw = kwargs == null ? Collections.emptyMap() : kwargs;
         Object[] params = new Object[parameters.size()];
         System.arraycopy(args, 0, params, 0, args.length);
         for (int i = args.length; i < parameters.size(); i++) {
             ParameterInfo p = parameters.get(i);
-            if (!p.isOptional()) {
-                throw new IllegalArgumentException(String.format("Method %s.%s(%s) get %s args", meta.name(),
-                        method.getName(), parameters, args.length));
+            String name = p.getParameter().getName();
+            if (kw.containsKey(name)) {
+                params[i] = kw.get(name);
+            } else {
+                if (!p.isOptional()) {
+                    throw new IllegalArgumentException(String.format("Method %s.%s(%s) get args: %s, kwargs: %s",
+                            meta.name(), method.getName(), parameters, new Tuple<>(args), kw));
+                }
+                params[i] = p.getDefaultValue();
             }
-            params[i] = p.getDefaultValue();
         }
         return params;
     }
 
-    public boolean isParameterMatch(Object[] args) {
+    public boolean isParameterMatch(Object[] args, @Nullable Kwargs kwargs) {
+        Map<String, Object> kw = kwargs == null ? Collections.emptyMap() : kwargs;
         if (args.length > parameters.size()) {
-            return false;
+            return false;// too much args
         }
         for (int i = args.length; i < parameters.size(); i++) {
-            if (!parameters.get(i).isOptional()) {
-                return false;
+            ParameterInfo p = parameters.get(i);
+            String name = p.parameter.getName();
+            if (!p.isOptional() && !kw.containsKey(name)) {
+                return false;// parameter is not optional and not in args and kwargs
+            }
+            if (kw.containsKey(name) && !TypeUtils.isInstance(p.parameter.getType(), kw.get(name))) {
+                return false;// value type not match
             }
         }
         for (int i = 0; i < args.length; i++) {
             Object arg = args[i];
-            if (arg != null && !TypeUtils.isInstance(parameters.get(i).getParameter().getType(), arg)) {
-                return false;
+            Parameter p = parameters.get(i).getParameter();
+            String name = p.getName();
+            if (kw.containsKey(name)) {
+                return false;// both args and kwargs has the parameter
+            }
+            if (arg != null && !TypeUtils.isInstance(p.getType(), arg)) {
+                return false;// value type not match
             }
         }
 

@@ -15,6 +15,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import javax.el.MethodNotFoundException;
+
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import jdoo.exceptions.InvocationException;
@@ -23,6 +25,7 @@ import jdoo.exceptions.TypeErrorException;
 import jdoo.exceptions.ValidationErrorException;
 import jdoo.modules.Registry;
 import jdoo.tools.Collector;
+import jdoo.util.Kwargs;
 import jdoo.util.Tuple;
 import jdoo.util.Utils;
 import jdoo.apis.Environment;
@@ -211,8 +214,9 @@ public class MetaModel {
             Class<?> clazz = getClass();
             for (int i = methods.size() - 1; i >= 0; i--) {
                 MethodInfo meta = methods.get(i);
-                if (meta.getMethod().getDeclaringClass() == clazz && meta.isParameterMatch(args)) {
-                    parameterTypes = meta.getMethod().getParameterTypes();
+                if (meta.getMethod().getDeclaringClass() == clazz && meta.isParameterMatch(args, null)) {
+                    parameterTypes = meta.getMethod().getParameterTypes();// find the parameterTypes of the matched
+                                                                          // method in current class first
                     continue;
                 }
                 if (parameterTypes != null && meta.isParameterMatch(parameterTypes)) {
@@ -229,14 +233,14 @@ public class MetaModel {
         throw new MethodNotFoundException("call super method:" + method + "(" + sb.toString() + ") not found");
     }
 
-    public Object invoke(String method, Object[] args) {
+    public Object invoke(String method, Object[] args, @Nullable Kwargs kwargs) {
         if (nameMethods.containsKey(method)) {
             List<MethodInfo> methods = nameMethods.get(method);
             for (int i = methods.size() - 1; i >= 0; i--) {
                 MethodInfo meta = methods.get(i);
-                if (meta.isParameterMatch(args)) {
+                if (meta.isParameterMatch(args, kwargs)) {
                     try {
-                        return meta.invoke(args);
+                        return meta.invoke(args, kwargs);
                     } catch (Exception e) {
                         throw new InvocationException("invoke method:'" + method + "' failed", e);
                     }
@@ -246,6 +250,10 @@ public class MetaModel {
         StringBuilder sb = new StringBuilder();
         org.apache.tomcat.util.buf.StringUtils.join(args, ',', o -> o == null ? "null" : o.getClass().getName(), sb);
         throw new MethodNotFoundException("method:" + method + "(" + sb.toString() + ") not found");
+    }
+
+    public Object invoke(String method, Object[] args) {
+        return invoke(method, args, null);
     }
 
     public MethodInfo findOverrideMethod(Method method) {

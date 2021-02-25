@@ -11,15 +11,17 @@ public class Dict<K, V> extends HashMap<K, V> {
     public Dict() {
     }
 
-    public Dict(Map<K, V> args){
-        putAll(args);
+    public Dict(Map<K, V> args) {
+        if (args != null) {
+            putAll(args);
+        }
     }
 
-    public Dict(Consumer<Dict<K,V>> consumer) {
+    public Dict(Consumer<Dict<K, V>> consumer) {
         consumer.accept(this);
     }
 
-    public Dict<K,V> set(K key, V value) {
+    public Dict<K, V> set(K key, V value) {
         put(key, value);
         return this;
     }

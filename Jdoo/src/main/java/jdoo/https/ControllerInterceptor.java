@@ -1,6 +1,7 @@
 package jdoo.https;
 
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
@@ -62,29 +63,32 @@ public class ControllerInterceptor implements HandlerInterceptor {
             } else {
                 return new JsonRpcResponse(request.getId(), result);
             }
-        } catch (JsonRpcInvalidParamsException exc) {
-            return new JsonRpcResponse(JsonRpcError.InvalidParams, getDetails(exc, debug));
-        } catch (IllegalArgumentException exc) {
-            return new JsonRpcResponse(JsonRpcError.InvalidParams, getDetails(exc, debug));
-        } catch (Exception exc) {
-            return new JsonRpcResponse(JsonRpcError.InternalError, getDetails(exc, debug));
+        } catch (JsonRpcInvalidParamsException e) {
+            return new JsonRpcResponse(JsonRpcError.InvalidParams, getDetails(e, debug));
+        } catch (IllegalArgumentException e) {
+            return new JsonRpcResponse(JsonRpcError.InvalidParams, getDetails(e, debug));
+        } catch (Exception e) {
+            return new JsonRpcResponse(JsonRpcError.InternalError, getDetails(e, debug));
         }
     }
 
-    String getDetails(Exception exc, boolean debug) {
-        if (debug)
-            return exc.toString();
-        String msg = exc.getMessage();
-        Throwable t = exc.getCause();
+    String getDetails(Exception e, boolean debug) {
+        e.printStackTrace();
+        if (debug) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            return sw.toString(); // stack trace as a string
+        }
+        String msg = e.toString();
+        Throwable t = e.getCause();
         while (t != null) {
-            if (StringUtils.hasText(msg)) {
-                msg += ", because " + t.getMessage();
-            } else {
-                msg = t.getMessage();
-            }
+            msg += ", Caused by: " + t.toString();
             Throwable cause = t.getCause();
             if (cause != t)
                 t = cause;
+            else
+                break;
         }
         return msg;
     }

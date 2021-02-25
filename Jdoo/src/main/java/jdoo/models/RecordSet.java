@@ -20,6 +20,7 @@ import jdoo.exceptions.ModelException;
 import jdoo.exceptions.ValueErrorException;
 import jdoo.tools.Tools;
 import jdoo.util.Kvalues;
+import jdoo.util.Kwargs;
 import jdoo.util.Pair;
 import jdoo.util.Tuple;
 import jdoo.apis.Environment;
@@ -93,7 +94,7 @@ public final class RecordSet implements Iterable<RecordSet> {
         if (id instanceof Collection<?>) {
             return meta.browse(env, (Collection<?>) id, (Collection<?>) id);
         }
-        Tuple<Object> ids = Tuple.of(id);
+        Tuple<Object> ids = new Tuple<>(id);
         return meta.browse(env, ids, ids);
     }
 
@@ -261,8 +262,19 @@ public final class RecordSet implements Iterable<RecordSet> {
     // call methods
     //
 
+    public Object call(String method, Collection<?> args, Kwargs kwargs) {
+        Object[] array = args == null ? new Object[0] : args.toArray();
+        return meta.invoke(method, getArgs(array), kwargs);
+    }
+
+    public Object call(String method, Kwargs kwargs) {
+        return meta.invoke(method, new Object[] { this }, kwargs);
+    }
+
     public Object call(String method, Object... args) {
-        return meta.invoke(method, getArgs(args));
+        Kwargs kwargs = args.length > 0 && args[args.length - 1] instanceof Kwargs ? (Kwargs) args[args.length - 1]
+                : null;
+        return meta.invoke(method, getArgs(args), kwargs);
     }
 
     /** call method define in {@code Model}. */
@@ -277,15 +289,23 @@ public final class RecordSet implements Iterable<RecordSet> {
     }
 
     private Object[] getArgs(Object[] args) {
-        if (args.length > 0 && args[0] instanceof RecordSet) {
-            return args;
+        if (args.length == 0) {
+            return new Object[] { this };
+        } else if (args[0] instanceof RecordSet) {
+            if (!(args[args.length - 1] instanceof Kwargs)) {
+                return args;
+            } else {
+                Object[] result = new Object[args.length - 1];
+                System.arraycopy(args, 0, result, 0, result.length);
+                return result;
+            }
+        } else {
+            int length = args[args.length - 1] instanceof Kwargs ? args.length - 1 : args.length;
+            Object[] result = new Object[length + 1];
+            result[0] = this;
+            System.arraycopy(args, 0, result, 1, length);
+            return result;
         }
-        Object[] result = new Object[args.length + 1];
-        result[0] = this;
-        for (int i = 0; i < args.length; i++) {
-            result[i + 1] = args[i];
-        }
-        return result;
     }
 
     // =================================================================================
@@ -309,7 +329,7 @@ public final class RecordSet implements Iterable<RecordSet> {
 
     /** subset of this {@code RecordSet} */
     public RecordSet get(int from, int to) {
-        return browse(Tuple.of(ids.toArray(from, to)));
+        return browse(new Tuple<>(ids.toArray(from, to)));
     }
 
     class SelfIterator implements Iterator<RecordSet> {

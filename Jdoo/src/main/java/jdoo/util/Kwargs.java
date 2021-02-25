@@ -11,8 +11,10 @@ public class Kwargs extends HashMap<String, Object> {
     public Kwargs() {
     }
 
-    public Kwargs(Map<String, Object> args){
-        putAll(args);
+    public Kwargs(Map<String, Object> args) {
+        if (args != null) {
+            putAll(args);
+        }
     }
 
     public Kwargs(Consumer<Kwargs> consumer) {
