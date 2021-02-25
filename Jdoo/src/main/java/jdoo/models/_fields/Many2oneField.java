@@ -7,7 +7,7 @@ import jdoo.exceptions.ValueErrorException;
 import jdoo.models.RecordSet;
 import jdoo.tools.Slot;
 import jdoo.tools.Tools;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 
 /**
@@ -106,7 +106,7 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
     }
 
     @Override
-    public boolean update_db(RecordSet model, Map<String, Dict> columns) {
+    public boolean update_db(RecordSet model, Map<String, Kvalues> columns) {
         RecordSet comodel = model.env(comodel_name());
         if (!model.type().is_transient() && comodel.type().is_transient()) {
             throw new ValueErrorException(String.format("Many2one %s from Model to TransientModel is forbidden", this));
@@ -115,13 +115,13 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
     }
 
     @Override
-    public void update_db_column(RecordSet model, Dict column) {
+    public void update_db_column(RecordSet model, Kvalues column) {
         super.update_db_column(model, column);
         // todo model.pool.post_init(self.update_db_foreign_key, model, column)
     }
 
     @Override
-    public Object convert_to_column(Object value, RecordSet record, Dict values, boolean validate) {
+    public Object convert_to_column(Object value, RecordSet record, Kvalues values, boolean validate) {
         return value;
     }
 

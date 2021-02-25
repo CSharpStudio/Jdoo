@@ -5,7 +5,7 @@ import jdoo.util.TypeUtils;
 import jdoo.apis.Environment;
 import jdoo.models.RecordSet;
 import jdoo.tools.Slot;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 
 /**
@@ -60,7 +60,7 @@ public class FloatField extends BaseField<FloatField> {
     }
 
     @Override
-    public Object convert_to_column(Object value, RecordSet record, Dict values, boolean validate) {
+    public Object convert_to_column(Object value, RecordSet record, Kvalues values, boolean validate) {
         double result = TypeUtils.toDouble(value);
         Pair<Integer, Integer> digits = get_digits(record.env());
         if (digits != null) {

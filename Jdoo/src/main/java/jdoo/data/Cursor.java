@@ -17,7 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import jdoo.exceptions.DataException;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.tools.Sql;
 import jdoo.util.Tuple;
 
@@ -261,32 +261,32 @@ public class Cursor implements AutoCloseable {
         return list;
     }
 
-    public Dict dictfetchone() {
+    public Kvalues dictfetchone() {
         ensureExecuted();
         if (state == CursorState.Fetchable) {
-            Dict dict = readDict();
+            Kvalues kv = readKvalues();
             scroll();
-            return dict;
+            return kv;
         }
-        return new Dict();
+        return new Kvalues();
     }
 
-    public List<Dict> dictfetchmany(int size) {
+    public List<Kvalues> dictfetchmany(int size) {
         ensureExecuted();
-        List<Dict> list = new ArrayList<>();
+        List<Kvalues> list = new ArrayList<>();
         int i = 0;
         while (state == CursorState.Fetchable && i++ < size) {
-            list.add(readDict());
+            list.add(readKvalues());
             scroll();
         }
         return list;
     }
 
-    public List<Dict> dictfetchall() {
+    public List<Kvalues> dictfetchall() {
         ensureExecuted();
-        List<Dict> list = new ArrayList<>();
+        List<Kvalues> list = new ArrayList<>();
         while (state == CursorState.Fetchable) {
-            list.add(readDict());
+            list.add(readKvalues());
             scroll();
         }
         return list;
@@ -305,15 +305,15 @@ public class Cursor implements AutoCloseable {
         }
     }
 
-    Dict readDict() {
+    Kvalues readKvalues() {
         try {
             ResultSetMetaData meta = resultSet.getMetaData();
-            Dict dict = new Dict();
+            Kvalues kv = new Kvalues();
             Object[] values = new Object[meta.getColumnCount()];
             for (int i = 1; i <= values.length; i++) {
-                dict.set(meta.getColumnLabel(i), resultSet.getObject(i));
+                kv.set(meta.getColumnLabel(i), resultSet.getObject(i));
             }
-            return dict;
+            return kv;
         } catch (SQLException e) {
             throw new DataException("read row error", e);
         }

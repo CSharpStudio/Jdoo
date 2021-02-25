@@ -1,11 +1,10 @@
 package jdoo.addons.base.models;
 
-import jdoo.models.Kwargs;
 import jdoo.models.Field;
 import jdoo.models.Model;
 import jdoo.models.RecordSet;
-import jdoo.models.d;
 import jdoo.models.fields;
+import jdoo.util.Kvalues;
 
 public class ResBank extends Model {
 
@@ -41,7 +40,7 @@ public class ResBank extends Model {
     // return result;
     // }
 
-    public Object _name_search(RecordSet self, Kwargs args) {
+    public Object _name_search(RecordSet self, Kvalues args) {
 
         return null;
     }

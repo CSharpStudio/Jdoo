@@ -95,7 +95,7 @@ public class Query {
             if (!tables.contains(alias_statement)) {
                 tables.add(alias_statement);
                 Tuple<String> join_tuple = new Tuple<>(alias, lhs_col, col, outer ? "LEFT JOIN" : "JOIN");
-                Utils.setdefault(joins, lhs, new ArrayList<Tuple<String>>()).add(join_tuple);
+                Utils.setdefault(joins, lhs, ArrayList<Tuple<String>>::new).add(join_tuple);
                 if (StringUtils.hasText(extra) || !extra_params.isEmpty()) {
                     if (StringUtils.hasText(extra)) {
                         extra.replace("{lhs}", lhs).replace("{rhs}", alias);

@@ -14,7 +14,7 @@ import jdoo.models.Field;
 import jdoo.models.RecordSet;
 import jdoo.modules.Loader;
 import jdoo.modules.Registry;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.tools.StackMap;
 import jdoo.util.Tuple;
 
@@ -30,7 +30,7 @@ public class Environment {
         return envs;
     }
 
-    public static Environment create(Registry registry, Cursor cr, String uid, Dict context, boolean su) {
+    public static Environment create(Registry registry, Cursor cr, String uid, Kvalues context, boolean su) {
         if (init.SUPERUSER_ID.equals(uid))
             su = true;
 
@@ -55,14 +55,14 @@ public class Environment {
         return self;
     }
 
-    public static Environment create(String tenant, Cursor cr, String uid, Dict context, boolean su) {
+    public static Environment create(String tenant, Cursor cr, String uid, Kvalues context, boolean su) {
         Registry registry = Loader.getRegistry(tenant);
         return create(registry, cr, uid, context, su);
     }
 
     Registry registry;
     Cursor cr;
-    Dict context;
+    Kvalues context;
     Cache cache;
     boolean su;
     String uid;
@@ -77,7 +77,7 @@ public class Environment {
         return cr;
     }
 
-    public Dict context() {
+    public Kvalues context() {
         return context;
     }
 
@@ -158,7 +158,7 @@ public class Environment {
         }
     }
 
-    private Dict lazy_properties = new Dict();
+    private Kvalues lazy_properties = new Kvalues();
 
     @SuppressWarnings("unchecked")
     <T> T lazy_property(String p, Supplier<T> func) {

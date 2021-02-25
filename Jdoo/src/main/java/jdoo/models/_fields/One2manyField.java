@@ -8,7 +8,7 @@ import jdoo.exceptions.UserErrorException;
 import jdoo.models.Field;
 import jdoo.models.RecordSet;
 import jdoo.tools.Slot;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 
 /**
  * One2many field; the value of such a field is the recordset of all the records
@@ -84,7 +84,7 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
     }
 
     @Override
-    public boolean update_db(RecordSet model, Map<String, Dict> columns) {
+    public boolean update_db(RecordSet model, Map<String, Kvalues> columns) {
         if (model.type().pool().contains(comodel_name())) {
             RecordSet comodel = model.env(comodel_name());
             if (!comodel.hasField(getattr(String.class, inverse_name))) {

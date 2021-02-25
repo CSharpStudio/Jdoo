@@ -24,7 +24,7 @@ import jdoo.exceptions.MissingErrorException;
 import jdoo.exceptions.ModelException;
 import jdoo.exceptions.TypeErrorException;
 import jdoo.util.Default;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 import jdoo.tools.IdValues;
 import jdoo.tools.Sql;
@@ -428,7 +428,7 @@ public class Field extends MetaField {
 
     public Object cache_key(Environment env) {
         List<Object> objs = new ArrayList<>();
-        Dict ctx = env.context();
+        Kvalues ctx = env.context();
         for (String key : depends_context()) {
             if ("force_company".equals(key)) {
                 if (ctx.containsKey("force_company")) {
@@ -466,7 +466,7 @@ public class Field extends MetaField {
      * @param validate default true
      * @return
      */
-    public Object convert_to_column(Object value, RecordSet record, @Default Dict values,
+    public Object convert_to_column(Object value, RecordSet record, @Default Kvalues values,
             @Default("true") boolean validate) {
         if (value == null)
             return null;
@@ -573,12 +573,12 @@ public class Field extends MetaField {
      * @param columns a dict mapping column names to their configuration in database
      * @return true if the field must be recomputed on existing rows
      */
-    public boolean update_db(RecordSet model, Map<String, Dict> columns) {
+    public boolean update_db(RecordSet model, Map<String, Kvalues> columns) {
         if (column_type() == null) {
             return false;
         }
         try {
-            Dict column = columns.get(getName());
+            Kvalues column = columns.get(getName());
             update_db_column(model, column);
             update_db_notnull(model, column);
             update_db_index(model, column);
@@ -594,7 +594,7 @@ public class Field extends MetaField {
      * @param model  an instance of the field's model
      * @param column the column's configuration (dict) if it exists, or null
      */
-    public void update_db_column(RecordSet model, @Nullable Dict column) {
+    public void update_db_column(RecordSet model, @Nullable Kvalues column) {
         Cursor cr = model.env().cr();
         if (column == null) {
             Sql.create_column(cr, model.table(), getName(), column_type().second().toString(), string());
@@ -625,7 +625,7 @@ public class Field extends MetaField {
      * @param model  an instance of the field's model
      * @param column the column's configuration (dict) if it exists, or null
      */
-    public void update_db_notnull(RecordSet model, @Nullable Dict column) {
+    public void update_db_notnull(RecordSet model, @Nullable Kvalues column) {
         boolean has_notnull = column != null && column.get("is_nullable").equals("NO");
         if (column != null || (required() && !has_notnull)) {
             if (model.call(Boolean.class, "_table_has_rows")) {
@@ -646,7 +646,7 @@ public class Field extends MetaField {
      * @param model  an instance of the field's model
      * @param column the column's configuration (dict) if it exists, or null
      */
-    public void update_db_index(RecordSet model, @Nullable Dict column) {
+    public void update_db_index(RecordSet model, @Nullable Kvalues column) {
         String indexname = String.format("%s_%s_index", model.table(), getName());
         if (index()) {
             try (SavePoint p = model.cr().savepoint()) {
@@ -781,7 +781,7 @@ public class Field extends MetaField {
             } else {
                 value = convert_to_cache(null, record, false);
                 env.cache().set(record, this, value);
-                Dict defaults = record.call(Dict.class, "default_get", Arrays.asList(getName()));
+                Kvalues defaults = record.call(Kvalues.class, "default_get", Arrays.asList(getName()));
                 if (defaults.containsKey(getName())) {
                     value = convert_to_cache(defaults.get(getName()), record, true);
                 }
@@ -843,7 +843,7 @@ public class Field extends MetaField {
         if (!other_ids.isEmpty()) {
             records = records.browse(other_ids);
             Object write_value = convert_to_write(value, records);
-            records.call("write", new Dict().set(getName(), write_value));
+            records.call("write", new Kvalues(k -> k.set(getName(), write_value)));
         }
     }
 

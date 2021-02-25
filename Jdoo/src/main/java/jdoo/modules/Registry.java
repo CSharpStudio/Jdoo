@@ -7,7 +7,7 @@ import java.util.List;
 
 import jdoo.models.MetaModel;
 import jdoo.models.RecordSet;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.init;
 import jdoo.apis.Environment;
 import jdoo.data.Cursor;
@@ -47,7 +47,7 @@ public class Registry {
     }
 
     public void setup_models(Cursor cr) {
-        Environment env = Environment.create(this, cr, init.SUPERUSER_ID, new Dict(), true);
+        Environment env = Environment.create(this, cr, init.SUPERUSER_ID, new Kvalues(), true);
 
         List<RecordSet> models = new ArrayList<>();
         for (MetaModel m : map.values()) {
@@ -67,7 +67,7 @@ public class Registry {
     }
 
     public void init_models(Cursor cr) {
-        Environment env = Environment.create(this, cr, init.SUPERUSER_ID, new Dict(), true);
+        Environment env = Environment.create(this, cr, init.SUPERUSER_ID, new Kvalues(), true);
         List<RecordSet> models = new ArrayList<>();
         for (MetaModel m : map.values()) {
             RecordSet self = env.get(m.name());

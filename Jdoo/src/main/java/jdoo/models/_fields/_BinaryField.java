@@ -12,7 +12,7 @@ import jdoo.models.RecordSet;
 import jdoo.models.d;
 import jdoo.tools.Slot;
 import jdoo.tools.Tools;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 import jdoo.util.Tuple;
 import jdoo.util.Utils;
@@ -45,7 +45,7 @@ public class _BinaryField<T extends _BinaryField<T>> extends BaseField<T> {
     }
 
     @Override
-    public Object convert_to_column(Object value, RecordSet record, Dict values, boolean validate) {
+    public Object convert_to_column(Object value, RecordSet record, Kvalues values, boolean validate) {
         if (value == null) {
             return null;
         }
@@ -86,12 +86,12 @@ public class _BinaryField<T extends _BinaryField<T>> extends BaseField<T> {
         // try(env.norecompute()){
         List<Map<String, Object>> args = new ArrayList<>();
         for (Pair<RecordSet, Object> pair : record_values) {
-            args.add(new Dict().set("name", getName())//
+            args.add(new Kvalues(k -> k.set("name", getName())//
                     .set("res_model", model_name())//
                     .set("res_field", getName())//
                     .set("res_id", pair.first().id())//
                     .set("type", "binary")//
-                    .set("datas", pair.second()));
+                    .set("datas", pair.second())));
         }
         env.get("ir.attachment").sudo().with_context(ctx -> ctx.set("binary_field_real_user", env.user()))
                 .call("create", args);

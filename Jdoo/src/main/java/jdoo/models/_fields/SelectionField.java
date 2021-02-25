@@ -9,7 +9,7 @@ import jdoo.apis.Environment;
 import jdoo.data.PgVarchar;
 import jdoo.models.RecordSet;
 import jdoo.tools.Slot;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 
 /**
@@ -104,7 +104,7 @@ public class SelectionField extends BaseField<SelectionField> {
     }
 
     @Override
-    public Object convert_to_column(Object value, RecordSet record, Dict values, boolean validate) {
+    public Object convert_to_column(Object value, RecordSet record, Kvalues values, boolean validate) {
         if (validate && getattr(Boolean.class, SelectionField.validate)) {
             value = convert_to_cache(value, record, true);
         }

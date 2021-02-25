@@ -19,7 +19,7 @@ import org.springframework.lang.Nullable;
 import jdoo.exceptions.ModelException;
 import jdoo.exceptions.ValueErrorException;
 import jdoo.tools.Tools;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 import jdoo.util.Tuple;
 import jdoo.apis.Environment;
@@ -31,7 +31,7 @@ public final class RecordSet implements Iterable<RecordSet> {
     Tuple<?> ids;
     Tuple<?> prefetchIds;
     static Map<Field, Collection<Field>> _field_computed;
-    Dict context;
+    Kvalues context;
 
     public Map<Field, Collection<Field>> _field_computed() {
         return _field_computed;
@@ -73,7 +73,7 @@ public final class RecordSet implements Iterable<RecordSet> {
     }
 
     /** the context from Environment */
-    public Dict context() {
+    public Kvalues context() {
         return env.context();
     }
 
@@ -189,14 +189,14 @@ public final class RecordSet implements Iterable<RecordSet> {
      * @param context
      * @return a new version of this recordset attached to an extended context.
      */
-    public RecordSet with_context(Dict context) {
+    public RecordSet with_context(Kvalues context) {
         // todo
         this.context = context;
         return this;
     }
 
-    public RecordSet with_context(Consumer<Dict> func) {
-        context = new Dict();
+    public RecordSet with_context(Consumer<Kvalues> func) {
+        context = new Kvalues();
         func.accept(context);
         return this;
     }
@@ -496,8 +496,8 @@ public final class RecordSet implements Iterable<RecordSet> {
         return (List<Pair<Object, Object>>) call("name_get", this);
     }
 
-    public Dict default_get(Collection<String> fields_list) {
-        return call(Dict.class, "default_get", this, fields_list);
+    public Kvalues default_get(Collection<String> fields_list) {
+        return call(Kvalues.class, "default_get", this, fields_list);
     }
 
     public boolean write(Map<String, Object> vals) {
@@ -509,8 +509,8 @@ public final class RecordSet implements Iterable<RecordSet> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Dict> read(Collection<String> fields) {
-        return (List<Dict>) call("read", this, fields);
+    public List<Kvalues> read(Collection<String> fields) {
+        return (List<Kvalues>) call("read", this, fields);
     }
 
     public RecordSet exists() {

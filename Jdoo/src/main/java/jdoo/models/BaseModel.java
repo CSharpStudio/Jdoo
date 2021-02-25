@@ -26,7 +26,7 @@ import org.springframework.util.StringUtils;
 
 import jdoo.util.Default;
 import jdoo.util.DefaultDict;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 import jdoo.tools.Collector;
 import jdoo.tools.IdValues;
@@ -60,13 +60,13 @@ public class BaseModel extends MetaModel {
     static List<String> LOG_ACCESS_COLUMNS = Arrays.asList("create_uid", "create_date", "write_uid", "write_date");
     Map<Field, Object> _field_computed = new HashMap<>();
 
-    protected RecordSet _create(RecordSet self, Collection<Dict> data_list) {
+    protected RecordSet _create(RecordSet self, Collection<Kvalues> data_list) {
         List<String> ids = new ArrayList<>();
         List<Field> other_fields = new ArrayList<>();
         // List<String> translated_fields = new ArrayList<>();
         Cursor cr = self.env().cr();
-        for (Dict data : data_list) {
-            Dict stored = (Dict) data.get("stored");
+        for (Kvalues data : data_list) {
+            Kvalues stored = (Kvalues) data.get("stored");
             StringBuilder columns = new StringBuilder();
             StringBuilder formats = new StringBuilder();
             List<Object> values = new ArrayList<>();
@@ -104,8 +104,8 @@ public class BaseModel extends MetaModel {
         RecordSet records = self.browse(ids);
         Cache cache = self.env().cache();
         for (RecordSet record : records) {
-            for (Dict data : data_list) {
-                Dict stored = (Dict) data.get("stored");
+            for (Kvalues data : data_list) {
+                Kvalues stored = (Kvalues) data.get("stored");
                 for (String fname : stored.keySet()) {
                     Field field = self.getField(fname);
                     Object value = stored.get(fname);
@@ -153,12 +153,12 @@ public class BaseModel extends MetaModel {
         if (self.type().log_access()) {
             bad_names.addAll(LOG_ACCESS_COLUMNS);
         }
-        List<Dict> data_list = new ArrayList<Dict>();
+        List<Kvalues> data_list = new ArrayList<Kvalues>();
         Set<Field> inversed_fields = new HashSet<Field>();
         for (Map<String, Object> vals : vals_list) {
             vals = _add_missing_default_values(self, vals);
-            Dict data = new Dict();
-            Dict stored = new Dict(), inversed = new Dict();
+            Kvalues data = new Kvalues();
+            Kvalues stored = new Kvalues(), inversed = new Kvalues();
             Map<String, Map<String, Object>> inherited = new HashMap<String, Map<String, Object>>();
             Set<Object> protected_ = new HashSet<Object>();
             data.put("stored", stored);
@@ -185,7 +185,7 @@ public class BaseModel extends MetaModel {
                     if (inherited.containsKey(field.related_field().model_name())) {
                         inherited.get(field.related_field().model_name()).put(key, val);
                     } else {
-                        Map<String, Object> m = new Dict().set(key, val);
+                        Map<String, Object> m = new Kvalues().set(key, val);
                         inherited.put(field.related_field().model_name(), m);
                     }
                 } else if (StringUtils.hasText(field.inverse())) {
@@ -213,7 +213,7 @@ public class BaseModel extends MetaModel {
         }
         if (missing_defaults.isEmpty())
             return vals;
-        Dict defaults = default_get(self, missing_defaults);
+        Kvalues defaults = default_get(self, missing_defaults);
         for (String name : defaults.keySet()) {
             Object value = defaults.get(name);
             Field field = self.getField(name);
@@ -234,9 +234,9 @@ public class BaseModel extends MetaModel {
 
     }
 
-    public Dict default_get(RecordSet self, Collection<String> fields_list) {
+    public Kvalues default_get(RecordSet self, Collection<String> fields_list) {
         // TODO self.view_init(fields_list)
-        Dict defaults = new Dict();
+        Kvalues defaults = new Kvalues();
         Map<String, Object> ir_defaults = self.env("ir.default").call(new TypeReference<Map<String, Object>>() {
         }, "get_model_defaults", self.name(), false);
 
@@ -277,7 +277,7 @@ public class BaseModel extends MetaModel {
         }
 
         for (String model : parent_fields.keySet()) {
-            defaults.putAll(self.env(model).call(Dict.class, "default_get", parent_fields.get(model)));
+            defaults.putAll(self.env(model).call(Kvalues.class, "default_get", parent_fields.get(model)));
         }
 
         return defaults;
@@ -300,7 +300,7 @@ public class BaseModel extends MetaModel {
     public Pair<Object, Object> name_create(RecordSet self, String name) {
         String rec_name = self.type().rec_name();
         if (StringUtils.hasText(rec_name)) {
-            RecordSet record = create(self, new Dict().set(rec_name, name));
+            RecordSet record = create(self, new Kvalues(k -> k.set(rec_name, name)));
             return name_get(record).get(0);
         }
         return null;
@@ -504,6 +504,7 @@ public class BaseModel extends MetaModel {
         return _name_search(self, name, args, operator, limit, null);
     }
 
+    @SuppressWarnings("unchecked")
     public List<Pair<Object, Object>> _name_search(RecordSet self, @Default("") String name, @Default List<Object> args,
             @Default("ilike") String operator, @Default("100") int limit, @Default String name_get_uid) {
         if (args == null) {
@@ -572,7 +573,7 @@ public class BaseModel extends MetaModel {
 
         Environment env = self.env();
         Cursor cr = env.cr();
-        Dict context = env.context();
+        Kvalues context = env.context();
         Object param_ids = new Object();
         Query query = new Query(Arrays.asList("\"" + table() + "\""), Arrays.asList("\"" + table() + "\".id IN %s"),
                 Arrays.asList(param_ids));
@@ -815,10 +816,10 @@ public class BaseModel extends MetaModel {
                 if (to == null) {
                     return;
                 }
-                Dict dict = (Dict) to;
+                Kvalues dict = (Kvalues) to;
                 boolean hasToWrite = false;
                 for (RecordSet record : records) {
-                    Dict kv = (Dict) dict.get(record.id());
+                    Kvalues kv = (Kvalues) dict.get(record.id());
                     for (String f : fnames) {
                         if (kv.containsKey(f)) {
                             hasToWrite = true;
@@ -911,7 +912,7 @@ public class BaseModel extends MetaModel {
         }
     }
 
-    public List<Dict> read(RecordSet self, Collection<String> fields) {
+    public List<Kvalues> read(RecordSet self, Collection<String> fields) {
         Collection<Field> _fields = check_field_access_rights(self, "read", fields);
         List<Field> stored_fields = new ArrayList<Field>();
         for (Field field : _fields) {
@@ -927,9 +928,9 @@ public class BaseModel extends MetaModel {
             }
         }
         _read(self, _fields);
-        List<Dict> result = new ArrayList<Dict>();
+        List<Kvalues> result = new ArrayList<>();
         for (RecordSet record : self) {
-            Dict dict = new Dict();
+            Kvalues dict = new Kvalues();
             dict.put("id", record.id());
             boolean error = false;
             for (Field field : _fields) {
@@ -1034,7 +1035,7 @@ public class BaseModel extends MetaModel {
     public void _fetch_field(RecordSet self, Field field) {
         check_field_access_rights(self, "read", Arrays.asList(field.getName()));
         List<Field> fields = new ArrayList<>();
-        if (self.context().get("prefetch_fields", true) && field.prefetch()) {
+        if (Boolean.TRUE.equals(self.context().getOrDefault("prefetch_fields", true)) && field.prefetch()) {
             for (Field f : self.getFields()) {
                 if (f.prefetch() && !(StringUtils.hasText(f.groups()) && !user_has_group(self, f.groups()))
                         && !(StringUtils.hasText(f.compute()) && self.env().records_to_compute(f).hasId())) {
@@ -1196,7 +1197,7 @@ public class BaseModel extends MetaModel {
                 Sql.create_model_table(cr, self.table(), self.type().description());
             }
             // _check_removed_columns(self)
-            Map<String, Dict> columns = Sql.table_columns(cr, self.table());
+            Map<String, Kvalues> columns = Sql.table_columns(cr, self.table());
             List<Field> fields_to_compute = new ArrayList<>();
             for (Field field : self.getFields()) {
                 if (!field.store()) {

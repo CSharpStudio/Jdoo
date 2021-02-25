@@ -1,7 +1,7 @@
 package jdoo.models._fields;
 
 import jdoo.models.RecordSet;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 import jdoo.util.TypeUtils;
 
@@ -12,7 +12,7 @@ public class IntegerField extends BaseField<IntegerField> {
     }
 
     @Override
-    public Object convert_to_column(Object value, RecordSet record, Dict values, boolean validate) {
+    public Object convert_to_column(Object value, RecordSet record, Kvalues values, boolean validate) {
         return TypeUtils.toInteger(value);
     }
 

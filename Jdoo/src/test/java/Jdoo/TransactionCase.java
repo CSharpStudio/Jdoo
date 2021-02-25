@@ -7,7 +7,7 @@ import jdoo.apis.Environment;
 import jdoo.models.RecordSet;
 import jdoo.modules.Loader;
 import jdoo.modules.Registry;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.data.Database;
 
 public class TransactionCase {
@@ -21,7 +21,7 @@ public class TransactionCase {
     public void setUp() {
         Registry registry = Loader.getRegistry("test");
         Database db = new Database("config/dbcp.properties");
-        env = Environment.create(registry, db.cursor(), "uid", new Dict(), false);
+        env = Environment.create(registry, db.cursor(), "uid", new Kvalues(), false);
         // env.cr().setAutoCommit(true);
     }
 

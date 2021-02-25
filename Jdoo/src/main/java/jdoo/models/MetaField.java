@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import jdoo.tools.Slot;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 import jdoo.util.Tuple;
 
@@ -87,7 +87,7 @@ public abstract class MetaField {
     /** the field's setup state: None, 'base' or 'full' */
     SetupState _setup_done = SetupState.None;
 
-    protected Dict context;
+    protected Kvalues context;
 
     protected MetaField() {
         _sequence = _global_seq++;
@@ -97,9 +97,9 @@ public abstract class MetaField {
         return name;
     }
 
-    Dict context() {
+    Kvalues context() {
         if (context == null) {
-            context = new Dict();
+            context = new Kvalues();
         }
         return context;
     }

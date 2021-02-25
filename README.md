@@ -85,8 +85,8 @@ public class Partner extends Model {
     @api.depends({ "is_company", "name", "parent_id.name", "type", "company_name" })
     @api.depends_context({ "show_address", "show_address_only", "show_email", "html_format", "show_vat" })
     public void _compute_display_name(Self self) {
-        self.with_context(new Dict().set("show_address",null).set("show_address_only",null).set("show_email",null).set("html_format",null).set("show_vat",null));
-        Dict names = self.call(Dict.class, "name_get");
+        self.with_context(new Kvalues().set("show_address",null).set("show_address_only",null).set("show_email",null).set("html_format",null).set("show_vat",null));
+        Kvalues names = self.call(Kvalues.class, "name_get");
         for (Self partner : self)
             partner.set(display_name, names.get(partner.id()));
     }

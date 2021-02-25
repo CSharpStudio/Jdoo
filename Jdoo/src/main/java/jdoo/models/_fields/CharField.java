@@ -5,7 +5,7 @@ import jdoo.models.RecordSet;
 import jdoo.tools.Slot;
 import jdoo.tools.Sql;
 import jdoo.util.Tuple;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 
 /**
@@ -54,7 +54,7 @@ public class CharField extends _StringField<CharField> {
     }
 
     @Override
-    public void update_db_column(RecordSet model, Dict column) {
+    public void update_db_column(RecordSet model, Kvalues column) {
         if (column != null && "varchar".equals(column.get("udt_name")) && column.get("character_maximum_length") != null
                 && (!hasattr(size) || (int) column.get("character_maximum_length") < getattr(Integer.class, size))) {
             // the column's varchar size does not match self.size; convert it
@@ -64,7 +64,7 @@ public class CharField extends _StringField<CharField> {
     }
 
     @Override
-    public Object convert_to_column(Object value, RecordSet record, Dict values, boolean validate) {
+    public Object convert_to_column(Object value, RecordSet record, Kvalues values, boolean validate) {
         if (value == null) {
             return null;
         }

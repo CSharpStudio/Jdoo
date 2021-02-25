@@ -13,17 +13,21 @@ public class Loader {
     static DefaultDict<String, List<Class<?>>> module_to_models = new DefaultDict<>(ArrayList.class);
 
     static {
-        Package[] pkgs = Package.getPackages();
-        for (Package pkg : pkgs) {
-            if (pkg.getName().startsWith("jdoo")) {
-                System.out.println(pkg.getName());
-            }
-            Import imp = pkg.getAnnotation(Import.class);
-            if (imp != null) {
-                Manifest manifest = pkg.getAnnotation(Manifest.class);
-                for (Class<?> clazz : imp.value()) {
-                    module_to_models.get(manifest.name()).add(clazz);
+        String[] packages = new String[] { "jdoo.addons.base", "jdoo.addons.web" };
+        for (String p : packages) {
+            try {
+                Class<?> info = Class.forName(p + ".package-info", true,
+                        Thread.currentThread().getContextClassLoader());
+                Package pkg = info.getPackage();
+                Import imp = pkg.getAnnotation(Import.class);
+                if (imp != null) {
+                    Manifest manifest = pkg.getAnnotation(Manifest.class);
+                    for (Class<?> clazz : imp.value()) {
+                        module_to_models.get(manifest.name()).add(clazz);
+                    }
                 }
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
     }

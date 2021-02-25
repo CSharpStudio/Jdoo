@@ -10,7 +10,7 @@ import jdoo.models.Field;
 import jdoo.models.Model;
 import jdoo.models.RecordSet;
 import jdoo.models.fields;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 import jdoo.util.Tuple;
 import jdoo.apis.api;
@@ -47,7 +47,7 @@ public class IrModel extends Model {
             return Collections.emptyList();// no default field when importing
         }
         return Arrays.asList(new Tuple<>(0, 0,
-                new Dict().set("name", "x_name").set("field_description", "Name").set("ttype", "char")));
+                new Kvalues(k->k.set("name", "x_name").set("field_description", "Name").set("ttype", "char"))));
     }
 
     @api.depends()

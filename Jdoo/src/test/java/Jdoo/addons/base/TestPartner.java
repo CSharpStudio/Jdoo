@@ -11,15 +11,15 @@ import java.util.List;
 
 import jdoo.models.RecordSet;
 import jdoo.models.d;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 
 public class TestPartner extends TransactionCase {
     @Test
     public void test_name_search() {
-        RecordSet test_partner = env("res.partner").create(new Dict().set("name", "Vlad the Impaler"));
+        RecordSet test_partner = env("res.partner").create(new Kvalues().set("name", "Vlad the Impaler"));
 
-        RecordSet test_user = env("res.users").create(new Dict().set("name", "Vlad the Impaler").set("login", "vlad")
+        RecordSet test_user = env("res.users").create(new Kvalues().set("name", "Vlad the Impaler").set("login", "vlad")
                 .set("email", "vlad.the.impaler@example.com"));
         //List<Pair<Object, Object>> ns_res = env("res.partner").name_search("Vlad");
 

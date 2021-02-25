@@ -3,7 +3,7 @@ package jdoo.models._fields;
 import jdoo.models.Field;
 import jdoo.models.RecordSet;
 import jdoo.tools.Slot;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 import jdoo.util.Tuple;
 import jdoo.util.TypeUtils;
@@ -56,7 +56,7 @@ public class MonetaryField extends BaseField<MonetaryField> {
     }
 
     @Override
-    public Object convert_to_column(Object value, RecordSet record, Dict values, boolean validate) {
+    public Object convert_to_column(Object value, RecordSet record, Kvalues values, boolean validate) {
         String _currency_field = getattr(String.class, currency_field);
         RecordSet currency;
         if (values != null && values.containsKey(_currency_field)) {

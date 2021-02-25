@@ -5,7 +5,7 @@ import jdoo.models.Model;
 import jdoo.models.RecordSet;
 import jdoo.models.fields;
 import jdoo.util.Default;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 
 public class IrDefault extends Model {
         public IrDefault() {
@@ -24,8 +24,8 @@ public class IrDefault extends Model {
         public static Field condition = fields.Char("Condition").help("If set, applies the default upon condition.");
         public static Field json_value = fields.Char("Default Value (JSON format)").required(true);
 
-        public Dict get_model_defaults(RecordSet self, String model_name, @Default boolean condition) {
-                Dict result = new Dict();
+        public Kvalues get_model_defaults(RecordSet self, String model_name, @Default boolean condition) {
+                Kvalues result = new Kvalues();
                 return result;
         }
 }

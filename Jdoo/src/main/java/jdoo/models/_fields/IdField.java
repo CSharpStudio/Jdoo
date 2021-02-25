@@ -6,7 +6,7 @@ import java.util.Map;
 import jdoo.data.PgVarchar;
 import jdoo.exceptions.TypeErrorException;
 import jdoo.models.RecordSet;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 
 public class IdField extends BaseField<IdField> {
@@ -19,7 +19,7 @@ public class IdField extends BaseField<IdField> {
     }
 
     @Override
-    public boolean update_db(RecordSet model, Map<String, Dict> columns) {
+    public boolean update_db(RecordSet model, Map<String, Kvalues> columns) {
         return false;// this column is created with the table
     }
 

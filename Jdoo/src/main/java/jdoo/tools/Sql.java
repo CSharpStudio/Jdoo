@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 
 import jdoo.data.Cursor;
 import jdoo.util.Default;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Tuple;
 import jdoo.util.Utils;
 
@@ -61,12 +61,12 @@ public class Sql {
         _schema.debug("Table {}: created", tablename);
     }
 
-    public static Map<String, Dict> table_columns(Cursor cr, String tablename) {
+    public static Map<String, Kvalues> table_columns(Cursor cr, String tablename) {
         String query = "SELECT column_name, udt_name, character_maximum_length, is_nullable"//
                 + " FROM information_schema.columns WHERE table_name=%s";
         cr.execute(query, new Tuple<>(tablename));
-        Map<String, Dict> result = new HashMap<>();
-        for (Dict row : cr.dictfetchall()) {
+        Map<String, Kvalues> result = new HashMap<>();
+        for (Kvalues row : cr.dictfetchall()) {
             result.put((String) row.get("column_name"), row);
         }
         return result;

@@ -57,13 +57,13 @@ public class Utils {
         throw new NoSuchElementException("map is empty");
     }
 
-    public static <K, V> V setdefault(Map<K, V> map, K key, V value) {
-        if (map.containsKey(key)) {
-            return map.get(key);
-        }
-        map.put(key, value);
-        return value;
-    }
+    // public static <K, V> V setdefault(Map<K, V> map, K key, V value) {
+    //     if (map.containsKey(key)) {
+    //         return map.get(key);
+    //     }
+    //     map.put(key, value);
+    //     return value;
+    // }
 
     public static <K, V> V setdefault(Map<K, V> map, K key, Supplier<? extends V> supplier) {
         if (map.containsKey(key)) {

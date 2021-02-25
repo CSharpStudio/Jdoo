@@ -8,7 +8,7 @@ import java.util.function.Function;
 import jdoo.models.Domain;
 import jdoo.models.RecordSet;
 import jdoo.tools.Slot;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 
 /** Abstract class for relational fields. */
 public abstract class _RelationalField<T extends _RelationalField<T>> extends BaseField<T> {
@@ -19,7 +19,7 @@ public abstract class _RelationalField<T extends _RelationalField<T>> extends Ba
     public static final Slot check_company = new Slot("check_company");
     static {
         default_slots().put(domain, new Domain());
-        default_slots().put(context, new Dict());
+        default_slots().put(context, new Kvalues());
         default_slots().put(check_company, false);
     }
 

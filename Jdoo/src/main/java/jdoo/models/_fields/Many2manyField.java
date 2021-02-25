@@ -3,7 +3,7 @@ package jdoo.models._fields;
 import java.util.Map;
 
 import jdoo.models.RecordSet;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 
 /**
  * Many2many field; the value of such a field is the recordset.
@@ -93,7 +93,7 @@ public class Many2manyField extends _RelationalMultiField<Many2manyField> {
     }
 
     @Override
-    public boolean update_db(RecordSet model, Map<String, Dict> columns) {
+    public boolean update_db(RecordSet model, Map<String, Kvalues> columns) {
         return true;
     }
 }

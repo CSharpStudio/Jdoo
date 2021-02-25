@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 
 //@EnableAutoConfiguration
 @RestController
@@ -21,8 +21,8 @@ public class App {
 
     @RequestMapping("/hello")
     @ResponseBody
-    public Dict hello() {
-        Dict map = new Dict();
+    public Kvalues hello() {
+        Kvalues map = new Kvalues();
         map.put("Hello World", 1.0);
         map.put("Hello Java", 1.1);
         map.put("Hello Odoo", 1.2);

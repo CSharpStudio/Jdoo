@@ -13,7 +13,7 @@ import jdoo.models.Model;
 import jdoo.models.RecordSet;
 import jdoo.models.d;
 import jdoo.models.fields;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 import jdoo.util.Utils;
 
@@ -117,8 +117,8 @@ public class Partner extends Model {
     @api.depends({ "is_company", "name", "parent_id.name", "type", "company_name" })
     @api.depends_context({ "show_address", "show_address_only", "show_email", "html_format", "show_vat" })
     public void _compute_display_name(RecordSet self) {
-        Dict diff = new Dict().set("show_address", null).set("show_address_only", null).set("show_email", null)
-                .set("html_format", null).set("show_vat", null);
+        Kvalues diff = new Kvalues(k->k.set("show_address", null).set("show_address_only", null).set("show_email", null)
+                .set("html_format", null).set("show_vat", null));
         Map<Object, Object> names = Utils.toMap(self.with_context(diff).name_get());
         for (RecordSet partner : self)
             partner.set(display_name, names.get(partner.id()));

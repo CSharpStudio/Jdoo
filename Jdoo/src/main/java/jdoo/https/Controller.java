@@ -7,7 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import jdoo.data.Cursor;
 import jdoo.data.Database;
 import jdoo.apis.Environment;
-import jdoo.util.Dict;
+import jdoo.util.Kvalues;
+import jdoo.util.Kwargs;
 import jdoo.https.json.JsonRpcParseException;
 import jdoo.https.json.JsonRpcRequest;
 import jdoo.models.RecordSet;
@@ -21,12 +22,12 @@ public class Controller {
 
     public Environment env(){
         Cursor cr = new Cursor(Database.get("key"));
-        return Environment.create("key", cr, "uid", new Dict(), false);
+        return Environment.create("key", cr, "uid", new Kvalues(), false);
     }
 
     public RecordSet env(String model){
         Cursor cr = new Cursor(Database.get("key"));
-        return Environment.create("key", cr, "uid", new Dict(), false).get(model);
+        return Environment.create("key", cr, "uid", new Kvalues(), false).get(model);
     }
 
     protected JsonRpcRequest getRequest(String data) throws JsonRpcParseException {
