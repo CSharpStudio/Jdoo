@@ -132,8 +132,12 @@ public abstract class MetaField {
         return getattr(Field.class, Slots.related_field);
     }
 
-    String inverse() {
-        return getattr(String.class, Slots.inverse);
+    boolean inverse() {
+        return hasattr(Slots.inverse);
+    }
+
+    public boolean search() {
+        return hasattr(Slots.search);
     }
 
     String compute() {
@@ -229,7 +233,7 @@ public abstract class MetaField {
 
     public boolean prefetch() {
         return getattr(Boolean.class, Slots.prefetch);
-    } 
+    }
 
     public static class Slots {
         /** the field's module name */

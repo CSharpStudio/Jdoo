@@ -62,14 +62,26 @@ public class Many2manyField extends _RelationalMultiField<Many2manyField> {
     Integer limit;
     String ondelete;
 
+    public String relation() {
+        return relation;
+    }
+
     public Many2manyField relation(String relation) {
         this.relation = relation;
         return this;
     }
 
+    public String column1() {
+        return column1;
+    }
+
     public Many2manyField column1(String column1) {
         this.column1 = column1;
         return this;
+    }
+
+    public String column2() {
+        return column2;
     }
 
     public Many2manyField column2(String column2) {

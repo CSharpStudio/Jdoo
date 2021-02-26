@@ -93,6 +93,14 @@ public class MetaModel {
 
     Registry pool;
 
+    public boolean parent_store() {
+        return _parent_store;
+    }
+
+    public String parent_name() {
+        return _parent_name;
+    }
+
     public String name() {
         return _name;
     }

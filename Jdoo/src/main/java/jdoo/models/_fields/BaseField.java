@@ -2,7 +2,10 @@ package jdoo.models._fields;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import jdoo.models.Field;
@@ -59,7 +62,19 @@ public class BaseField<T extends BaseField<T>> extends Field {
     }
 
     @SuppressWarnings("unchecked")
+    public T inverse(Consumer<RecordSet> inverse) {
+        setattr(Slots.inverse, inverse);
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
     public T search(String search) {
+        setattr(Slots.search, search);
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T search(BiFunction<String, Object, List<Object>> search) {
         setattr(Slots.search, search);
         return (T) this;
     }

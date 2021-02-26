@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
@@ -320,7 +321,7 @@ public class Field extends MetaField {
                 setattr(Slots.copy, false);
             }
             if (!hasattr(Slots.readonly)) {
-                setattr(Slots.readonly, StringUtils.hasText(inverse()));
+                setattr(Slots.readonly, inverse());
             }
         }
         if (hasattr(Slots.related)) {
@@ -868,7 +869,23 @@ public class Field extends MetaField {
         }
     }
 
+    @SuppressWarnings("unchecked")
     void determine_inverse(RecordSet records) {
-        records.call(inverse());
+        Object inverse = getattr(Slots.inverse);
+        if (inverse instanceof String) {
+            records.call((String) inverse);
+        }
+        Consumer<RecordSet> func = (Consumer<RecordSet>) inverse;
+        func.accept(records);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Object> determine_domain(RecordSet records, String operator, Object value) {
+        Object search = getattr(Slots.search);
+        if (search instanceof String) {
+            return (List<Object>) records.call((String) search, operator, value);
+        }
+        BiFunction<String, Object, List<Object>> func = (BiFunction<String, Object, List<Object>>) search;
+        return func.apply(operator, value);
     }
 }

@@ -188,7 +188,7 @@ public class BaseModel extends MetaModel {
                         Map<String, Object> m = new Kvalues().set(key, val);
                         inherited.put(field.related_field().model_name(), m);
                     }
-                } else if (StringUtils.hasText(field.inverse())) {
+                } else if (field.inverse()) {
                     inversed.put(key, val);
                     inversed_fields.add(field);
                 }
@@ -335,7 +335,7 @@ public class BaseModel extends MetaModel {
             cr.execute(query_str, sql.params());
             return cr.fetchone().get(0);
         } else {
-            String limit_str = limit > 0 ? " limit " + limit : "";
+            String limit_str = limit != null && limit > 0 ? " limit " + limit : "";
             String offset_str = offset > 0 ? " offset " + offset : "";
             String query_str = "SELECT \"" + self.table() + "\".id FROM " + sql.from_clause() + where_str + order_by
                     + limit_str + offset_str;
@@ -500,13 +500,13 @@ public class BaseModel extends MetaModel {
     // }
 
     public List<Pair<Object, Object>> name_search(RecordSet self, @Default("") String name, @Default List<Object> args,
-            @Default("ilike") String operator, @Default("100") int limit) {
+            @Default("ilike") String operator, @Default("100") Integer limit) {
         return _name_search(self, name, args, operator, limit, null);
     }
 
     @SuppressWarnings("unchecked")
     public List<Pair<Object, Object>> _name_search(RecordSet self, @Default("") String name, @Default List<Object> args,
-            @Default("ilike") String operator, @Default("100") int limit, @Default String name_get_uid) {
+            @Default("ilike") String operator, @Default("100") Integer limit, @Default String name_get_uid) {
         if (args == null) {
             args = new ArrayList<>();
         } else {
@@ -671,8 +671,8 @@ public class BaseModel extends MetaModel {
 
         for (String fname : vals.keySet()) {
             Field field = self.getField(fname);
-            String inverse = field.inverse();
-            if (StringUtils.hasText(inverse)) {
+            if (field.inverse()) {
+                String inverse = field.getattr(MetaField.Slots.inverse).toString();
                 determine_inverses.get(inverse).add(field);
             }
         }

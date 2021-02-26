@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.CRC32;
 
 import org.apache.logging.log4j.LogManager;
@@ -175,7 +177,7 @@ public class Expression {
             byte[] b = alias.getBytes(Charset.forName("UTF-8"));
             CRC32 c = new CRC32();
             c.reset();// Resets CRC-32 to initial value.
-            c.update(b, 0, b.length);// 将数据丢入CRC32解码器
+            c.update(b, 0, b.length);
             String alias_hash = Long.toHexString(c.getValue());
             alias = alias.substring(0, 62 - alias_hash.length()) + "_" + alias_hash;
         }
@@ -255,6 +257,71 @@ public class Expression {
         return tables;
     }
 
+    @SuppressWarnings("unchecked")
+    Collection<Object> to_ids(Object value, RecordSet comodel, Object leaf) {
+        List<Object> names = new ArrayList<>();
+        if (value instanceof String) {
+            names.add(value);
+        } else if (value instanceof List && ((List<Object>) value).stream().allMatch(item -> item instanceof String)) {
+            names = (List<Object>) value;
+        }
+        if (!names.isEmpty()) {
+            return names.stream().map(name -> comodel.name_search((String) name, Collections.emptyList(), "ilike", -1))
+                    .collect(Collectors.toList());
+        }
+        return (List<Object>) value;
+    }
+
+    @SuppressWarnings("unchecked")
+    List<Object> child_of_domain(Object left, Collection<?> ids, RecordSet left_model, @Default String parent,
+            @Default("") String prefix) {
+        if (ids.isEmpty()) {
+            return FALSE_DOMAIN;
+        }
+        if (left_model.type().parent_store()) {
+            List<Object> doms = OR(left_model.browse(ids).stream()
+                    .map(rec -> new Tuple<Object>("parent_path", "=like", rec.get("parent_path") + "%"))
+                    .collect(Collectors.toList()));
+            if (StringUtils.hasText(prefix)) {
+                return Arrays.asList(new Tuple<>(left, "in", left_model.search(doms).ids()));
+            }
+            return doms;
+        } else {
+            String parent_name = StringUtils.hasText(parent) ? parent : left_model.type().parent_name();
+            Set<Object> child_ids = new HashSet<>(ids);
+            while (!ids.isEmpty()) {
+                ids = left_model.search(Arrays.asList(new Tuple<>(parent_name, "in", ids))).ids();
+                child_ids.addAll(ids);
+            }
+            return Arrays.asList(new Tuple<>(left, "in", child_ids));
+        }
+    }
+
+    List<Object> parent_of_domain(Object left, Collection<?> ids, RecordSet left_model, @Default String parent,
+            @Default("") String prefix) {
+        if (left_model.type().parent_store()) {
+            List<Object> parent_ids = left_model.browse(ids).stream()
+                    .flatMap(rec -> Stream.of(((String) rec.get("parent_path")).split("/")))// todo [:-1] 不取最后一个值
+                    .collect(Collectors.toList());
+            return Arrays.asList(new Tuple<>("id", "in", parent_ids));
+        } else {
+            String parent_name = StringUtils.hasText(parent) ? parent : left_model.type().parent_name();
+            Set<Object> parent_ids = new HashSet<>();
+            for (RecordSet record : left_model.browse(ids)) {
+                while (record.hasId()) {
+                    parent_ids.add(record.id());
+                    Object p = record.get(parent_name);
+                    if (p instanceof RecordSet) {
+                        record = (RecordSet) p;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            return Arrays.asList(new Tuple<>(left, "in", parent_ids));
+        }
+    }
+
     public Pair<String, List<Object>> to_sql() {
         Stack<String> stack = new Stack<>();
         List<Object> params = new ArrayList<>();
@@ -314,6 +381,12 @@ public class Expression {
                 operator = l.get(1);
                 right = l.get(2);
             }
+            // ----------------------------------------
+            // SIMPLE CASE
+            // 1. leaf is an operator
+            // 2. leaf is a true/false leaf
+            // -> add directly to result
+            // ----------------------------------------
             if (leaf.is_operator() || leaf.is_true_leaf() || leaf.is_false_leaf()) {
                 result.add(leaf);
             } else {
@@ -333,7 +406,14 @@ public class Expression {
                     leaf.add_join_context(parent_model, parent_fname, "id", parent_fname);
                     stack.add(leaf);
                 } else if ("id".equals(left) && ("child_of".equals(operator) || "parent_of".equals(operator))) {
-                    int todo = 0;
+                    Collection<Object> ids2 = to_ids(right, model, leaf.leaf);
+                    List<Object> dom = "child_of".equals(operator) ? child_of_domain(left, ids2, model, null, "")
+                            : parent_of_domain(left, ids2, model, null, "");
+                    Collections.reverse(dom);
+                    for (Object dom_leaf : dom) {
+                        ExtendedLeaf new_leaf = create_substitution_leaf(leaf, dom_leaf, model, false);
+                        stack.add(new_leaf);
+                    }
                 }
                 // ----------------------------------------
                 // PATH SPOTTED
@@ -366,23 +446,66 @@ public class Expression {
                         }
                         stack.add(create_substitution_leaf(leaf, AND_OPERATOR, comodel, false));
                     }
-                } else if (path.length > 1 && field.store() && field instanceof One2manyField) {
+                } else if (path.length > 1 && field.store() && field instanceof Many2oneField) {
                     Collection<?> right_ids = comodel.with_context(ctx -> ctx.put("active_test", false))
                             .search(d.on(path[1], (String) operator, right)).ids();
                     leaf.leaf = new Tuple<>(path[0], "in", right_ids);
                     stack.add(leaf);
-                } else if (path.length > 1 && field.store()
+                }
+                // Making search easier when there is a left operand as one2many or many2many
+                else if (path.length > 1 && field.store()
                         && (field instanceof Many2manyField || field instanceof One2manyField)) {
                     Collection<?> right_ids = comodel.search(d.on(path[1], (String) operator, right)).ids();
                     leaf.leaf = new Tuple<>(path[0], "in", right_ids);
                     stack.add(leaf);
                 } else if (!field.store()) {
-                    int todo = 0;
-                    // todo
-                } else if (field instanceof One2manyField
+                    // Non-stored field should provide an implementation of search.
+                    List<Object> domain;
+                    if (!field.search()) {
+                        _logger.error("Non-stored field {} cannot be searched.", field);
+                        if (_logger.isDebugEnabled()) {
+                            // _logger.debug(''.join(traceback.format_stack()))
+                        }
+                        // Ignore it: generate a dummy leaf.
+                        domain = Collections.emptyList();
+                    } else {
+                        if (path.length > 1) {
+                            right = comodel.search(Arrays.asList(new Tuple<>(path[1], operator, right))).ids();
+                            operator = "in";
+                        }
+                        domain = field.determine_domain(model, (String) operator, right);
+                    }
+                    if (domain.isEmpty()) {
+                        leaf.leaf = TRUE_LEAF;
+                        stack.add(leaf);
+                    } else {
+                        Collections.reverse(domain);
+                        for (Object elem : domain) {
+                            stack.add(create_substitution_leaf(leaf, elem, model, true));
+                        }
+                    }
+                }
+                // -------------------------------------------------
+                // RELATIONAL FIELDS
+                // -------------------------------------------------
+
+                // Applying recursivity on field(one2many)
+                else if (field instanceof One2manyField
                         && ("child_of".equals(operator) || "parent_of".equals(operator))) {
-                    int todo = 0;
-                    // TODO
+                    Collection<Object> ids2 = to_ids(right, comodel, leaf.leaf);
+                    List<Object> dom;
+                    if (field.comodel_name() != model.name()) {
+                        dom = "child_of".equals(operator)
+                                ? child_of_domain(left, ids2, model, null, field.comodel_name())
+                                : parent_of_domain(left, ids2, model, null, field.comodel_name());
+                    } else {
+                        dom = "child_of".equals(operator) ? child_of_domain("id", ids2, model, (String) left, "")
+                                : parent_of_domain("id", ids2, model, (String) left, "");
+                    }
+                    Collections.reverse(dom);
+                    for (Object dom_leaf : dom) {
+                        stack.add(create_substitution_leaf(leaf, dom_leaf, model, false));
+                    }
                 } else if (field instanceof One2manyField) {
                     One2manyField f = (One2manyField) field;
                     List<Object> domain = f.get_domain_list(model);
@@ -440,8 +563,11 @@ public class Expression {
                         stack.add(create_substitution_leaf(leaf, new Tuple<>("id", op1, ids1), model, false));
                     }
                 } else if (field instanceof Many2manyField) {
-                    int todo = 0;
-                    // TODO
+                    Many2manyField f = (Many2manyField) field;
+                    String rel_table = f.relation();
+                    String rel_id1 = f.column1();
+                    String rel_id2 = f.column2();
+                    //todo
                 } else if (field instanceof Many2oneField) {
                     int todo = 0;
                     // TODO

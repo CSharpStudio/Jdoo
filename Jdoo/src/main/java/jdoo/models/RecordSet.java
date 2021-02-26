@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -19,6 +20,7 @@ import org.springframework.lang.Nullable;
 import jdoo.exceptions.ModelException;
 import jdoo.exceptions.ValueErrorException;
 import jdoo.tools.Tools;
+import jdoo.util.Default;
 import jdoo.util.Kvalues;
 import jdoo.util.Kwargs;
 import jdoo.util.Pair;
@@ -317,6 +319,10 @@ public final class RecordSet implements Iterable<RecordSet> {
         return new SelfIterator();
     }
 
+    public Stream<RecordSet> stream() {
+        return StreamSupport.stream(this.spliterator(), false);
+    }
+
     /** the size of this {@code RecordSet} */
     public int size() {
         return ids.size();
@@ -538,7 +544,8 @@ public final class RecordSet implements Iterable<RecordSet> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Pair<Object, Object>> name_search(String name, List<Object> args, String operator, Integer limit) {
+    public List<Pair<Object, Object>> name_search(String name, List<Object> args, @Default("ilike") String operator,
+            @Default("100") Integer limit) {
         return (List<Pair<Object, Object>>) call("name_search", name, args, operator, limit);
     }
 
