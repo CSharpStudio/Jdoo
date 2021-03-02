@@ -33,6 +33,11 @@ public abstract class _RelationalField<T extends _RelationalField<T>> extends Ba
         return (T) this;
     }
 
+    @Override
+    public boolean check_company() {
+        return getattr(Boolean.class, _RelationalField.check_company);
+    }
+
     @SuppressWarnings("unchecked")
     public T comodel_name(String comodel_name) {
         setattr(Slots.comodel_name, comodel_name);

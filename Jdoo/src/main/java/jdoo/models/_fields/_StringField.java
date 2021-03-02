@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 
 import jdoo.apis.Cache;
 import jdoo.models.RecordSet;
+import jdoo.tools.IdValues;
 import jdoo.tools.Slot;
 import jdoo.util.Utils;
 
@@ -15,6 +16,11 @@ public abstract class _StringField<T extends _StringField<T>> extends BaseField<
     public static final Slot translate = new Slot("translate");
     static {
         default_slots().put(translate, false);
+    }
+
+    @Override
+    public boolean translate() {
+        return getattr(Boolean.class, _StringField.translate);
     }
 
     @SuppressWarnings("unchecked")
@@ -42,6 +48,28 @@ public abstract class _StringField<T extends _StringField<T>> extends BaseField<
 
         if (!store()) {
             return records;
+        }
+
+        RecordSet real_recs = records.filtered("id");
+        if (!real_recs.hasId()) {
+            return records;
+        }
+        boolean update_column = true;
+        boolean update_trans = false;
+        if (translate()) {
+            // todo
+        }
+
+        if (update_column) {
+            IdValues towrite = records.env().all().towrite(model_name());
+            for (Object rid : real_recs.ids()) {
+                towrite.set(rid, getName(), cache_value);
+            }
+            // todo
+        }
+
+        if (update_trans) {
+
         }
         // todo
         return records;

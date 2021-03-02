@@ -69,6 +69,14 @@ public class Utils {
         return value;
     }
 
+    public static <K, V> V get(Map<K, V> map, K key, Supplier<? extends V> supplier) {
+        if (map.containsKey(key)) {
+            return map.get(key);
+        }
+        V value = supplier.get();
+        return value;
+    }
+
     public static <T, V> Map<T, V> toMap(Collection<Pair<T, V>> pairs) {
         Map<T, V> map = new HashMap<>();
         for (Pair<T, V> p : pairs) {

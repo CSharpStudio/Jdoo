@@ -103,7 +103,7 @@ public class Cursor implements AutoCloseable {
         }
         resultSet = null;
         statement = null;
-        rowcount = 0;
+        //rowcount = 0;
         state = CursorState.Unexecuted;
     }
 
@@ -165,6 +165,7 @@ public class Cursor implements AutoCloseable {
         String cmd = mogrify(sql, params);
         logger.debug(cmd);
         reset();
+        rowcount = 0;
         try {
             statement = connection.prepareStatement(cmd);
             // statement = connection.prepareStatement(sql.replace("%s", "?"));
@@ -193,7 +194,7 @@ public class Cursor implements AutoCloseable {
             }
             return result;
         } catch (SQLException e) {
-            throw new DataException("execute sql error:" + sql, e);
+            throw new DataException("execute sql error:" + cmd, e);
         }
     }
 

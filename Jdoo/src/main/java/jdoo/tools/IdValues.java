@@ -8,7 +8,7 @@ public class IdValues {
     // HashMap<id, HashMap<field, value>>
     HashMap<Object, HashMap<String, Object>> data = new HashMap<Object, HashMap<String, Object>>();
 
-    public Set<Object> ids() {
+    public Set<Object> keySet() {
         return data.keySet();
     }
 

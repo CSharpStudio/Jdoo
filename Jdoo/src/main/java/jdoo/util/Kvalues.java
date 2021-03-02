@@ -5,8 +5,15 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import com.bestvike.linq.exception.NotSupportedException;
+
 public class Kvalues extends HashMap<String, Object> {
     private static final long serialVersionUID = 1L;
+    static final Kvalues empty = new EmptyKvalues();
+
+    public static Kvalues empty() {
+        return empty;
+    }
 
     public Kvalues() {
     }
@@ -40,5 +47,14 @@ public class Kvalues extends HashMap<String, Object> {
 
     public Object setdefault(String key, Supplier<Object> supplier) {
         return Utils.setdefault(this, key, supplier);
+    }
+}
+
+class EmptyKvalues extends Kvalues {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public Kvalues set(String key, Object value) {
+        throw new NotSupportedException();
     }
 }

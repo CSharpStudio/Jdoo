@@ -5,14 +5,12 @@ import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -201,8 +199,7 @@ public class Tuple<E> extends AbstractList<E> {
 class TupleJsonDeserializer extends JsonDeserializer<Tuple<?>> {
     @Override
     public Tuple<?> deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-        List<Object> list = parser.readValueAs(new TypeReference<List<Object>>() {
-        });
-        return Tuple.fromCollection(list);
+        Object[] array = parser.readValueAs(Object[].class);
+        return new Tuple<>(array);
     }
 }

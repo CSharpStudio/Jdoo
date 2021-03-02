@@ -3,7 +3,6 @@ package jdoo.apis;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -21,7 +20,7 @@ public class Environments implements Iterable<Environment> {
     Map<Field, Set<String>> tocompute = new DefaultDict<>(HashSet::new);// recomputations
     // {field: ids}
     // updates {model: {id: {field: value}}}
-    HashMap<String, IdValues> towrite = new DefaultDict<>(IdValues.class);
+    Map<String, IdValues> towrite = new DefaultDict<>(IdValues.class);
 
     public Cache cache() {
         return cache;
@@ -31,7 +30,7 @@ public class Environments implements Iterable<Environment> {
         return $protected;
     }
 
-    public HashMap<String, IdValues> towrite() {
+    public Map<String, IdValues> towrite() {
         return towrite;
     }
 

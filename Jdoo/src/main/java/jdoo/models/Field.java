@@ -747,9 +747,9 @@ public class Field extends MetaField {
             if (Tools.hasId(record.id()) && store()) {
                 RecordSet recs = _in_cache_without(record, this);
                 try {
-                    recs.call("_fetch_field", this);
+                    Model._fetch_field(recs, this);
                 } catch (AccessErrorException e) {
-                    record.call("_fetch_field", this);
+                    Model._fetch_field(record, this);
                 }
                 if (env.cache().contains(record, this) && !record.call(RecordSet.class, "exists").hasId()) {
                     throw new MissingErrorException("Record does not exist or has been deleted.\r\n"
@@ -863,7 +863,7 @@ public class Field extends MetaField {
             env.remove_to_compute(field, records);
         }
         try (Protecting p = env.protecting(fields, records)) {
-            records.call("_compute_field_value", this);
+            Model._compute_field_value(records, this);
         } catch (Exception e) {
             throw e;
         }
@@ -887,5 +887,9 @@ public class Field extends MetaField {
         }
         BiFunction<String, Object, List<Object>> func = (BiFunction<String, Object, List<Object>>) search;
         return func.apply(operator, value);
+    }
+
+    public boolean check_company() {
+        return false;
     }
 }

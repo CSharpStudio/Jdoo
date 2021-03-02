@@ -4,16 +4,21 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.springframework.lang.Nullable;
 
+import jdoo.apis.api;
+import jdoo.exceptions.InvocationException;
 import jdoo.util.Default;
 import jdoo.util.Kwargs;
 import jdoo.util.Tuple;
 import jdoo.util.TypeUtils;
+import jdoo.util.Utils;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -24,6 +29,8 @@ public class MethodInfo {
     private MetaModel meta;
     private BaseModel proxy;
     private List<ParameterInfo> parameters;
+    private Returns returns;
+    private String api;
 
     public MethodInfo(MetaModel meta, Method method) {
         this.method = method;
@@ -31,6 +38,15 @@ public class MethodInfo {
         parameters = new ArrayList<>();
         for (Parameter p : method.getParameters()) {
             parameters.add(new ParameterInfo(p));
+        }
+        api.returns spec = method.getAnnotation(api.returns.class);
+        if (spec != null) {
+            returns = new Returns(spec);
+        }
+        if (method.getAnnotation(api.model.class) != null) {
+            api = "model";
+        } else if (method.getAnnotation(api.model_create_multi.class) != null) {
+            api = "model_create";
         }
     }
 
@@ -50,6 +66,14 @@ public class MethodInfo {
         return parameters;
     }
 
+    public String api() {
+        return api;
+    }
+
+    public Returns returns() {
+        return returns;
+    }
+
     public Object invoke(Object[] args, @Nullable Kwargs kwargs)
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         BaseModel obj = getProxy();
@@ -57,10 +81,51 @@ public class MethodInfo {
         return method.invoke(obj, args);
     }
 
+    public Object invoke(RecordSet self, Collection<Object> args, @Nullable Kwargs kwargs) {
+        BaseModel obj = getProxy();
+        Object[] $args = getArgs(self, args, kwargs);
+        try {
+            return method.invoke(obj, $args);
+        } catch (Exception e) {
+            throw new InvocationException(String.format("Method %s, args: %s, invoke error", toString(), $args), e);
+        }
+    }
+
     Object invokeThis(Object[] args)
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         MethodInfo.callingThis.set(true);
         return invoke(args, null);
+    }
+
+    Object[] getArgs(RecordSet self, Collection<Object> args, @Nullable Kwargs kwargs) throws IllegalArgumentException {
+        Map<String, Object> kw = kwargs == null ? Collections.emptyMap() : kwargs;
+        if (args.size() > parameters.size() - 1) {
+            List<Object> $args = Utils.asList(self);
+            $args.addAll(args);
+            throw new IllegalArgumentException(
+                    String.format("Method %s get too much args: %s, kwargs: %s", toString(), $args, kw));
+        }
+        Object[] params = new Object[parameters.size()];
+        params[0] = self;
+        int i = 1;
+        for (Object arg : args) {
+            params[i++] = arg;
+        }
+        while (i < parameters.size()) {
+            ParameterInfo p = parameters.get(i);
+            String name = p.getParameter().getName();
+            if (kw.containsKey(name)) {
+                params[i] = kw.get(name);
+            } else {
+                if (!p.isOptional()) {
+                    throw new IllegalArgumentException(String.format("Method %s get too few args: %s, kwargs: %s",
+                            toString(), new Tuple<>(args), kw));
+                }
+                params[i] = p.getDefaultValue();
+            }
+            i++;
+        }
+        return params;
     }
 
     Object[] getArgs(Object[] args, @Nullable Kwargs kwargs) throws IllegalArgumentException {
@@ -77,8 +142,9 @@ public class MethodInfo {
                 params[i] = kw.get(name);
             } else {
                 if (!p.isOptional()) {
-                    throw new IllegalArgumentException(String.format("Method %s.%s(%s) get args: %s, kwargs: %s",
-                            meta.name(), method.getName(), parameters, new Tuple<>(args), kw));
+                    throw new IllegalArgumentException(
+                            String.format("Method %s.%s(%s) get too few args: %s, kwargs: %s", meta.name(),
+                                    method.getName(), parameters, new Tuple<>(args), kw));
                 }
                 params[i] = p.getDefaultValue();
             }
@@ -204,6 +270,29 @@ public class MethodInfo {
                 }
             }
             return str;
+        }
+    }
+
+    public class Returns {
+        api.returns spec;
+        String model;
+        Function<RecordSet, Object> downgrade;
+        Function<RecordSet, Object> upgrade;
+
+        public String model() {
+            return model;
+        }
+
+        public Function<RecordSet, Object> downgrade() {
+            return downgrade;
+        }
+
+        public Function<RecordSet, Object> upgrade() {
+            return upgrade;
+        }
+
+        public Returns(api.returns spec) {
+            model = spec.value();
         }
     }
 }

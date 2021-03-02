@@ -19,6 +19,7 @@ import javax.el.MethodNotFoundException;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
+import jdoo.exceptions.AccessErrorException;
 import jdoo.exceptions.InvocationException;
 import jdoo.exceptions.ModelException;
 import jdoo.exceptions.TypeErrorException;
@@ -183,6 +184,14 @@ public class MetaModel {
             keyMethods = new HashMap<String, MethodInfo>();
         }
         return keyMethods.values();
+    }
+
+    public MethodInfo findMethod(String method) {
+        List<MethodInfo> methods = nameMethods.get(method);
+        if (methods != null && !methods.isEmpty()) {
+            return methods.get(methods.size() - 1);
+        }
+        return null;
     }
 
     private Map<String, List<MethodInfo>> getNameMethods() {
@@ -406,10 +415,16 @@ public class MetaModel {
         }
         if (method_list.isEmpty()) {
             for (Method method : BaseModel.class.getDeclaredMethods()) {
+                if (Modifier.isPrivate(method.getModifiers())) {
+                    continue;
+                }
                 method_list.add(new MethodInfo(ModelClass, method));
             }
         }
         for (Method method : clazz.getDeclaredMethods()) {
+            if (Modifier.isPrivate(method.getModifiers())) {
+                continue;
+            }
             method_list.add(new MethodInfo(ModelClass, method));
         }
         ModelClass.setMethods(method_list);
@@ -520,6 +535,15 @@ public class MetaModel {
         for (String child_name : cls._inherit_children) {
             MetaModel child_class = pool.get(child_name);
             _build_model_attributes(child_class, pool);
+        }
+    }
+
+    static final Pattern regex_private = Pattern.compile("^(_.*|init)$");
+
+    public static void check_method_name(String name) {
+        if (regex_private.matcher(name).matches()) {
+            throw new AccessErrorException(
+                    String.format("Private methods (such as %s) cannot be called remotely.", name));
         }
     }
 

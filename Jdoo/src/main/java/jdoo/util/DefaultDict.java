@@ -24,6 +24,10 @@ public class DefaultDict<K,V> extends HashMap<K,V> {
         return this;
     }
 
+    /**
+     * Returns the value to which the specified key is mapped,
+     * or put and return default value if this map contains no mapping for the key.
+     */
     @Override
     @SuppressWarnings("unchecked")
     public V get(Object key) {

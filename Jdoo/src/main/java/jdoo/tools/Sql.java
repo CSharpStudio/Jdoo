@@ -195,7 +195,7 @@ public class Sql {
 
     public static String getValueSql(Object param) {
         if (param == null) {
-            return "''";
+            return "null";
         } else if (param instanceof String) {
             return "'" + ((String) param).replace("'", "''") + "'";
         } else if (param instanceof Date) {

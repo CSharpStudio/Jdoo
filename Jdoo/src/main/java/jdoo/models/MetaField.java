@@ -70,8 +70,6 @@ public abstract class MetaField {
     static int _global_seq = 0;
     /** whether the field is a relational one */
     protected boolean relational = false;
-    /** whether the field is translated */
-    Boolean translate;
     /** database column type (ident, spec) */
     protected Pair<String, Object> column_type;
     /** placeholder for value in queries */
@@ -109,7 +107,7 @@ public abstract class MetaField {
     }
 
     public boolean translate() {
-        return translate != null && translate;
+        return false;
     }
 
     public Pair<String, Object> column_type() {

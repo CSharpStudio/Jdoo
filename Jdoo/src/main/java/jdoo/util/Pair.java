@@ -3,11 +3,9 @@ package jdoo.util;
 import java.io.IOException;
 import java.util.AbstractCollection;
 import java.util.Iterator;
-import java.util.List;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -95,11 +93,10 @@ class PairJsonDeserializer extends JsonDeserializer<Pair<?, ?>> {
 
     @Override
     public Pair<?, ?> deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-        List<Object> list = parser.readValueAs(new TypeReference<List<Object>>() {
-        });
-        if (list.size() != 2) {
+        Object[] array = parser.readValueAs(Object[].class);
+        if (array.length != 2) {
             throw new JsonParseException(parser, "pair must be two elements");
         }
-        return new Pair<>(list.get(0), list.get(1));
+        return new Pair<>(array[0], array[1]);
     }
 }
