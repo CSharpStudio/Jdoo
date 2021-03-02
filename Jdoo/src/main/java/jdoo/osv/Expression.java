@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.CRC32;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.util.StringUtils;
 
 import jdoo.data.Cursor;
@@ -39,7 +39,7 @@ import jdoo.util.Tuple;
 import jdoo.util.Utils;
 
 public class Expression {
-    private static Logger _logger = LogManager.getLogger(Expression.class);
+    private static Logger _logger = LoggerFactory.getLogger(Expression.class);
 
     public static String NOT_OPERATOR = "!";
     public static String OR_OPERATOR = "|";
@@ -567,7 +567,7 @@ public class Expression {
                     String rel_table = f.relation();
                     String rel_id1 = f.column1();
                     String rel_id2 = f.column2();
-                    //todo
+                    // todo
                 } else if (field instanceof Many2oneField) {
                     int todo = 0;
                     // TODO
@@ -690,7 +690,7 @@ public class Expression {
                 : String.format("Invalid field %s in domain term %s", left, leaf);
         assert !(right instanceof RecordSet) : String.format("Invalid value %s in domain term %s", right, leaf);
 
-        Field field = model.hasField((String) left) ? model.getField((String) left) : null;
+        Field field = left instanceof String && model.hasField((String) left) ? model.getField((String) left) : null;
         String table_alias = String.format("\"%s\"", eleaf.generate_alias());
         String query = null;
         List<Object> params = null;
@@ -820,7 +820,7 @@ public class Expression {
 }
 
 class ExtendedLeaf {
-    private static Logger _logger = LogManager.getLogger(ExtendedLeaf.class);
+    private static Logger _logger = LoggerFactory.getLogger(ExtendedLeaf.class);
     Object leaf;
     List<Tuple<Object>> join_context;
     RecordSet model;

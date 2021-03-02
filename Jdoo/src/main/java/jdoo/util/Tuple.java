@@ -1,14 +1,23 @@
 package jdoo.util;
 
+import java.io.IOException;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+@JsonDeserialize(using = TupleJsonDeserializer.class)
 public class Tuple<E> extends AbstractList<E> {
     @SuppressWarnings("rawtypes")
     public static final Tuple EMPTY_LIST = new Tuple<>();
@@ -144,7 +153,7 @@ public class Tuple<E> extends AbstractList<E> {
             if (a.length != other.a.length)
                 return false;
             for (int i = 0; i < a.length; i++) {
-                if (!a[i].equals(obj))
+                if (!a[i].equals(other.get(i)))
                     return false;
             }
             return true;
@@ -186,5 +195,14 @@ public class Tuple<E> extends AbstractList<E> {
             return "\"" + obj + "\"";
         }
         return obj.toString();
+    }
+}
+
+class TupleJsonDeserializer extends JsonDeserializer<Tuple<?>> {
+    @Override
+    public Tuple<?> deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+        List<Object> list = parser.readValueAs(new TypeReference<List<Object>>() {
+        });
+        return Tuple.fromCollection(list);
     }
 }

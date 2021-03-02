@@ -20,8 +20,8 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.util.StringUtils;
 
 import jdoo.util.Default;
@@ -55,7 +55,7 @@ import jdoo.apis.api;
 import jdoo.apis.Environment.Protecting;
 
 public class BaseModel extends MetaModel {
-    private static Logger _logger = LogManager.getLogger(BaseModel.class);
+    private static Logger _logger = LoggerFactory.getLogger(BaseModel.class);
     MetaModel meta;
     static List<String> LOG_ACCESS_COLUMNS = Arrays.asList("create_uid", "create_date", "write_uid", "write_date");
     Map<Field, Object> _field_computed = new HashMap<>();
@@ -328,7 +328,7 @@ public class BaseModel extends MetaModel {
         String where_str = sql.where_clause();
         Cursor cr = self.cr();
         if (StringUtils.hasText(where_str)) {
-            where_str = "WHERE " + where_str;
+            where_str = " WHERE " + where_str;
         }
         if (count) {
             String query_str = "SELECT count(1) FROM " + sql.from_clause() + where_str;

@@ -1,8 +1,21 @@
 package jdoo.util;
 
+import java.io.IOException;
+import java.util.AbstractCollection;
+import java.util.Iterator;
+import java.util.List;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import org.springframework.util.ObjectUtils;
 
-public class Pair<P0, P1> {
+@JsonDeserialize(using = PairJsonDeserializer.class)
+public class Pair<P0, P1> extends AbstractCollection<Object> {
     private P0 first;
     private P1 second;
 
@@ -38,7 +51,7 @@ public class Pair<P0, P1> {
 
     @Override
     public String toString() {
-        return String.format("(%s,%s)", getString(first), getString(second));
+        return String.format("[%s,%s]", getString(first), getString(second));
     }
 
     String getString(Object obj) {
@@ -49,5 +62,44 @@ public class Pair<P0, P1> {
             return "\"" + obj + "\"";
         }
         return obj.toString();
+    }
+
+    @Override
+    public Iterator<Object> iterator() {
+        return new Iterator<Object>() {
+            int cursor = 0;
+
+            @Override
+            public boolean hasNext() {
+                return cursor < 2;
+            }
+
+            @Override
+            public Object next() {
+                if (cursor++ == 0) {
+                    return first;
+                } else {
+                    return second;
+                }
+            }
+        };
+    }
+
+    @Override
+    public int size() {
+        return 2;
+    }
+}
+
+class PairJsonDeserializer extends JsonDeserializer<Pair<?, ?>> {
+
+    @Override
+    public Pair<?, ?> deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+        List<Object> list = parser.readValueAs(new TypeReference<List<Object>>() {
+        });
+        if (list.size() != 2) {
+            throw new JsonParseException(parser, "pair must be two elements");
+        }
+        return new Pair<>(list.get(0), list.get(1));
     }
 }

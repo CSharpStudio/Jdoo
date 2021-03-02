@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.util.StringUtils;
 
 import jdoo.data.Cursor;
@@ -21,7 +21,7 @@ import jdoo.util.Kvalues;
 import jdoo.util.Tuple;
 
 public class Sql {
-    private static Logger _schema = LogManager.getLogger("jdoo.schema");
+    private static Logger _schema = LoggerFactory.getLogger("jdoo.schema");
     static Map<String, String> _TABLE_KIND = new Dict<>(d -> d//
             .set("BASE TABLE", "r")//
             .set("VIEW", "v")//

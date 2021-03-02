@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
@@ -282,7 +282,7 @@ import jdoo.util.Tuple;
  * </blockquote>
  */
 public class Field extends MetaField {
-    protected static Logger _schema = LogManager.getLogger("jdoo.schema");
+    protected static Logger _schema = LoggerFactory.getLogger("jdoo.schema");
 
     public Field $new(@Nullable Consumer<Field> consumer) {
         try {

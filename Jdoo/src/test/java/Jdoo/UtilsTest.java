@@ -10,11 +10,13 @@ import java.util.Arrays;
 import java.util.Date;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Test;
 
+import jdoo.util.Pair;
 import jdoo.util.Tuple;
 import jdoo.util.TypeUtils;
 import jdoo.https.json.JsonRpcRequest;
@@ -23,14 +25,55 @@ import jdoo.https.json.RpcId;
 /**
  * Unit test for simple App.
  */
-public class AppTest {
+public class UtilsTest {
     @Test
-    public void test_linq() {
-        Tuple<?> a = Tuple.fromCollection(Arrays.asList(1,2));
+    public void test_tuple() {
+        Tuple<?> a = Tuple.fromCollection(Arrays.asList(1, 2));
+        Tuple<?> b = new Tuple<>(1, 2);
+        assertEquals(2, a.size());
+        assertEquals(b, a);
     }
 
     @Test
-    public void rpcIdJsonDeserialize() throws JsonParseException, JsonMappingException, IOException {
+    public void test_pair_json_deserialize() throws JsonParseException, JsonMappingException, IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        String json = "[1,\"str\"]";
+        Pair<Integer, String> pair = mapper.readValue(json, new TypeReference<Pair<Integer, String>>() {
+        });
+        System.out.println(pair);
+        assertEquals(1, (int) pair.first());
+        assertEquals("str", pair.second());
+    }
+
+    @Test
+    public void test_pair_json_serialize() throws JsonParseException, JsonMappingException, IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(new Pair<>(1, "str"));
+        System.out.println(json);
+        assertEquals("[1,\"str\"]", json);
+    }
+
+    @Test
+    public void test_tuple_json_deserialize() throws JsonParseException, JsonMappingException, IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        String json = "[1,\"str\"]";
+        Tuple<Object> tuple = mapper.readValue(json, new TypeReference<Tuple<Object>>() {
+        });
+        System.out.println(tuple);
+        assertEquals(1, tuple.get(0));
+        assertEquals("str", tuple.get(1));
+    }
+
+    @Test
+    public void test_tuple_json_serialize() throws JsonParseException, JsonMappingException, IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(new Tuple<>(1, "str"));
+        System.out.println(json);
+        assertEquals("[1,\"str\"]", json);
+    }
+
+    @Test
+    public void test_rpcid_json_deserialize() throws JsonParseException, JsonMappingException, IOException {
         ObjectMapper mapper = new ObjectMapper();
 
         String strId = "{\"id\":\"x\"}";
@@ -61,7 +104,7 @@ public class AppTest {
     }
 
     @Test
-    public void rpcIdJsonSerialize() throws JsonParseException, JsonMappingException, IOException {
+    public void test_rpcid_json_serialize() throws JsonParseException, JsonMappingException, IOException {
         ObjectMapper mapper = new ObjectMapper();
         JsonRpcRequest request = new JsonRpcRequest();
         request.setId(new RpcId(1234L));
@@ -70,7 +113,7 @@ public class AppTest {
     }
 
     @Test
-    public void rpcParamsJsonDeserialize() throws JsonParseException, JsonMappingException, IOException {
+    public void test_rpcparams_json_deserialize() throws JsonParseException, JsonMappingException, IOException {
         ObjectMapper mapper = new ObjectMapper();
 
         String listParams = "{\"params\":[1,2.2,\"str\",\"2020-11-03 06:10:54\",{}]}";
@@ -83,7 +126,7 @@ public class AppTest {
     }
 
     @Test
-    public void parseValues() throws ParseException {
+    public void test_typeutils_parse_values() throws ParseException {
         int v1 = TypeUtils.parse("1", int.class);
         assertEquals(1, v1);
         int v2 = TypeUtils.parse("1", Integer.class);

@@ -13,8 +13,8 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jdoo.exceptions.DataException;
 import jdoo.util.Kvalues;
@@ -22,7 +22,7 @@ import jdoo.tools.Sql;
 import jdoo.util.Tuple;
 
 public class Cursor implements AutoCloseable {
-    private static Logger logger = LogManager.getLogger(Cursor.class);
+    private static Logger logger = LoggerFactory.getLogger(Cursor.class);
     static int IN_MAX = 1000;// decent limit on size of IN queries - guideline = Oracle limit
     Connection connection;
     PreparedStatement statement;
