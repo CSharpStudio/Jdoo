@@ -98,8 +98,8 @@ public class BaseModel extends MetaModel {
         Cursor cr = env.cr();
         Kvalues context = env.context();
         Object param_ids = new Object();
-        Query query = new Query(Arrays.asList("\"" + table() + "\""), Arrays.asList("\"" + table() + "\".id IN %s"),
-                Arrays.asList(param_ids));
+        Query query = new Query(Arrays.asList("\"" + self.table() + "\""),
+                Arrays.asList("\"" + self.table() + "\".id IN %s"), Arrays.asList(param_ids));
         // todo _apply_ir_rules(self, query, "read");
 
         List<String> qual_names = new ArrayList<>();
@@ -246,6 +246,7 @@ public class BaseModel extends MetaModel {
         }
     }
 
+    @api.model
     public List<Pair<Object, Object>> name_search(RecordSet self, @Default("") String name, @Default List<Object> args,
             @Default("ilike") String operator, @Default("100") Integer limit) {
         return _name_search(self, name, args, operator, limit, null);
@@ -291,6 +292,7 @@ public class BaseModel extends MetaModel {
         return result;
     }
 
+    @api.model
     public Kvalues default_get(RecordSet self, Collection<String> fields_list) {
         // TODO self.view_init(fields_list)
         Kvalues defaults = new Kvalues();
@@ -429,6 +431,8 @@ public class BaseModel extends MetaModel {
         return records;
     }
 
+    @api.model_create_multi
+    @api.returns(value = "self", downgrade = RecordSetId.class)
     @SuppressWarnings("unchecked")
     public RecordSet create(RecordSet self, Object values) {
         List<Map<String, Object>> vals_list = new ArrayList<Map<String, Object>>();
@@ -692,26 +696,25 @@ public class BaseModel extends MetaModel {
             }
         };
 
-        Map<String, IdValues> towrite = self.env().all().towrite();
         if (fnames == null) {
             recompute(self, null, null);
+            Map<String, IdValues> towrite = self.env().all().towrite();
             Object[] keys = towrite.keySet().toArray();
-            for (Object key : keys) {
+            for (Object key : keys) {// todo popitem
                 IdValues vals = towrite.remove(key);
                 process.accept(self.env((String) key), vals);
             }
         } else {
             recompute(self, fnames, records);
-
+            // todo
             if (records != null) {
-                Object to = towrite.get(self.name());
-                if (to == null) {
+                IdValues towrite = self.env().all().towrite(self.name());
+                if (towrite == null || towrite.isEmpty()) {
                     return;
                 }
-                Kvalues dict = (Kvalues) to;
                 boolean hasToWrite = false;
                 for (RecordSet record : records) {
-                    Kvalues kv = (Kvalues) dict.get(record.id());
+                    Map<String, Object> kv = towrite.get(record.id());
                     for (String f : fnames) {
                         if (kv.containsKey(f)) {
                             hasToWrite = true;
@@ -727,7 +730,7 @@ public class BaseModel extends MetaModel {
                 }
             }
 
-            HashMap<String, List<Field>> model_fields = new HashMap<String, List<Field>>();
+            Map<String, List<Field>> model_fields = new HashMap<>();
             for (String fname : fnames) {
                 Field field = self.getField(fname);
                 Utils.setdefault(model_fields, field.model_name(), ArrayList::new).add(field);
@@ -738,6 +741,7 @@ public class BaseModel extends MetaModel {
             for (String model_name : model_fields.keySet()) {
                 List<Field> fields = model_fields.get(model_name);
                 Stream<String> stream = fields.stream().map(f -> f.getName());
+                Map<String, IdValues> towrite = self.env().all().towrite();
                 if (Utils.get(towrite, model_name, IdValues::new).values().stream()
                         .anyMatch(vals -> stream.anyMatch(field -> vals.containsKey(field)))) {
                     IdValues id_vals = towrite.remove(model_name);
@@ -903,8 +907,9 @@ public class BaseModel extends MetaModel {
                     Field new_field = self.type().findField(field.name);
                     if (new_field == null) {
                         new_field = field.$new(null);
+                    } else {
+                        new_field._slots.putAll(field._slots);
                     }
-                    new_field._slots.putAll(field._slots);
                     _add_field(self, field.name, new_field);
                 }
             });
@@ -1293,5 +1298,12 @@ public class BaseModel extends MetaModel {
             }
             self.call("_validate_fields", fnames);
         }
+    }
+}
+
+class RecordSetId implements Function<RecordSet, Object> {
+    @Override
+    public Object apply(RecordSet t) {
+        return t.id();
     }
 }

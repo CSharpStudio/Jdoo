@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import com.bestvike.linq.exception.NotSupportedException;
-
 public class Kvalues extends HashMap<String, Object> {
     private static final long serialVersionUID = 1L;
     static final Kvalues empty = new EmptyKvalues();
@@ -55,6 +53,6 @@ class EmptyKvalues extends Kvalues {
 
     @Override
     public Kvalues set(String key, Object value) {
-        throw new NotSupportedException();
+        throw new UnsupportedOperationException();
     }
 }

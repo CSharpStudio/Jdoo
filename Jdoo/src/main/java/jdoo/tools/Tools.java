@@ -25,7 +25,9 @@ public class Tools {
     }
 
     public static boolean hasId(Object id) {
-        if (id instanceof String) {
+        if (Boolean.FALSE.equals(id)) {
+            return false;
+        } else if (id instanceof String) {
             return true;
         }
         return false;
@@ -42,5 +44,4 @@ public class Tools {
         return true;
     }
 
-    
 }

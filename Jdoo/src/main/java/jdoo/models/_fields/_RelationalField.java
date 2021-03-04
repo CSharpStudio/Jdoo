@@ -70,6 +70,11 @@ public abstract class _RelationalField<T extends _RelationalField<T>> extends Ba
 
     @Override
     public Object get(RecordSet records) {
+        // base case: do the regular access
+        if (records == null || records.size() <= 1) {
+            return super.get(records);
+        }
+        // multirecord case: return the union of the values of 'self' on records
         RecordSet comodel = records.env(comodel_name());
         List<RecordSet> list = new ArrayList<>();
         for (RecordSet record : records) {

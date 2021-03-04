@@ -24,7 +24,7 @@ public class ResUsers extends Model {
                         .help("Specify a value only when creating a user or if you\"re changing the user\"s password, otherwise leave empty. After a change of password, the user has to login again.");
         static Field signature = fields.Html().string("Email Signature");
 
-        static Field name = fields.Char().related("partner_id.name")/* .inherited(true) */.readonly(false);
+        static Field name = fields.Char().related("partner_id.name").inherited(true).readonly(false);
         static Field email = fields.Char().related("partner_id.email").inherited(true).readonly(false);
 
 }

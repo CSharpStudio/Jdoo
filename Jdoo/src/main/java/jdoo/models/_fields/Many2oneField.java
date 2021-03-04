@@ -1,14 +1,20 @@
 package jdoo.models._fields;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import jdoo.exceptions.MissingErrorException;
 import jdoo.exceptions.ValueErrorException;
+import jdoo.models.Field;
 import jdoo.models.RecordSet;
 import jdoo.tools.Slot;
 import jdoo.tools.Tools;
 import jdoo.util.Kvalues;
 import jdoo.util.Pair;
+import jdoo.util.Tuple;
 
 /**
  * The value of such a field is a recordset of size 0 (no record) or 1 (a single
@@ -133,14 +139,35 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
 
     @Override
     public Object convert_to_record(Object value, RecordSet record) {
-        // TODO Auto-generated method stub
-        return super.convert_to_record(value, record);
+        Collection<Object> ids = value == null ? Collections.emptyList() : new Tuple<>(value);
+        Collection<Object> prefetch_ids = prefetch_many2one_ids(record, this);
+        return record.pool(comodel_name()).browse(record.env(), ids, prefetch_ids);
+    }
+
+    Collection<Object> prefetch_many2one_ids(RecordSet record, Field field) {
+        RecordSet records = record.browse(record.prefetch_ids());
+        Collection<Object> ids = record.env().cache().get_values(records, field);
+        Set<Object> unique = new HashSet<>();
+        for (Object id : ids) {
+            if (id != null) {
+                unique.add(id);
+            }
+        }
+        return unique;
     }
 
     @Override
     public Object convert_to_read(Object value, RecordSet record) {
-        // TODO Auto-generated method stub
-        return super.convert_to_read(value, record);
+        RecordSet rec = (RecordSet) value;
+        if (rec.hasId()) {
+            try {
+                return new Tuple<>(rec.id(), rec.sudo().get("display_name"));
+            } catch (MissingErrorException e) {
+                return null;
+            }
+        } else {
+            return rec.id();
+        }
     }
 
     @Override

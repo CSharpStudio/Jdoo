@@ -21,7 +21,7 @@ import jdoo.util.Tuple;
 public class Environment {
     static ThreadLocal<Environments> local = new ThreadLocal<Environments>();
 
-    static Environments envs() {
+    static synchronized Environments envs() {
         Environments envs = local.get();
         if (envs == null) {
             envs = new Environments();
@@ -37,7 +37,7 @@ public class Environment {
         Tuple<Object> args = new Tuple<>(registry.tenant(), cr, uid, context, su);
         Environments envs = envs();
         for (Environment env : envs) {
-            if (env.args.equals(args)) {
+            if (env != null && env.args.equals(args)) {
                 return env;
             }
         }

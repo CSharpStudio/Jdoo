@@ -287,6 +287,7 @@ public class Field extends MetaField {
     public Field $new(@Nullable Consumer<Field> consumer) {
         try {
             Field field = (Field) getClass().getConstructor().newInstance();
+            field._slots.putAll(this._slots);
             if (consumer != null) {
                 consumer.accept(field);
             }

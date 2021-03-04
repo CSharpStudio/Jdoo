@@ -167,7 +167,7 @@ public class MetaModel {
     }
 
     public Field findField(String field) {
-        if (_fields != null && _fields.containsKey(field))
+        if (_fields != null && field != null && _fields.containsKey(field))
             return _fields.get(field);
         return null;
     }

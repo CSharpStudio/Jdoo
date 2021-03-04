@@ -12,6 +12,8 @@ import java.util.NoSuchElementException;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class Utils {
 
     @SuppressWarnings("unchecked")
@@ -51,14 +53,6 @@ public class Utils {
         }
         throw new NoSuchElementException("map is empty");
     }
-
-    // public static <K, V> V setdefault(Map<K, V> map, K key, V value) {
-    // if (map.containsKey(key)) {
-    // return map.get(key);
-    // }
-    // map.put(key, value);
-    // return value;
-    // }
 
     public static <K, V> V setdefault(Map<K, V> map, K key, Supplier<? extends V> supplier) {
         if (map.containsKey(key)) {
@@ -108,5 +102,17 @@ public class Utils {
             result.add(new Tuple<>(objs));
         }
         return result;
+    }
+
+    public static String repr(Object obj) {
+        if (obj == null) {
+            return "null";
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            return obj.toString();
+        }
     }
 }

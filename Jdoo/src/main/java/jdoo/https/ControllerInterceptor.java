@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import jdoo.data.Cursor;
 import jdoo.https.json.JsonRpcError;
 import jdoo.https.json.JsonRpcInvalidParamsException;
 import jdoo.https.json.JsonRpcParameter;
@@ -27,35 +28,46 @@ public class ControllerInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object object) throws Exception {
         if (object instanceof HandlerMethod) {
             HandlerMethod handler = (HandlerMethod) object;
-            http.Route route = handler.getMethodAnnotation(http.Route.class);
-            if (route != null && "json".equals(route.type())) {
-                boolean debug = StringUtils.hasText(request.getParameter("debug"));
-                ObjectMapper mapper = new ObjectMapper();
-                JsonRpcRequest req;
-                JsonRpcResponse res;
-                try {
-                    req = mapper.readValue(request.getReader(), JsonRpcRequest.class);
-                    res = getResponse(handler, req, debug);
-                } catch (Exception exc) {
-                    res = new JsonRpcResponse(JsonRpcError.ParseError, getDetails(exc, debug));
+            if (handler.getBean() instanceof Controller) {
+                Controller ctl = (Controller) handler.getBean();
+                http.Route route = handler.getMethodAnnotation(http.Route.class);
+                if (route != null && "json".equals(route.type())) {
+                    boolean debug = StringUtils.hasText(request.getParameter("debug"));
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonRpcRequest req;
+                    JsonRpcResponse res;
+                    try {
+                        req = mapper.readValue(request.getReader(), JsonRpcRequest.class);
+                        res = getResponse(ctl, handler.getMethod(), req, debug);
+                    } catch (Exception exc) {
+                        res = new JsonRpcResponse(JsonRpcError.ParseError, getDetails(exc, debug));
+                    }
+                    response.setContentType("application/json");
+                    String json = mapper.writeValueAsString(res);
+                    PrintWriter pw = response.getWriter();
+                    pw.write(json);
+                    pw.flush();
+                    pw.close();
+                    return false;
                 }
-                response.setContentType("application/json");
-                String json = mapper.writeValueAsString(res);
-                PrintWriter pw = response.getWriter();
-                pw.write(json);
-                pw.flush();
-                pw.close();
-                return false;
             }
         }
         return true;
     }
 
-    JsonRpcResponse getResponse(HandlerMethod handler, JsonRpcRequest request, boolean debug) {
+    JsonRpcResponse getResponse(Controller ctl, Method method, JsonRpcRequest request, boolean debug) {
         try {
-            Method method = handler.getMethod();
             Object[] args = getArgs(method, request);
-            Object result = method.invoke(handler.getBean(), args);
+            Object result;
+            try {
+                result = method.invoke(ctl, args);
+                ctl.cr().commit();
+            } catch (Exception e) {
+                ctl.cr().rollback();
+                throw e;
+            } finally {
+                ctl.close();
+            }
             if (result instanceof JsonRpcResponse) {
                 JsonRpcResponse res = (JsonRpcResponse) result;
                 res.setId(request.getId());

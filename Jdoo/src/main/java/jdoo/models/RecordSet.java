@@ -70,6 +70,10 @@ public final class RecordSet implements Iterable<RecordSet> {
         return env.get(model);
     }
 
+    public MetaModel pool(String model) {
+        return meta.pool.get(model);
+    }
+
     /** SQL table name used by model */
     public String table() {
         return meta.table();
@@ -114,12 +118,16 @@ public final class RecordSet implements Iterable<RecordSet> {
     public Object id() {
         if (hasId())
             return ids.get(0);
-        throw new ModelException("Model:" + meta.name() + " ids not set");
+        return false;
     }
 
     /** Return the list of actual record ids corresponding to this. */
     public Collection<?> ids() {
         return ids;
+    }
+
+    public Collection<?> prefetch_ids() {
+        return prefetchIds;
     }
 
     /** Test whether this is nonempty. */

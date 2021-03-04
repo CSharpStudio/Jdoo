@@ -4,8 +4,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Function;
 
 import org.slf4j.Logger;
@@ -16,6 +18,7 @@ import jdoo.models.MethodInfo;
 import jdoo.models.RecordSet;
 import jdoo.util.Kvalues;
 import jdoo.util.Kwargs;
+import jdoo.util.Utils;
 
 public class api {
     private static Logger _logger = LoggerFactory.getLogger(api.class);
@@ -119,16 +122,16 @@ public class api {
     static Object call_kw_model(MethodInfo method, RecordSet model, List<Object> args, Kwargs kwargs) {
         Kvalues context = split_context(kwargs);
         RecordSet recs = model.with_context(context);
-        _logger.debug("call %s with args:%s,kwargs:%s", recs, method.toString(), args, kwargs);
-        Object result = method.invoke(model, args, kwargs);
+        debug(recs, method.getMethod().getName(), args, kwargs);
+        Object result = method.invoke(recs, args, kwargs);
         return downgrade(method, result);
     }
 
     static Object call_kw_model_create(MethodInfo method, RecordSet model, List<Object> args, Kwargs kwargs) {
         Kvalues context = split_context(kwargs);
         RecordSet recs = model.with_context(context);
-        _logger.debug("call %s with args:%s,kwargs:%s", recs, method.toString(), args, kwargs);
-        RecordSet result = (RecordSet) method.invoke(model, args, kwargs);
+        debug(recs, method.getMethod().getName(), args, kwargs);
+        RecordSet result = (RecordSet) method.invoke(recs, args, kwargs);
         return args.size() > 0 && args.get(0) instanceof Map ? result.id() : result.ids();
     }
 
@@ -139,9 +142,22 @@ public class api {
         }
         Kvalues context = split_context(kwargs);
         RecordSet recs = model.with_context(context).browse(ids);
-        _logger.debug("call %s with args:%s,kwargs:%s", recs, method.toString(), args, kwargs);
-        Object result = method.invoke(model, args, kwargs);
+        debug(recs, method.getMethod().getName(), args, kwargs);
+        Object result = method.invoke(recs, args, kwargs);
         return downgrade(method, result);
+    }
+
+    static void debug(RecordSet model, String method, List<Object> args, Kwargs kwargs) {
+        if (_logger.isDebugEnabled()) {
+            List<String> params = new ArrayList<>();
+            for (Object arg : args) {
+                params.add(Utils.repr(arg));
+            }
+            for (Entry<String, Object> kw : kwargs.entrySet()) {
+                params.add(kw.getKey() + "=" + Utils.repr(kw.getValue()));
+            }
+            _logger.debug("call {}.{}({})", model, method, String.join(",", params));
+        }
     }
 
     public static Object call_kw(RecordSet model, String name, List<Object> args, Kwargs kwargs) {
