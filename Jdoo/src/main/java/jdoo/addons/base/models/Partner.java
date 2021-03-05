@@ -119,7 +119,7 @@ public class Partner extends Model {
     public void _compute_display_name(RecordSet self) {
         Kvalues diff = new Kvalues(k->k.set("show_address", null).set("show_address_only", null).set("show_email", null)
                 .set("html_format", null).set("show_vat", null));
-        Map<Object, Object> names = Utils.toMap(self.with_context(diff).name_get());
+        Map<Object, String> names = Utils.toMap(self.with_context(diff).name_get());
         for (RecordSet partner : self)
             partner.set(display_name, names.get(partner.id()));
     }

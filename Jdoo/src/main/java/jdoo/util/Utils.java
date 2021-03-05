@@ -14,6 +14,8 @@ import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jdoo.apis.api.returns;
+
 public class Utils {
 
     @SuppressWarnings("unchecked")
@@ -114,5 +116,66 @@ public class Utils {
         } catch (Exception e) {
             return obj.toString();
         }
+    }
+
+    /**
+     * test the obj in the known case:
+     * <p>
+     * {@code !String.isBlank()}
+     * </p>
+     * <p>
+     * {@code !Collection.isEmpty()}
+     * </p>
+     * <p>
+     * {@code Iterable.iterator().hasNext()}
+     * </p>
+     * <p>
+     * {@code !Integer.equals(0)}
+     * </p>
+     * <p>
+     * {@code !Long.equals(0)}
+     * </p>
+     * <p>
+     * {@code !Float.equals(0.0f)}
+     * </p>
+     * <p>
+     * {@code !Double.equals(0.0d)}
+     * </p>
+     * <p>
+     * {@code !Short.equals((short) 0)}
+     * </p>
+     * <p>
+     * {@code !Byte.equals((byte) 0)}
+     * </p>
+     * 
+     * @param obj the obj to test
+     * @return the test result
+     */
+    public static boolean bool(Object obj) {
+        if (obj == null) {
+            return false;
+        } else if (Boolean.FALSE.equals(obj)) {
+            return false;
+        } else if (obj instanceof String) {
+            return !((String) obj).isBlank();
+        } else if (obj instanceof Collection) {
+            return !((Collection<?>) obj).isEmpty();
+        } else if (obj instanceof Iterable) {
+            return ((Iterable<?>) obj).iterator().hasNext();
+        } else if (obj instanceof Integer) {
+            return !((Integer) obj).equals(0);
+        } else if (obj instanceof Long) {
+            return !((Long) obj).equals(0l);
+        } else if (obj instanceof Float) {
+            return !((Float) obj).equals(0.0f);
+        } else if (obj instanceof Double) {
+            return !((Double) obj).equals(0.0d);
+        } else if (obj instanceof Short) {
+            return !((Short) obj).equals((short) 0);
+        } else if (obj instanceof Byte) {
+            return !((Byte) obj).equals((byte) 0);
+        }
+
+        return true;
     }
 }

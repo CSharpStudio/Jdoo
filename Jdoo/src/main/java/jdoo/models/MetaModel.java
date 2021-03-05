@@ -341,6 +341,47 @@ public class MetaModel {
         return cls;
     }
 
+    /**
+     * Instantiate a given model in the registry.
+     * 
+     * This method creates or extends a "registry" class for the given model. This
+     * "registry" class carries inferred model metadata, and inherits (in the Python
+     * sense) from all classes that define the model, and possibly other registry
+     * classes.
+     * 
+     * <pre>
+     *In the simplest case, the model's registry class inherits from cls and
+     *the other classes that define the model in a flat hierarchy. The
+     *registry contains the instance ``model`` (on the left). Its class,
+     *``ModelClass``, carries inferred metadata that is shared between all
+     *the model's instances for this registry only.
+     *  class A1(Model):                          Model
+     *      _name = 'a'                           / | \
+     *                                           A3 A2 A1
+     *  class A2(Model):                          \ | /
+     *      _inherit = 'a'                      ModelClass
+     *                                            /   \
+     *  class A3(Model):                      model   recordset
+     *      _inherit = 'a'
+     *When a model is extended by '_inherit', its base classes are modified
+     *to include the current class and the other inherited model classes.
+     *Note that we actually inherit from other ``ModelClass``, so that
+     *extensions to an inherited model are immediately visible in the
+     *current model class, like in the following example:
+     *  class A1(Model):
+     *      _name = 'a'                           Model
+     *                                           / / \ \
+     *  class B1(Model):                        / A2 A1 \
+     *      _name = 'b'                        /   \ /   \
+     *                                        B2  ModelA  B1
+     *  class B2(Model):                       \    |    /
+     *      _name = 'b'                         \   |   /
+     *      _inherit = ['a', 'b']                \  |  /
+     *                                            ModelB
+     *  class A2(Model):
+     *      _inherit = 'a'
+     * </pre>
+     */
     @SuppressWarnings("unchecked")
     public static MetaModel _build_model(Class<?> clazz, String module, Registry pool, Cursor cr)
             throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,

@@ -519,7 +519,7 @@ public class Expression {
                                     ? TERM_OPERATORS_NEGATION.get(operator)
                                     : (String) operator;
                             ids2 = new ArrayList<>();
-                            for (Pair<Object, Object> pair : comodel.name_search((String) right, domain, op2, null)) {
+                            for (Pair<Object, String> pair : comodel.name_search((String) right, domain, op2, null)) {
                                 ids2.add(pair.first());
                             }
                         } else if (right instanceof Collection) {

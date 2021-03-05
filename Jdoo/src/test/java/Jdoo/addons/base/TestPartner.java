@@ -26,7 +26,7 @@ public class TestPartner extends TransactionCase {
         // assertEquals(set(i[0] for i in ns_res), set((test_partner |
         // test_user.partner_id).ids))
 
-        List<Pair<Object, Object>> ns_res = env("res.partner").name_search("Vlad", d.on("user_ids.email", "ilike", "vlad"));
+        List<Pair<Object, String>> ns_res = env("res.partner").name_search("Vlad", d.on("user_ids.email", "ilike", "vlad"));
         // assertEquals(set(i[0] for i in ns_res), set(test_user.partner_id.ids))
 
         assertTrue(true);

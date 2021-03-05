@@ -17,7 +17,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import org.springframework.lang.Nullable;
 
-import jdoo.exceptions.ModelException;
 import jdoo.exceptions.ValueErrorException;
 import jdoo.tools.Tools;
 import jdoo.util.Default;
@@ -28,6 +27,12 @@ import jdoo.util.Tuple;
 import jdoo.apis.Environment;
 import jdoo.data.Cursor;
 
+/**
+ * Every model instance is a "recordset", i.e., an ordered collection of records
+ * of the model. Recordsets are returned by methods like :meth:`~.browse`,
+ * :meth:`~.search`, or field accesses. Records have no explicit representation:
+ * a record is represented as a recordset of one record.
+ */
 public final class RecordSet implements Iterable<RecordSet> {
     private MetaModel meta;
     private Environment env;
@@ -499,6 +504,13 @@ public final class RecordSet implements Iterable<RecordSet> {
         }
     }
 
+    /**
+     * Select the records in ``self`` such that ``func(rec)`` is true, and return
+     * them as a recordset.
+     * 
+     * @param func
+     * @return
+     */
     public RecordSet filtered(String func) {
         if ("id".equals(func)) {
             return filtered(rec -> Tools.hasId(rec.id()));
@@ -507,6 +519,13 @@ public final class RecordSet implements Iterable<RecordSet> {
         }
     }
 
+    /**
+     * Select the records in ``self`` such that ``func(rec)`` is true, and return
+     * them as a recordset.
+     * 
+     * @param func
+     * @return
+     */
     public RecordSet filtered(Predicate<RecordSet> func) {
         return browse(StreamSupport.stream(this.spliterator(), false).filter(rec -> func.test(rec)).map(rec -> rec.id())
                 .collect(Collectors.toList()));
@@ -516,70 +535,283 @@ public final class RecordSet implements Iterable<RecordSet> {
     // model methods
     //
 
+    /**
+     * Creates new records for the model.
+     * 
+     * The new records are initialized using the values from the list of dicts
+     * ``values``, and if necessary those from :meth:`~.default_get`.
+     * 
+     * @param values values for the model's fields, as a list of dictionaries::
+     *               <p>
+     *               [{'field_name': field_value, ...}, ...]
+     *               </p>
+     *               For backward compatibility, ``vals_list`` may be a dictionary.
+     *               It is treated as a singleton list ``[vals]``, and a single
+     *               record is returned.
+     */
     public RecordSet create(Object values) {
         return call(RecordSet.class, "create", this, values);
     }
 
+    /**
+     * name_create(name) -> record
+     * 
+     * Create a new record by calling :meth:`create` with only one value provided:
+     * the display name of the new record.
+     * 
+     * The new record will be initialized with any default values applicable to this
+     * model, or provided through the context. The usual behavior of :meth:`create`
+     * applies.
+     * 
+     * @param name display name of the record to create
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    public Pair<Object, Object> name_create(String name) {
-        return (Pair<Object, Object>) call("name_create", this, name);
+    public Pair<Object, String> name_create(String name) {
+        return (Pair<Object, String>) call("name_create", this, name);
     }
 
+    /**
+     * Returns a textual representation for the records in ``self``. By default this
+     * is the value of the ``display_name`` field.
+     * 
+     * @return list of pairs ``(id, text_repr)`` for each records
+     */
     @SuppressWarnings("unchecked")
-    public List<Pair<Object, Object>> name_get() {
-        return (List<Pair<Object, Object>>) call("name_get", this);
+    public List<Pair<Object, String>> name_get() {
+        return (List<Pair<Object, String>>) call("name_get", this);
     }
 
+    /**
+     * Return default values for the fields in ``fields_list``. Default values are
+     * determined by the context, user defaults, and the model itself.
+     * 
+     * @param fields_list a list of field names
+     * @return a dictionary mapping each field name to its corresponding default
+     *         value, if it has one.
+     */
     public Kvalues default_get(Collection<String> fields_list) {
         return call(Kvalues.class, "default_get", this, fields_list);
     }
 
+    /**
+     * Updates all records in the current set with the provided values.
+     * 
+     * @param vals fields to update and the value to set on them e.g::
+     *             <p>
+     *             {'foo': 1, 'bar': "Qux"}
+     *             </p>
+     *             will set the field ``foo`` to ``1`` and the field ``bar`` to
+     *             ``"Qux"`` if those are valid (otherwise it will trigger an
+     *             error).
+     * @return
+     * @exception AccessErrorException   if user has no write rights on the
+     *                                   requested object if user tries to bypass
+     *                                   access rules for write on the requested
+     *                                   object
+     * @exception ValidateErrorException if user tries to enter invalid value for a
+     *                                   field that is not in selection
+     * @exception UserErrorException     if a loop would be created in a hierarchy
+     *                                   of objects a result of the operation (such
+     *                                   as setting an object as its own parent)
+     */
     public boolean write(Map<String, Object> vals) {
         return call(Boolean.class, "write", this, vals);
     }
 
+    /**
+     * Process all the pending recomputations and flush the pending updates to the
+     * database.
+     */
     public void flush() {
         call("flush", this, null, null);
     }
 
+    /**
+     * Reads the requested fields for the records in ``self``, low-level/RPC method.
+     * In Python code, prefer :meth:`~.browse`.
+     * 
+     * @param fields list of field names to return (default is all fields)
+     * @return a list of dictionaries mapping field names to their values, with one
+     *         dictionary per record
+     * @exception AccessErrorException: if user has no read rights on some of the
+     *                                  given records
+     */
     @SuppressWarnings("unchecked")
     public List<Kvalues> read(Collection<String> fields) {
         return (List<Kvalues>) call("read", this, fields);
     }
 
+    /**
+     * Returns the subset of records in ``self`` that exist, and marks deleted
+     * records as such in cache. It can be used as a test on records:: <blockquote>
+     * 
+     * <pre>
+     *if(record.exists().hasId()){
+     *  ...
+     *}
+     * </pre>
+     * 
+     * </blockquote> By convention, new records are returned as existing.
+     */
     public RecordSet exists() {
         return call(RecordSet.class, "exists", this);
     }
 
+    /**
+     * Search for records that have a display name matching the given ``name``
+     * pattern when compared with the given ``operator``, while also matching the
+     * optional search domain (``args``).
+     * 
+     * This is used for example to provide suggestions based on a partial value for
+     * a relational field. Sometimes be seen as the inverse function of
+     * :meth:`~.name_get`, but it is not guaranteed to be.
+     * 
+     * This method is equivalent to calling :meth:`~.search` with a search domain
+     * based on ``display_name`` and then :meth:`~.name_get` on the result of the
+     * search.
+     * 
+     * @param name     the name pattern to match
+     * @param args     optional search domain (see :meth:`~.search` for syntax),
+     *                 specifying further restrictions
+     * @param operator domain operator for matching ``name``, such as ``'like'`` or
+     *                 ``'='``.
+     * @param limit    optional max number of records to return
+     * @return list of pairs ``(id, text_repr)`` for all matching records.
+     */
     @SuppressWarnings("unchecked")
-    public List<Pair<Object, Object>> name_search(String name, List<Object> args, @Default("ilike") String operator,
+    public List<Pair<Object, String>> name_search(String name, List<Object> args, @Default("ilike") String operator,
             @Default("100") Integer limit) {
-        return (List<Pair<Object, Object>>) call("name_search", name, args, operator, limit);
+        return (List<Pair<Object, String>>) call("name_search", name, args, operator, limit);
     }
 
+    /**
+     * Search for records that have a display name matching the given ``name``
+     * pattern when compared with the given ``operator``, while also matching the
+     * optional search domain (``args``).
+     * 
+     * This is used for example to provide suggestions based on a partial value for
+     * a relational field. Sometimes be seen as the inverse function of
+     * :meth:`~.name_get`, but it is not guaranteed to be.
+     * 
+     * This method is equivalent to calling :meth:`~.search` with a search domain
+     * based on ``display_name`` and then :meth:`~.name_get` on the result of the
+     * search.
+     * 
+     * @param name the name pattern to match
+     * @return list of pairs ``(id, text_repr)`` for all matching records.
+     */
     @SuppressWarnings("unchecked")
-    public List<Pair<Object, Object>> name_search(String name) {
-        return (List<Pair<Object, Object>>) call("name_search", name);
+    public List<Pair<Object, String>> name_search(String name) {
+        return (List<Pair<Object, String>>) call("name_search", name);
     }
 
+    /**
+     * Search for records that have a display name matching the given ``name``
+     * pattern when compared with the given ``operator``, while also matching the
+     * optional search domain (``args``).
+     * 
+     * This is used for example to provide suggestions based on a partial value for
+     * a relational field. Sometimes be seen as the inverse function of
+     * :meth:`~.name_get`, but it is not guaranteed to be.
+     * 
+     * This method is equivalent to calling :meth:`~.search` with a search domain
+     * based on ``display_name`` and then :meth:`~.name_get` on the result of the
+     * search.
+     * 
+     * @param name the name pattern to match
+     * @param args optional search domain (see :meth:`~.search` for syntax),
+     *             specifying further restrictions
+     * @return list of pairs ``(id, text_repr)`` for all matching records.
+     */
     @SuppressWarnings("unchecked")
-    public List<Pair<Object, Object>> name_search(String name, List<Object> args) {
-        return (List<Pair<Object, Object>>) call("name_search", name, args);
+    public List<Pair<Object, String>> name_search(String name, List<Object> args) {
+        return (List<Pair<Object, String>>) call("name_search", name, args);
     }
 
+    /**
+     * Searches for records based on the ``args`` :ref:`search domain
+     * <reference/orm/domains>`.
+     * 
+     * @param args :ref:`A search domain <reference/orm/domains>`. Use an empty list
+     *             to match all records.
+     * 
+     * @return at most ``limit`` records matching the search criteria
+     * @exception AccessErrorException: * if user tries to bypass access rules for
+     *                                  read on the requested object.
+     */
     public RecordSet search(List<Object> args) {
         return (RecordSet) call("search", args, 0, null, null, false);
     }
 
+    /**
+     * Searches for records based on the ``args`` :ref:`search domain
+     * <reference/orm/domains>`.
+     * 
+     * @param args   :ref:`A search domain <reference/orm/domains>`. Use an empty
+     *               list to match all records.
+     * @param offset number of results to ignore (default: 0)
+     * @param limit  maximum number of records to return (default: all)
+     * 
+     * @return at most ``limit`` records matching the search criteria
+     * @exception AccessErrorException: * if user tries to bypass access rules for
+     *                                  read on the requested object.
+     */
     public RecordSet search(List<Object> args, int offset, Integer limit) {
         return (RecordSet) call("search", args, offset, limit, null, false);
     }
 
+    /**
+     * Searches for records based on the ``args`` :ref:`search domain
+     * <reference/orm/domains>`.
+     * 
+     * @param args   :ref:`A search domain <reference/orm/domains>`. Use an empty
+     *               list to match all records.
+     * @param offset number of results to ignore (default: 0)
+     * @param limit  maximum number of records to return (default: all)
+     * @param order  sort string
+     * 
+     * @return at most ``limit`` records matching the search criteria
+     * @exception AccessErrorException: * if user tries to bypass access rules for
+     *                                  read on the requested object.
+     */
     public RecordSet search(List<Object> args, int offset, Integer limit, String order) {
         return (RecordSet) call("search", args, offset, limit, order, false);
     }
 
+    /**
+     * Searches for records based on the ``args`` :ref:`search domain
+     * <reference/orm/domains>`.
+     * 
+     * @param args   :ref:`A search domain <reference/orm/domains>`. Use an empty
+     *               list to match all records.
+     * @param offset number of results to ignore (default: 0)
+     * @param limit  maximum number of records to return (default: all)
+     * @param order  sort string
+     * @param count  if True, only counts and returns the number of matching records
+     *               (default: false)
+     * 
+     * @return at most ``limit`` records matching the search criteria
+     * @exception AccessErrorException: * if user tries to bypass access rules for
+     *                                  read on the requested object.
+     */
     public Object search(List<Object> args, int offset, Integer limit, String order, boolean count) {
         return call("search", args, offset, limit, order, count);
+    }
+
+    /**
+     * Searches for records based on the ``args`` :ref:`search domain
+     * <reference/orm/domains>`.
+     * 
+     * @param args   :ref:`A search domain <reference/orm/domains>`. Use an empty
+     *               list to match all records.
+     * @param kwargs dictionary args of offset, limit, order, count
+     * 
+     * @return at most ``limit`` records matching the search criteria
+     * @exception AccessErrorException: * if user tries to bypass access rules for
+     *                                  read on the requested object.
+     */
+    public Object search(List<Object> args, Kwargs kwargs) {
+        return call("search", new Tuple<>(args), kwargs);
     }
 }

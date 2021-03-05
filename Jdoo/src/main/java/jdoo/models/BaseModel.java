@@ -57,6 +57,33 @@ import jdoo.osv.Query;
 import jdoo.apis.api;
 import jdoo.apis.Environment.Protecting;
 
+/**
+ * Base class for Jdoo models.
+ * 
+ * Jdoo models are created by inheriting:
+ * 
+ * :class:`Model` for regular database-persisted models
+ * 
+ * :class:`TransientModel` for temporary data, stored in the database but
+ * automatically vacuumed every so often
+ * 
+ * :class:`AbstractModel` for abstract super classes meant to be shared by
+ * multiple inheriting models
+ * 
+ * The system automatically instantiates every model once per database. Those
+ * instances represent the available models on each database, and depend on
+ * which modules are installed on that database. The actual class of each
+ * instance is built from the Python classes that create and inherit from the
+ * corresponding model.
+ * 
+ * Every model instance is a "recordset", i.e., an ordered collection of records
+ * of the model. Recordsets are returned by methods like :meth:`~.browse`,
+ * :meth:`~.search`, or field accesses. Records have no explicit representation:
+ * a record is represented as a recordset of one record.
+ * 
+ * To create a class that should not be instantiated, the _register class
+ * attribute may be set to False.
+ */
 public class BaseModel extends MetaModel {
     private static Logger _logger = LoggerFactory.getLogger(BaseModel.class);
     MetaModel meta;
@@ -66,6 +93,15 @@ public class BaseModel extends MetaModel {
     // query methods
     //
 
+    /**
+     * Read the given fields of the records in ``self`` from the database, and store
+     * them in cache. Access errors are also stored in cache. Skip fields that are
+     * not stored.
+     * 
+     * @param self   RecordSet
+     * @param fields collection of column of model ``self``; all those fields are
+     *               guaranteed to be read
+     */
     protected void _read(RecordSet self, Collection<Field> fields) {
         if (fields.isEmpty())
             return;
@@ -168,6 +204,17 @@ public class BaseModel extends MetaModel {
         }
     }
 
+    /**
+     * Reads the requested fields for the records in ``self``, low-level/RPC method.
+     * In Python code, prefer :meth:`~.browse`.
+     * 
+     * @param self   RecordSet
+     * @param fields list of field names to return (default is all fields)
+     * @return a list of dictionaries mapping field names to their values, with one
+     *         dictionary per record
+     * @exception AccessErrorException: if user has no read rights on some of the
+     *                                  given records
+     */
     public List<Kvalues> read(RecordSet self, Collection<String> fields) {
         Collection<Field> _fields = check_field_access_rights(self, "read", fields);
         List<Field> stored_fields = new ArrayList<Field>();
@@ -177,7 +224,7 @@ public class BaseModel extends MetaModel {
             } else if (StringUtils.hasText(field.compute())) {
                 for (String dotname : field.depends()) {
                     Field f = self.getField(dotname.split("\\.")[0]);
-                    if (f.prefetch() && (!StringUtils.hasText(f.groups()) || user_has_group(self, f.groups()))) {
+                    if (f.prefetch() && (!StringUtils.hasText(f.groups()) || user_has_groups(self, f.groups()))) {
                         stored_fields.add(f);
                     }
                 }
@@ -203,7 +250,22 @@ public class BaseModel extends MetaModel {
         return result;
     }
 
-    // @api.returns("self");
+    /**
+     * Searches for records based on the ``args`` :ref:`search domain
+     * <reference/orm/domains>`.
+     * 
+     * @param args   :ref:`A search domain <reference/orm/domains>`. Use an empty
+     *               list to match all records.
+     * @param offset number of results to ignore (default: 0)
+     * @param limit  maximum number of records to return (default: all)
+     * @param order  sort string
+     * @param count  if True, only counts and returns the number of matching records
+     *               (default: false)
+     * 
+     * @return at most ``limit`` records matching the search criteria
+     * @exception AccessErrorException: * if user tries to bypass access rules for
+     *                                  read on the requested object.
+     */
     public Object search(RecordSet self, List<Object> args, @Default("0") int offset, @Default Integer limit,
             @Default String order, @Default("false") boolean count) {
         Object res = _search(self, args, offset, limit, order, count, null);
@@ -246,14 +308,36 @@ public class BaseModel extends MetaModel {
         }
     }
 
+    /**
+     * Search for records that have a display name matching the given ``name``
+     * pattern when compared with the given ``operator``, while also matching the
+     * optional search domain (``args``).
+     * 
+     * This is used for example to provide suggestions based on a partial value for
+     * a relational field. Sometimes be seen as the inverse function of
+     * :meth:`~.name_get`, but it is not guaranteed to be.
+     * 
+     * This method is equivalent to calling :meth:`~.search` with a search domain
+     * based on ``display_name`` and then :meth:`~.name_get` on the result of the
+     * search.
+     * 
+     * @param self     RecordSet
+     * @param name     the name pattern to match
+     * @param args     optional search domain (see :meth:`~.search` for syntax),
+     *                 specifying further restrictions
+     * @param operator domain operator for matching ``name``, such as ``'like'`` or
+     *                 ``'='``.
+     * @param limit    optional max number of records to return
+     * @return list of pairs ``(id, text_repr)`` for all matching records.
+     */
     @api.model
-    public List<Pair<Object, Object>> name_search(RecordSet self, @Default("") String name, @Default List<Object> args,
+    public List<Pair<Object, String>> name_search(RecordSet self, @Default("") String name, @Default List<Object> args,
             @Default("ilike") String operator, @Default("100") Integer limit) {
         return _name_search(self, name, args, operator, limit, null);
     }
 
     @SuppressWarnings("unchecked")
-    protected List<Pair<Object, Object>> _name_search(RecordSet self, @Default("") String name,
+    protected List<Pair<Object, String>> _name_search(RecordSet self, @Default("") String name,
             @Default List<Object> args, @Default("ilike") String operator, @Default("100") Integer limit,
             @Default String name_get_uid) {
         if (args == null) {
@@ -273,25 +357,40 @@ public class BaseModel extends MetaModel {
         return recs.with_user(access_rights_uid).name_get();
     }
 
-    public List<Pair<Object, Object>> name_get(RecordSet self) {
-        List<Pair<Object, Object>> result = new ArrayList<>();
+    /**
+     * Returns a textual representation for the records in ``self``. By default this
+     * is the value of the ``display_name`` field.
+     * 
+     * @return list of pairs ``(id, text_repr)`` for each records
+     */
+    public List<Pair<Object, String>> name_get(RecordSet self) {
+        List<Pair<Object, String>> result = new ArrayList<>();
         String rec_name = self.type().rec_name();
         Field field = self.type().findField(rec_name);
         if (field != null) {
             for (RecordSet record : self) {
-                Pair<Object, Object> pair = new Pair<>(record.id(),
+                Pair<Object, String> pair = new Pair<>(record.id(),
                         field.convert_to_display_name(record.get(field), record));
                 result.add(pair);
             }
         } else {
             for (RecordSet record : self) {
-                Pair<Object, Object> pair = new Pair<>(record.id(), String.format("%s.%s", record.name(), record.id()));
+                Pair<Object, String> pair = new Pair<>(record.id(), String.format("%s.%s", record.name(), record.id()));
                 result.add(pair);
             }
         }
         return result;
     }
 
+    /**
+     * Return default values for the fields in ``fields_list``. Default values are
+     * determined by the context, user defaults, and the model itself.
+     * 
+     * @param self
+     * @param fields_list a list of field names
+     * @return a dictionary mapping each field name to its corresponding default
+     *         value, if it has one.
+     */
     @api.model
     public Kvalues default_get(RecordSet self, Collection<String> fields_list) {
         // TODO self.view_init(fields_list)
@@ -342,6 +441,18 @@ public class BaseModel extends MetaModel {
         return defaults;
     }
 
+    /**
+     * Returns the subset of records in ``self`` that exist, and marks deleted
+     * records as such in cache. It can be used as a test on records:: <blockquote>
+     * 
+     * <pre>
+     *if(record.exists().hasId()){
+     *  ...
+     *}
+     * </pre>
+     * 
+     * </blockquote> By convention, new records are returned as existing.
+     */
     public RecordSet exists(RecordSet self) {
         List<Object> ids = new ArrayList<>();
         List<Object> new_ids = new ArrayList<>();
@@ -366,6 +477,13 @@ public class BaseModel extends MetaModel {
     // create methods
     //
 
+    /**
+     * Create records from the stored field values in ``data_list``.
+     * 
+     * @param self
+     * @param data_list
+     * @return
+     */
     protected RecordSet _create(RecordSet self, Collection<Kvalues> data_list) {
         List<String> ids = new ArrayList<>();
         List<Field> other_fields = new ArrayList<>();
@@ -431,6 +549,29 @@ public class BaseModel extends MetaModel {
         return records;
     }
 
+    /**
+     * Creates new records for the model.
+     * 
+     * The new records are initialized using the values from the list of dicts
+     * ``vals_list``, and if necessary those from :meth:`~.default_get`.
+     * 
+     * @param values values for the model's fields, as a list of
+     *               dictionaries::<blockquote>[{'field_name': field_value, ...},
+     *               ...]</blockquote><blockquote> For backward compatibility,
+     *               ``vals_list`` may be a dictionary. It is treated as a singleton
+     *               list ``[vals]``, and a single record is returned.</blockquote>
+     * @return the created records
+     * @exception AccessErrorException   if user has no create rights on the
+     *                                   requested object if user tries to bypass
+     *                                   access rules for create on the requested
+     *                                   object
+     * 
+     * @exception ValidateErrorException if user tries to enter invalid value for a
+     *                                   field that is not in selection
+     * @exception UserErrorException     if a loop would be created in a hierarchy
+     *                                   of objects a result of the operation (such
+     *                                   as setting an object as its own parent)
+     */
     @api.model_create_multi
     @api.returns(value = "self", downgrade = RecordSetId.class)
     @SuppressWarnings("unchecked")
@@ -515,7 +656,7 @@ public class BaseModel extends MetaModel {
      * @param name display name of the record to create
      * @return
      */
-    public Pair<Object, Object> name_create(RecordSet self, String name) {
+    public Pair<Object, String> name_create(RecordSet self, String name) {
         String rec_name = self.type().rec_name();
         if (StringUtils.hasText(rec_name)) {
             RecordSet record = create(self, new Kvalues(k -> k.set(rec_name, name)));
@@ -575,6 +716,28 @@ public class BaseModel extends MetaModel {
         return true;
     }
 
+    /**
+     * Updates all records in the current set with the provided values.
+     * 
+     * @param self
+     * @param vals fields to update and the value to set on them e.g::
+     *             <p>
+     *             {'foo': 1, 'bar': "Qux"}
+     *             </p>
+     *             will set the field ``foo`` to ``1`` and the field ``bar`` to
+     *             ``"Qux"`` if those are valid (otherwise it will trigger an
+     *             error).
+     * @return
+     * @exception AccessErrorException   if user has no write rights on the
+     *                                   requested object if user tries to bypass
+     *                                   access rules for write on the requested
+     *                                   object
+     * @exception ValidateErrorException if user tries to enter invalid value for a
+     *                                   field that is not in selection
+     * @exception UserErrorException     if a loop would be created in a hierarchy
+     *                                   of objects a result of the operation (such
+     *                                   as setting an object as its own parent)
+     */
     public boolean write(RecordSet self, Map<String, Object> vals) {
         if (!self.hasId()) {
             return true;
@@ -681,6 +844,10 @@ public class BaseModel extends MetaModel {
         return true;
     }
 
+    /**
+     * Process all the pending recomputations (or at least the given field names
+     * `fnames` if present) and flush the pending updates to the database.
+     */
     @api.model
     public void flush(RecordSet self, @Default Collection<String> fnames, @Default RecordSet records) {
         BiConsumer<RecordSet, IdValues> process = (model, id_vals) -> {
@@ -755,6 +922,15 @@ public class BaseModel extends MetaModel {
     // methods
     //
 
+    /**
+     * Recompute all function fields (or the given ``fnames`` if present). The
+     * fields and records to recompute have been determined by method
+     * :meth:`modified`.
+     * 
+     * @param self
+     * @param fnames
+     * @param records
+     */
     protected void recompute(RecordSet self, @Default Collection<String> fnames, @Default RecordSet records) {
         Consumer<Field> process = field -> {
             // todo
@@ -783,6 +959,12 @@ public class BaseModel extends MetaModel {
         }
     }
 
+    /**
+     * Check the user access rights on the given fields. This raises Access Denied
+     * if the user does not have the rights. Otherwise it returns the fields (as is
+     * if the fields is not falsy, or the readable/writable fields if fields is
+     * falsy).
+     */
     protected Collection<Field> check_field_access_rights(RecordSet self, String operatoin, Collection<String> fields) {
         if (self.env().su()) {
             if (fields != null && fields.size() > 0) {
@@ -796,7 +978,7 @@ public class BaseModel extends MetaModel {
         }
         Function<Field, Boolean> valid = (field) -> {
             if (StringUtils.hasText(field.groups())) {
-                return user_has_group(self, field.groups());
+                return user_has_groups(self, field.groups());
             }
             return true;
         };
@@ -824,20 +1006,61 @@ public class BaseModel extends MetaModel {
         return result;
     }
 
+    /**
+     * Verifies that the operation given by ``operation`` is allowed for the current
+     * user according to ir.rules.
+     * 
+     * @param self
+     * @param operation one of ``write``, ``unlink``
+     * @exception UserErrorException if current ir.rules do not permit this
+     *                               operation.
+     */
     protected void check_access_rule(RecordSet self, String operation) {
         if (self.env().su())
             return;
 
     }
 
+    /**
+     * Verifies that the operation given by ``operation`` is allowed for the current
+     * user according to the access rights.
+     * 
+     * @param self
+     * @param operation
+     * @param raise_exception
+     * @return
+     */
     protected boolean check_access_rights(RecordSet self, String operation, @Default("true") boolean raise_exception) {
         return self.env("ir.model.access").call(boolean.class, "check", self.name(), operation, raise_exception);
     }
 
-    protected boolean user_has_group(RecordSet self, String groups) {
+    /**
+     * Return true if the user is member of at least one of the groups in
+     * ``groups``, and is not a member of any of the groups in ``groups`` preceded
+     * by ``!``. Typically used to resolve ``groups`` attribute in view and model
+     * definitions.
+     * 
+     * @param self
+     * @param groups comma-separated list of fully-qualified group external IDs,
+     *               e.g., ``base.group_user,base.group_system``,
+     * @return True if the current user is a member of one of the given groups not
+     *         preceded by ``!`` and is not member of any of the groups preceded by
+     *         ``!``
+     */
+    protected boolean user_has_groups(RecordSet self, String groups) {
         return true;
     }
 
+    /**
+     * Notify that fields have been modified on ``self``. This invalidates the
+     * cache, and prepares the recomputation of stored function fields (new-style
+     * fields only).
+     * 
+     * @param self
+     * @param fnames iterable of field names that have been modified on records
+     *               ``self``
+     * @param create whether modified is called in the context of record creation
+     */
     protected void modified(RecordSet self, Collection<String> fnames, @Default("false") boolean create) {
         // todo
     }
@@ -866,10 +1089,22 @@ public class BaseModel extends MetaModel {
     // build methods
     //
 
+    /**
+     * This method is called after :meth:`~._auto_init`, and may be overridden to
+     * create or modify a model's database schema.
+     * 
+     * @param self
+     */
     protected void init(RecordSet self) {
 
     }
 
+    /**
+     * Initialize the value of the given column for existing rows.
+     * 
+     * @param self
+     * @param column_name
+     */
     protected void _init_column(RecordSet self, String column_name) {
         Field field = self.getField(column_name);
         Object value = null;
@@ -887,11 +1122,19 @@ public class BaseModel extends MetaModel {
         }
     }
 
+    /**
+     * Prepare the setup of the model.
+     * 
+     * @param self
+     */
     protected void _prepare_setup(RecordSet self) {
         MetaModel cls = self.type();
         cls._setup_done = false;
     }
 
+    /**
+     * Determine the inherited and custom fields of the model.
+     */
     protected void _setup_base(RecordSet self) {
         MetaModel cls = self.type();
         if (cls._setup_done) {
@@ -945,6 +1188,11 @@ public class BaseModel extends MetaModel {
         }
     }
 
+    /**
+     * Setup the fields, except for recomputation triggers.
+     * 
+     * @param self
+     */
     protected void _setup_fields(RecordSet self) {
         MetaModel cls = self.type();
         for (Field field : cls.getFields()) {
@@ -966,10 +1214,73 @@ public class BaseModel extends MetaModel {
         // todo check all field's compute_sudo is all the same
     }
 
+    /**
+     * Setup recomputation triggers, and complete the model setup. <blockquote>
+     * 
+     * <pre>
+     * The triggers of a field F is a tree that contains the fields that
+     * depend on F, together with the fields to inverse to find out which
+     * records to recompute.
+     *
+     * For instance, assume that G depends on F, H depends on X.F, I depends
+     * on W.X.F, and J depends on Y.F. The triggers of F will be the tree:
+     *
+     *                              [G]
+     *                            X/   \Y
+     *                          [H]     [J]
+     *                        W/
+     *                      [I]
+     *
+     * This tree provides perfect support for the trigger mechanism:
+     * when F is # modified on records,
+     *  - mark G to recompute on records,
+     *  - mark H to recompute on inverse(X, records),
+     *  - mark I to recompute on inverse(W, inverse(X, records)),
+     *  - mark J to recompute on inverse(Y, records).
+     * </pre>
+     * 
+     * </blockquote>
+     * 
+     * @param self
+     */
     protected void _setup_complete(RecordSet self) {
+
         // TODO
     }
 
+    /**
+     * Initialize the database schema of ``self``:
+     * <p>
+     * - create the corresponding table,
+     * </p>
+     * <p>
+     * - create/update the necessary columns/tables for fields,
+     * </p>
+     * <p>
+     * - initialize new columns on existing rows,
+     * </p>
+     * <p>
+     * - add the SQL constraints given on the model,
+     * </p>
+     * <p>
+     * - add the indexes on indexed fields,
+     * </p>
+     * Also prepare post-init stuff to:
+     * <p>
+     * - add foreign key constraints,
+     * </p>
+     * <p>
+     * - reflect models, fields, relations and constraints,
+     * </p>
+     * <p>
+     * - mark fields to recompute on existing records.
+     * </p>
+     * Note: you should not override this method. Instead, you can modify the
+     * model's database schema by overriding method :meth:`~.init`, which is called
+     * right after this one.
+     * 
+     * @param self
+     */
     protected void _auto_init(RecordSet self) {
         Cursor cr = self.env().cr();
         boolean must_create_table = !Sql.table_exists(cr, self.table());
