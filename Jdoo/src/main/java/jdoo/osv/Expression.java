@@ -78,7 +78,6 @@ public class Expression {
         return false;
     }
 
-    @SuppressWarnings("unchecked")
     public static List<Object> combine(String operator, List<Object> unit, List<Object> zero, List<Object>... domains) {
         List<Object> result = new ArrayList<>();
         int count = 0;
@@ -103,17 +102,14 @@ public class Expression {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     public static List<Object> AND(List<Object>... domains) {
         return combine(AND_OPERATOR, TRUE_DOMAIN, FALSE_DOMAIN, domains);
     }
 
-    @SuppressWarnings("unchecked")
     public static List<Object> OR(List<Object>... domains) {
         return combine(OR_OPERATOR, FALSE_DOMAIN, TRUE_DOMAIN, domains);
     }
 
-    @SuppressWarnings("unchecked")
     public static List<Object> distribute_not(List<Object> domain) {
         List<Object> result = new ArrayList<>();
         Stack<Boolean> stack = new Stack<>();
@@ -257,7 +253,6 @@ public class Expression {
         return tables;
     }
 
-    @SuppressWarnings("unchecked")
     Collection<Object> to_ids(Object value, RecordSet comodel, Object leaf) {
         List<Object> names = new ArrayList<>();
         if (value instanceof String) {
@@ -272,7 +267,6 @@ public class Expression {
         return (List<Object>) value;
     }
 
-    @SuppressWarnings("unchecked")
     List<Object> child_of_domain(Object left, Collection<?> ids, RecordSet left_model, @Default String parent,
             @Default("") String prefix) {
         if (ids.isEmpty()) {
@@ -354,7 +348,6 @@ public class Expression {
         return new Pair<>(query, params);
     }
 
-    @SuppressWarnings("unchecked")
     void parse() {
         result = new ArrayList<>();
         stack = new Stack<>();
@@ -677,7 +670,6 @@ public class Expression {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     Pair<String, List<Object>> __leaf_to_sql(ExtendedLeaf eleaf) {
         RecordSet model = eleaf.model;
         Tuple<Object> leaf = (Tuple<Object>) eleaf.leaf;
@@ -910,7 +902,6 @@ class ExtendedLeaf {
         return leaf instanceof String && Expression.DOMAIN_OPERATORS.contains(leaf);
     }
 
-    @SuppressWarnings("unchecked")
     Object normalize_leaf(Object element) {
         if (!Expression.is_leaf(element, false)) {
             return element;

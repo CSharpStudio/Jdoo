@@ -127,11 +127,11 @@ public final class RecordSet implements Iterable<RecordSet> {
     }
 
     /** Return the list of actual record ids corresponding to this. */
-    public Collection<?> ids() {
+    public List<?> ids() {
         return ids;
     }
 
-    public Collection<?> prefetch_ids() {
+    public List<?> prefetch_ids() {
         return prefetchIds;
     }
 
@@ -251,13 +251,11 @@ public final class RecordSet implements Iterable<RecordSet> {
     }
 
     /** read the field of the first record in {@code this}. */
-    @SuppressWarnings("unchecked")
     public <T> T get(Class<? extends T> c, String field) {
         return (T) get(field);
     }
 
     /** read the field of the first record in {@code this}. */
-    @SuppressWarnings("unchecked")
     public <T> T get(Class<? extends T> c, Field field) {
         return (T) field.get(this);
     }
@@ -293,12 +291,10 @@ public final class RecordSet implements Iterable<RecordSet> {
     }
 
     /** call method define in {@code Model}. */
-    @SuppressWarnings("unchecked")
     public <T> T call(Class<? extends T> c, String method, Object... args) {
         return (T) call(method, args);
     }
 
-    @SuppressWarnings("unchecked")
     public <T> T call(TypeReference<T> ref, String method, Object... args) {
         return (T) call(method, args);
     }
@@ -488,7 +484,6 @@ public final class RecordSet implements Iterable<RecordSet> {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public Object mapped(Object func) {
         if (func == null) {
             return this;
@@ -566,7 +561,6 @@ public final class RecordSet implements Iterable<RecordSet> {
      * @param name display name of the record to create
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Pair<Object, String> name_create(String name) {
         return (Pair<Object, String>) call("name_create", this, name);
     }
@@ -577,7 +571,6 @@ public final class RecordSet implements Iterable<RecordSet> {
      * 
      * @return list of pairs ``(id, text_repr)`` for each records
      */
-    @SuppressWarnings("unchecked")
     public List<Pair<Object, String>> name_get() {
         return (List<Pair<Object, String>>) call("name_get", this);
     }
@@ -637,7 +630,6 @@ public final class RecordSet implements Iterable<RecordSet> {
      * @exception AccessErrorException: if user has no read rights on some of the
      *                                  given records
      */
-    @SuppressWarnings("unchecked")
     public List<Kvalues> read(Collection<String> fields) {
         return (List<Kvalues>) call("read", this, fields);
     }
@@ -679,7 +671,6 @@ public final class RecordSet implements Iterable<RecordSet> {
      * @param limit    optional max number of records to return
      * @return list of pairs ``(id, text_repr)`` for all matching records.
      */
-    @SuppressWarnings("unchecked")
     public List<Pair<Object, String>> name_search(String name, List<Object> args, @Default("ilike") String operator,
             @Default("100") Integer limit) {
         return (List<Pair<Object, String>>) call("name_search", name, args, operator, limit);
@@ -701,7 +692,6 @@ public final class RecordSet implements Iterable<RecordSet> {
      * @param name the name pattern to match
      * @return list of pairs ``(id, text_repr)`` for all matching records.
      */
-    @SuppressWarnings("unchecked")
     public List<Pair<Object, String>> name_search(String name) {
         return (List<Pair<Object, String>>) call("name_search", name);
     }
@@ -724,7 +714,6 @@ public final class RecordSet implements Iterable<RecordSet> {
      *             specifying further restrictions
      * @return list of pairs ``(id, text_repr)`` for all matching records.
      */
-    @SuppressWarnings("unchecked")
     public List<Pair<Object, String>> name_search(String name, List<Object> args) {
         return (List<Pair<Object, String>>) call("name_search", name, args);
     }

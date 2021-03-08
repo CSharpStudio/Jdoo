@@ -870,7 +870,6 @@ public class Field extends MetaField {
         }
     }
 
-    @SuppressWarnings("unchecked")
     void determine_inverse(RecordSet records) {
         Object inverse = getattr(Slots.inverse);
         if (inverse instanceof String) {
@@ -880,7 +879,6 @@ public class Field extends MetaField {
         func.accept(records);
     }
 
-    @SuppressWarnings("unchecked")
     public List<Object> determine_domain(RecordSet records, String operator, Object value) {
         Object search = getattr(Slots.search);
         if (search instanceof String) {

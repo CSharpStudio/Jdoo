@@ -34,7 +34,6 @@ public class FloatField extends BaseField<FloatField> {
         return column_type;
     }
 
-    @SuppressWarnings("unchecked")
     public Pair<Integer, Integer> get_digits(Environment env) {
         Object digits = getattr(_digits);
         if (digits instanceof String) {

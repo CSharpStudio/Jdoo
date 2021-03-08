@@ -160,7 +160,6 @@ public class Environment {
 
     private Kvalues lazy_properties = new Kvalues();
 
-    @SuppressWarnings("unchecked")
     <T> T lazy_property(String p, Supplier<T> func) {
         if (lazy_properties.containsKey(p)) {
             return (T) lazy_properties.get(p);
@@ -180,7 +179,6 @@ public class Environment {
         });
     }
 
-    @SuppressWarnings("unchecked")
     public RecordSet company() {
         return lazy_property("company", () -> {
             if (context.containsKey("allowed_company_ids")) {
@@ -194,7 +192,6 @@ public class Environment {
         });
     }
 
-    @SuppressWarnings("unchecked")
     public RecordSet companies() {
         return lazy_property("companies", () -> {
             List<Object> allowed_company_ids = new ArrayList<>();

@@ -28,7 +28,6 @@ public abstract class _RelationalMultiField<T extends _RelationalMultiField<T>> 
         return ((RecordSet) value).ids();
     }
 
-    @SuppressWarnings("unchecked")
     Collection<Object> prefetch_x2many_ids(RecordSet record, Field field) {
         RecordSet records = record.browse(record.prefetch_ids());
         Collection<Object> ids_list = record.env().cache().get_values(records, field);

@@ -86,7 +86,6 @@ public class Cache {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public void update(RecordSet records, Field field, Collection<Object> values) {
         Map<Object, Object> field_cache;
         if (_data.containsKey(field)) {
@@ -159,7 +158,6 @@ public class Cache {
         return records.browse(ids);
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<Field> get_fields(RecordSet record) {
         List<Field> fields = new ArrayList<>();
         for (Field field : record.getFields()) {

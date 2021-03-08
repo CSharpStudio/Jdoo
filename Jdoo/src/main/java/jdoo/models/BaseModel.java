@@ -33,6 +33,7 @@ import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 import jdoo.tools.Collector;
 import jdoo.tools.IdValues;
+import jdoo.tools.LazyNameGet;
 import jdoo.tools.Sql;
 import jdoo.tools.Tools;
 import jdoo.util.Tuple;
@@ -336,7 +337,6 @@ public class BaseModel extends MetaModel {
         return _name_search(self, name, args, operator, limit, null);
     }
 
-    @SuppressWarnings("unchecked")
     protected List<Pair<Object, String>> _name_search(RecordSet self, @Default("") String name,
             @Default List<Object> args, @Default("ilike") String operator, @Default("100") Integer limit,
             @Default String name_get_uid) {
@@ -354,7 +354,7 @@ public class BaseModel extends MetaModel {
         String access_rights_uid = StringUtils.hasText(name_get_uid) ? name_get_uid : self.env().uid();
         Collection<Object> ids = (Collection<Object>) _search(self, args, 0, limit, null, false, access_rights_uid);
         RecordSet recs = self.browse(ids);
-        return recs.with_user(access_rights_uid).name_get();
+        return new LazyNameGet(recs.with_user(access_rights_uid));
     }
 
     /**
@@ -574,7 +574,6 @@ public class BaseModel extends MetaModel {
      */
     @api.model_create_multi
     @api.returns(value = "self", downgrade = RecordSetId.class)
-    @SuppressWarnings("unchecked")
     public RecordSet create(RecordSet self, Object values) {
         List<Map<String, Object>> vals_list = new ArrayList<Map<String, Object>>();
         if (values instanceof Map<?, ?>) {

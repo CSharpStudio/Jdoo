@@ -34,7 +34,7 @@ public class Pair<P0, P1> extends AbstractCollection<Object> {
     public boolean equals(Object obj) {
         if (obj instanceof Pair) {
             Pair<?, ?> other = (Pair<?, ?>) obj;
-            return ObjectUtils.nullSafeEquals(first, other.first) && ObjectUtils.nullSafeEquals(second, other.second);
+            return ObjectUtils.nullSafeEquals(first(), other.first()) && ObjectUtils.nullSafeEquals(second(), other.second());
         }
         return false;
     }
@@ -42,14 +42,14 @@ public class Pair<P0, P1> extends AbstractCollection<Object> {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 31 * hash + (first == null ? 0 : first.hashCode());
-        hash = 31 * hash + (second == null ? 0 : second.hashCode());
+        hash = 31 * hash + (first() == null ? 0 : first().hashCode());
+        hash = 31 * hash + (second() == null ? 0 : second().hashCode());
         return hash;
     }
 
     @Override
     public String toString() {
-        return String.format("[%s,%s]", getString(first), getString(second));
+        return String.format("[%s,%s]", getString(first()), getString(second()));
     }
 
     String getString(Object obj) {
@@ -75,9 +75,9 @@ public class Pair<P0, P1> extends AbstractCollection<Object> {
             @Override
             public Object next() {
                 if (cursor++ == 0) {
-                    return first;
+                    return first();
                 } else {
-                    return second;
+                    return second();
                 }
             }
         };

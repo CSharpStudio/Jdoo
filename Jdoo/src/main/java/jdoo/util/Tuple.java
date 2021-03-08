@@ -20,7 +20,6 @@ public class Tuple<E> extends AbstractList<E> {
     @SuppressWarnings("rawtypes")
     public static final Tuple EMPTY_LIST = new Tuple<>();
 
-    @SuppressWarnings("unchecked")
     public static final <E> Tuple<E> emptyTuple() {
         return (Tuple<E>) EMPTY_LIST;
     }
@@ -29,7 +28,6 @@ public class Tuple<E> extends AbstractList<E> {
     private static final long serialVersionUID = -2764017481108945198L;
     private final E[] a;
 
-    @SuppressWarnings("unchecked")
     public Tuple() {
         a = (E[]) new Object[0];
     }
@@ -40,7 +38,6 @@ public class Tuple<E> extends AbstractList<E> {
         a = array;
     }
 
-    @SuppressWarnings("unchecked")
     public static <E> Tuple<E> fromCollection(Collection<E> e) {
         return new Tuple<>((E[]) e.toArray());
     }
@@ -56,7 +53,6 @@ public class Tuple<E> extends AbstractList<E> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
         int size = size();
         if (a.length < size)
@@ -71,7 +67,6 @@ public class Tuple<E> extends AbstractList<E> {
         return Arrays.copyOfRange(a, from, to);
     }
 
-    @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a, int from, int to) {
         if (a.length < to - from)
             // Make a new array of a's runtime type, but my contents:

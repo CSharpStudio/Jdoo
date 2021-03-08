@@ -29,7 +29,6 @@ public class _BinaryField<T extends _BinaryField<T>> extends BaseField<T> {
         setattr(Slots.depends_context, new Tuple<>("bin_size"));// depends on context (content or size)
     }
 
-    @SuppressWarnings("unchecked")
     public T attachment(boolean attachment) {
         setattr(BinaryField.attachment, attachment);
         return (T) this;

@@ -26,7 +26,6 @@ public class Kwargs extends HashMap<String, Object> {
         return this;
     }
 
-    @SuppressWarnings("unchecked")
     public <T> T get(Class<? extends T> c, String key) {
         if (containsKey(key)) {
             return (T) get(key);

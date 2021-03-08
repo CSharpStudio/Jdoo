@@ -54,7 +54,6 @@ public abstract class MetaField {
         return _slots.get(key);
     }
 
-    @SuppressWarnings("unchecked")
     public <T> T getattr(Class<T> clazz, Slot key) {
         return (T) getattr(key);
     }
@@ -154,17 +153,14 @@ public abstract class MetaField {
         return column_format;
     }
 
-    @SuppressWarnings("unchecked")
     Function<RecordSet, Object> $default() {
         return (Function<RecordSet, Object>) getattr(Slots.$default);
     }
 
-    @SuppressWarnings("unchecked")
     Collection<String> depends() {
         return (Collection<String>) getattr(Slots.depends);
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<String> related() {
         return (Collection<String>) getattr(Slots.related);
     }
@@ -193,7 +189,6 @@ public abstract class MetaField {
         return getattr(Boolean.class, Slots.copy);
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<String> depends_context() {
         if (_slots.containsKey(Slots.depends_context)) {
             return (Collection<String>) _slots.get(Slots.depends_context);

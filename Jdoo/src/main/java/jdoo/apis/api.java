@@ -101,7 +101,6 @@ public class api {
     public @interface model_create_multi {
     }
 
-    @SuppressWarnings("unchecked")
     static Kvalues split_context(Kwargs kwargs) {
         Object ctx = kwargs.remove("context");
         if (ctx instanceof Map) {

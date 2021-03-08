@@ -88,7 +88,6 @@ public class SelectionField extends BaseField<SelectionField> {
         // todo
     }
 
-    @SuppressWarnings("unchecked")
     Object _description_selection(Environment env) {
         Object _selection = getattr(selection);
         if (_selection instanceof String) {

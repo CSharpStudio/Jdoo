@@ -382,7 +382,6 @@ public class MetaModel {
      *      _inherit = 'a'
      * </pre>
      */
-    @SuppressWarnings("unchecked")
     public static MetaModel _build_model(Class<?> clazz, String module, Registry pool, Cursor cr)
             throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
             NoSuchMethodException, SecurityException {

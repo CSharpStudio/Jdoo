@@ -27,7 +27,6 @@ public abstract class _RelationalField<T extends _RelationalField<T>> extends Ba
         relational = true;
     }
 
-    @SuppressWarnings("unchecked")
     public T check_company(boolean check_company) {
         setattr(_RelationalField.check_company, check_company);
         return (T) this;
@@ -38,25 +37,21 @@ public abstract class _RelationalField<T extends _RelationalField<T>> extends Ba
         return getattr(Boolean.class, _RelationalField.check_company);
     }
 
-    @SuppressWarnings("unchecked")
     public T comodel_name(String comodel_name) {
         setattr(Slots.comodel_name, comodel_name);
         return (T) this;
     }
 
-    @SuppressWarnings("unchecked")
     public T domain(Domain domain) {
         setattr(_RelationalField.domain, domain);
         return (T) this;
     }
 
-    @SuppressWarnings("unchecked")
     public T domain(Function<RecordSet, Domain> domain) {
         setattr(_RelationalField.domain, domain);
         return (T) this;
     }
 
-    @SuppressWarnings("unchecked")
     public List<Object> get_domain_list(RecordSet model) {
         Object d = getattr(_RelationalField.domain);
         if (d instanceof Function) {

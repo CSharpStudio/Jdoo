@@ -14,18 +14,13 @@ import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jdoo.apis.api.returns;
-
 public class Utils {
-
-    @SuppressWarnings("unchecked")
     public static <T> ArrayList<T> asList(T... e) {
         ArrayList<T> list = new ArrayList<>();
         Collections.addAll(list, e);
         return list;
     }
 
-    @SuppressWarnings("unchecked")
     public static <T> HashSet<T> asHashSet(T... e) {
         HashSet<T> set = new HashSet<>();
         for (T a : e) {
