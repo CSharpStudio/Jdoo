@@ -6,7 +6,7 @@ import java.util.Stack;
 
 import jdoo.exceptions.KeyErrorException;
 
-public class StackMap<K,V> {
+public class StackMap<K, V> {
     Stack<Map<K, V>> _maps = new Stack<Map<K, V>>();
 
     public V get(Object key) {
@@ -18,8 +18,9 @@ public class StackMap<K,V> {
         }
         throw new KeyErrorException(key);
     }
+
     public V get(Object key, V $default) {
-        for (int i = _maps.size(); i > 0; i--) {
+        for (int i = _maps.size() - 1; i >= 0; i--) {
             Map<K, V> m = _maps.get(i);
             if (m.containsKey(key)) {
                 return m.get(key);
@@ -44,7 +45,7 @@ public class StackMap<K,V> {
         return map;
     }
 
-    public Map<K, V> popmap(){
+    public Map<K, V> popmap() {
         return _maps.pop();
     }
 }

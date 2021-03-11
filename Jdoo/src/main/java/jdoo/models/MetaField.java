@@ -84,8 +84,6 @@ public abstract class MetaField {
     /** the field's setup state: None, 'base' or 'full' */
     SetupState _setup_done = SetupState.None;
 
-    protected Kvalues context;
-
     protected MetaField() {
         _sequence = _global_seq++;
     }
@@ -94,137 +92,160 @@ public abstract class MetaField {
         return name;
     }
 
-    Kvalues context() {
-        if (context == null) {
-            context = new Kvalues();
-        }
-        return context;
+    protected Kvalues _context() {
+        return Kvalues.empty();
     }
 
-    boolean relational() {
+    boolean _relational() {
         return relational;
     }
 
-    public boolean translate() {
+    public boolean _translate() {
         return false;
-    }
-
-    public Pair<String, Object> column_type() {
-        return column_type;
-    }
-
-    String module() {
-        return getattr(String.class, Slots._module);
-    }
-
-    boolean automatic() {
-        return getattr(Boolean.class, Slots.automatic);
-    }
-
-    public boolean inherited() {
-        return getattr(Boolean.class, Slots.inherited);
-    }
-
-    public Field related_field() {
-        return getattr(Field.class, Slots.related_field);
-    }
-
-    boolean inverse() {
-        return hasattr(Slots.inverse);
-    }
-
-    public boolean search() {
-        return hasattr(Slots.search);
-    }
-
-    String compute() {
-        return getattr(String.class, Slots.compute);
-    }
-
-    String groups() {
-        return getattr(String.class, Slots.groups);
-    }
-
-    String string() {
-        return getattr(String.class, Slots.string);
     }
 
     public String column_format() {
         return column_format;
     }
 
-    Function<RecordSet, Object> $default() {
-        return (Function<RecordSet, Object>) getattr(Slots.$default);
-    }
-
-    Collection<String> depends() {
-        return (Collection<String>) getattr(Slots.depends);
-    }
-
-    public Collection<String> related() {
-        return (Collection<String>) getattr(Slots.related);
-    }
-
     public String model_name() {
         return model_name;
     }
 
-    public String comodel_name() {
+    public Pair<String, Object> column_type() {
+        return column_type;
+    }
+
+    /** get slot _module */    
+    String _module() {
+        return getattr(String.class, Slots._module);
+    }
+
+    /** get slot automatic */    
+    boolean _automatic() {
+        return getattr(Boolean.class, Slots.automatic);
+    }
+
+    /** get slot inherited */    
+    public boolean _inherited() {
+        return getattr(Boolean.class, Slots.inherited);
+    }
+
+    /** get slot related_field */    
+    public Field _related_field() {
+        return getattr(Field.class, Slots.related_field);
+    }
+
+    /** has slot inverse */    
+    boolean _inverse() {
+        return hasattr(Slots.inverse);
+    }
+
+    /** has slot search */    
+    public boolean _search() {
+        return hasattr(Slots.search);
+    }
+
+    /** get slot compute */    
+    String _compute() {
+        return getattr(String.class, Slots.compute);
+    }
+
+    /** get slot groups */    
+    String _groups() {
+        return getattr(String.class, Slots.groups);
+    }
+
+    /** get slot string */    
+    String _string() {
+        return getattr(String.class, Slots.string);
+    }
+
+    /** get slot default */    
+    Function<RecordSet, Object> _default() {
+        return (Function<RecordSet, Object>) getattr(Slots.$default);
+    }
+
+    /** get slot depends */    
+    Collection<String> _depends() {
+        return (Collection<String>) getattr(Slots.depends);
+    }
+
+    /** get slot related */    
+    public Collection<String> _related() {
+        return (Collection<String>) getattr(Slots.related);
+    }
+
+    /** get slot comodel_name */    
+    public String _comodel_name() {
         return getattr(String.class, Slots.comodel_name);
     }
 
-    public boolean store() {
+    /** get slot store */    
+    public boolean _store() {
         return getattr(Boolean.class, Slots.store);
     }
 
-    boolean index() {
+    /** get slot index */    
+    boolean _index() {
         return getattr(Boolean.class, Slots.index);
     }
 
-    boolean manual() {
+    /** get slot manual */    
+    boolean _manual() {
         return getattr(Boolean.class, Slots.manual);
     }
 
-    boolean copy() {
+    /** get slot copy */    
+    boolean _copy() {
         return getattr(Boolean.class, Slots.copy);
     }
 
-    public Collection<String> depends_context() {
+    /** get slot depends_context */    
+    public Collection<String> _depends_context() {
         if (_slots.containsKey(Slots.depends_context)) {
             return (Collection<String>) _slots.get(Slots.depends_context);
         }
         return Tuple.emptyTuple();
     }
 
-    boolean recursive() {
+    /** get slot recursive */    
+    boolean _recursive() {
         return getattr(Boolean.class, Slots.recursive);
     }
 
-    boolean compute_sudo() {
+    /** get slot compute_sudo */    
+    boolean _compute_sudo() {
         return getattr(Boolean.class, Slots.compute_sudo);
     }
 
-    boolean company_dependent() {
+    /** get slot company_dependent */    
+    boolean _company_dependent() {
         return getattr(Boolean.class, Slots.company_dependent);
     }
 
-    public boolean readonly() {
+    /** get slot readonly */    
+    public boolean _readonly() {
         return getattr(Boolean.class, Slots.readonly);
     }
 
-    public boolean required() {
+    /** get slot required */    
+    public boolean _required() {
         return getattr(Boolean.class, Slots.required);
     }
 
-    public boolean change_default() {
+    /** get slot change_default */    
+    public boolean _change_default() {
         return getattr(Boolean.class, Slots.change_default);
     }
 
-    public boolean deprecated() {
+    /** get slot deprecated */    
+    public boolean _deprecated() {
         return getattr(Boolean.class, Slots.deprecated);
     }
 
-    public boolean prefetch() {
+    /** get slot prefetch */
+    public boolean _prefetch() {
         return getattr(Boolean.class, Slots.prefetch);
     }
 
@@ -293,24 +314,6 @@ public abstract class MetaField {
         public static final Slot group_expand = new Slot("group_expand");
         /** whether the field is prefetched */
         public static final Slot prefetch = new Slot("prefetch");
-    }
-
-    public class State {
-        private String state;
-        private boolean value;
-
-        public State(String state, boolean value) {
-            this.state = state;
-            this.value = value;
-        }
-
-        public String state() {
-            return state;
-        }
-
-        public boolean value() {
-            return value;
-        }
     }
 
     @Override

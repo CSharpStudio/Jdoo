@@ -173,4 +173,8 @@ public class Utils {
 
         return true;
     }
+
+    public static String l18i(String str) {
+        return str;
+    }
 }

@@ -42,6 +42,11 @@ public abstract class _RelationalField<T extends _RelationalField<T>> extends Ba
         return (T) this;
     }
 
+    public T context(Kvalues ctx) {
+        setattr(_RelationalField.context, ctx);
+        return (T) this;
+    }
+
     public T domain(Domain domain) {
         setattr(_RelationalField.domain, domain);
         return (T) this;
@@ -70,7 +75,7 @@ public abstract class _RelationalField<T extends _RelationalField<T>> extends Ba
             return super.get(records);
         }
         // multirecord case: return the union of the values of 'self' on records
-        RecordSet comodel = records.env(comodel_name());
+        RecordSet comodel = records.env(_comodel_name());
         List<RecordSet> list = new ArrayList<>();
         for (RecordSet record : records) {
             list.add((RecordSet) super.get(record));

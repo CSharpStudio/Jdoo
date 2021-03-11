@@ -110,13 +110,13 @@ public class _BinaryField<T extends _BinaryField<T>> extends BaseField<T> {
             return records;
         }
         RecordSet not_null = null;
-        if (store()) {
+        if (_store()) {
             not_null = cache.get_records_different_from(records, this, null);
         }
 
         cache.update(records, this, Utils.mutli(Arrays.asList(cache_value), records.size()));
 
-        if (store()) {
+        if (_store()) {
             // todo
             // RecordSet atts = records.env("ir.attachment").sudo();
             if (not_null != null && not_null.hasId()) {

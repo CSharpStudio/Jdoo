@@ -96,14 +96,14 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
         // 3) The ondelete attribute is explicitly defined as 'set null' for a required
         // m2o, this is considered a programming error.
         if (!hasattr(ondelete)) {
-            RecordSet comodel = model.env(comodel_name());
+            RecordSet comodel = model.env(_comodel_name());
             if (model.type().is_transient() && !comodel.type().is_transient()) {
-                setattr(ondelete, required() ? "cascade" : "set null");
+                setattr(ondelete, _required() ? "cascade" : "set null");
             } else {
-                setattr(ondelete, required() ? "restrict" : "set null");
+                setattr(ondelete, _required() ? "restrict" : "set null");
             }
         }
-        if ("set null".equals(getattr(String.class, ondelete)) && required()) {
+        if ("set null".equals(getattr(String.class, ondelete)) && _required()) {
             throw new ValueErrorException(String.format(
                     "The m2o field %s of model %s is required but declares its ondelete policy "
                             + "as being 'set null'. Only 'restrict' and 'cascade' make sense.",
@@ -113,7 +113,7 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
 
     @Override
     public boolean update_db(RecordSet model, Map<String, Kvalues> columns) {
-        RecordSet comodel = model.env(comodel_name());
+        RecordSet comodel = model.env(_comodel_name());
         if (!model.type().is_transient() && comodel.type().is_transient()) {
             throw new ValueErrorException(String.format("Many2one %s from Model to TransientModel is forbidden", this));
         }
@@ -141,7 +141,7 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
     public Object convert_to_record(Object value, RecordSet record) {
         Collection<Object> ids = value == null ? Collections.emptyList() : new Tuple<>(value);
         Collection<Object> prefetch_ids = prefetch_many2one_ids(record, this);
-        return record.pool(comodel_name()).browse(record.env(), ids, prefetch_ids);
+        return record.pool(_comodel_name()).browse(record.env(), ids, prefetch_ids);
     }
 
     Collection<Object> prefetch_many2one_ids(RecordSet record, Field field) {

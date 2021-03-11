@@ -15,6 +15,7 @@ import jdoo.models.RecordSet;
 import jdoo.modules.Loader;
 import jdoo.modules.Registry;
 import jdoo.util.Kvalues;
+import jdoo.util.Kwargs;
 import jdoo.tools.StackMap;
 import jdoo.util.Tuple;
 
@@ -30,11 +31,11 @@ public class Environment {
         return envs;
     }
 
-    public static Environment create(Registry registry, Cursor cr, String uid, Kvalues context, boolean su) {
+    public static Environment create(Cursor cr, String uid, Kvalues context, boolean su) {
         if (init.SUPERUSER_ID.equals(uid))
             su = true;
 
-        Tuple<Object> args = new Tuple<>(registry.tenant(), cr, uid, context, su);
+        Tuple<Object> args = new Tuple<>(cr, uid, context, su);
         Environments envs = envs();
         for (Environment env : envs) {
             if (env != null && env.args.equals(args)) {
@@ -48,16 +49,19 @@ public class Environment {
         self.uid = uid;
         self.context = context;
         self.su = su;
-        self.registry = registry;
+        self.registry = Registry.getRegistry(cr.getTenant());
         self.cache = envs.cache;
         self.all = envs;
         envs.add(self);
         return self;
     }
 
-    public static Environment create(String tenant, Cursor cr, String uid, Kvalues context, boolean su) {
-        Registry registry = Loader.getRegistry(tenant);
-        return create(registry, cr, uid, context, su);
+    public Environment create(Kwargs kwargs) {
+        Cursor cr = (Cursor) kwargs.getOrDefault("cr", this.cr);
+        String uid = (String) kwargs.getOrDefault("user", this.uid);
+        Kvalues context = (Kvalues) kwargs.getOrDefault("context", this.context);
+        boolean su = (boolean) kwargs.getOrDefault("su", !kwargs.containsKey("user") && this.su);
+        return create(cr, uid, context, su);
     }
 
     Registry registry;
@@ -111,6 +115,9 @@ public class Environment {
     }
 
     public RecordSet records_to_compute(Field field) {
+        if (field.model_name() == null) {
+            System.out.println(field.getName());
+        }
         return get(field.model_name()).browse(all.tocompute(field));
     }
 
@@ -175,7 +182,7 @@ public class Environment {
 
     public RecordSet user() {
         return lazy_property("user", () -> {
-            return create(registry, cr, uid, context, true).get("res.users").browse(uid);
+            return create(cr, uid, context, true).get("res.users").browse(uid);
         });
     }
 

@@ -322,7 +322,7 @@ public class Field extends MetaField {
                 setattr(Slots.copy, false);
             }
             if (!hasattr(Slots.readonly)) {
-                setattr(Slots.readonly, inverse());
+                setattr(Slots.readonly, _inverse());
             }
         }
         if (hasattr(Slots.related)) {
@@ -344,7 +344,7 @@ public class Field extends MetaField {
             // todo
         }
 
-        if (!(store() && column_type() != null) || manual() || deprecated()) {
+        if (!(_store() && column_type() != null) || _manual() || _deprecated()) {
             setattr(Slots.prefetch, false);
         }
 
@@ -395,7 +395,7 @@ public class Field extends MetaField {
     public void _setup_related_full(RecordSet model) {
         RecordSet target = model;
         Field field = null;
-        for (String name : related()) {
+        for (String name : _related()) {
             field = target.getField(name);
             field.setup_full(target);
             Object v = target.get(name);
@@ -418,7 +418,7 @@ public class Field extends MetaField {
     }
 
     public Domain _search_related(RecordSet records, String operator, Object value) {
-        return d.on(org.apache.tomcat.util.buf.StringUtils.join(related()), operator, value);
+        return d.on(org.apache.tomcat.util.buf.StringUtils.join(_related()), operator, value);
     }
 
     public Field base_field() {
@@ -431,7 +431,7 @@ public class Field extends MetaField {
     public Object cache_key(Environment env) {
         List<Object> objs = new ArrayList<>();
         Kvalues ctx = env.context();
-        for (String key : depends_context()) {
+        for (String key : _depends_context()) {
             if ("force_company".equals(key)) {
                 if (ctx.containsKey("force_company")) {
                     objs.add(ctx.get("force_company"));
@@ -443,8 +443,8 @@ public class Field extends MetaField {
             } else if ("active_test".equals(key)) {
                 if (ctx.containsKey("active_test")) {
                     objs.add(ctx.get("active_test"));
-                } else if (this.context().containsKey("active_test")) {
-                    objs.add(context().get("active_test"));
+                } else if (this._context().containsKey("active_test")) {
+                    objs.add(_context().get("active_test"));
                 } else {
                     objs.add(true);
                 }
@@ -599,7 +599,7 @@ public class Field extends MetaField {
     public void update_db_column(RecordSet model, @Nullable Kvalues column) {
         Cursor cr = model.env().cr();
         if (column == null) {
-            Sql.create_column(cr, model.table(), getName(), column_type().second().toString(), string());
+            Sql.create_column(cr, model.table(), getName(), column_type().second().toString(), _string());
             return;
         }
         if (column.get("udt_name").equals(column_type().first())) {
@@ -617,7 +617,7 @@ public class Field extends MetaField {
                 Sql.drop_not_null(cr, model.table(), getName());
             }
             Sql.rename_column(cr, model.table(), getName(), MessageFormat.format(newname, i));
-            Sql.create_column(cr, model.table(), getName(), column_type().second().toString(), string());
+            Sql.create_column(cr, model.table(), getName(), column_type().second().toString(), _string());
         }
     }
 
@@ -629,15 +629,15 @@ public class Field extends MetaField {
      */
     public void update_db_notnull(RecordSet model, @Nullable Kvalues column) {
         boolean has_notnull = column != null && column.get("is_nullable").equals("NO");
-        if (column != null || (required() && !has_notnull)) {
+        if (column != null || (_required() && !has_notnull)) {
             if (model.call(Boolean.class, "_table_has_rows")) {
                 model.call("_init_column", getName());
                 model.call("flush", Arrays.asList(getName()));
             }
         }
-        if (required() && !has_notnull) {
+        if (_required() && !has_notnull) {
             Sql.set_not_null(model.env().cr(), model.table(), getName());
-        } else if (!required() && has_notnull) {
+        } else if (!_required() && has_notnull) {
             Sql.drop_not_null(model.env().cr(), model.table(), getName());
         }
     }
@@ -650,7 +650,7 @@ public class Field extends MetaField {
      */
     public void update_db_index(RecordSet model, @Nullable Kvalues column) {
         String indexname = String.format("%s_%s_index", model.table(), getName());
-        if (index()) {
+        if (_index()) {
             try (SavePoint p = model.cr().savepoint()) {
                 Sql.create_index(model.cr(), indexname, model.table(),
                         Arrays.asList(String.format("\"%s\"", getName())));
@@ -705,7 +705,7 @@ public class Field extends MetaField {
         for (RecordSet rec : records) {
             cache.set(rec, this, cache_value);
         }
-        if (store()) {
+        if (_store()) {
             IdValues towrite = records.env().all().towrite(records.name());
             RecordSet record = records.browse(records.id());
             Object write_value = convert_to_record(cache_value, record);
@@ -732,9 +732,9 @@ public class Field extends MetaField {
         }
         record.ensure_one();
         Environment env = record.env();
-        if (StringUtils.hasText(compute()) && env.all().tocompute(this).contains(record.id())
+        if (StringUtils.hasText(_compute()) && env.all().tocompute(this).contains(record.id())
                 && !env.is_protected(this, record)) {
-            RecordSet recs = this.recursive() ? record : env.records_to_compute(this);
+            RecordSet recs = this._recursive() ? record : env.records_to_compute(this);
             try {
                 compute_value(recs);
             } catch (AccessErrorException e) {
@@ -745,24 +745,24 @@ public class Field extends MetaField {
         if (env.cache().contains(record, this)) {
             value = env.cache().get(record, this);
         } else {
-            if (Tools.hasId(record.id()) && store()) {
+            if (Tools.hasId(record.id()) && _store()) {
                 RecordSet recs = _in_cache_without(record, this);
                 try {
                     Model._fetch_field(recs, this);
                 } catch (AccessErrorException e) {
                     Model._fetch_field(record, this);
                 }
-                if (env.cache().contains(record, this) && !record.call(RecordSet.class, "exists").hasId()) {
+                if (!env.cache().contains(record, this) && !record.call(RecordSet.class, "exists").hasId()) {
                     throw new MissingErrorException("Record does not exist or has been deleted.\r\n"
                             + String.format("(Record: %s, User: %s)", record, env.uid()));
                 }
                 value = env.cache().get(record, this);
-            } else if (StringUtils.hasText(compute())) {
+            } else if (StringUtils.hasText(_compute())) {
                 if (env.is_protected(this, record)) {
                     value = convert_to_cache(null, record, false);
                     env.cache().set(record, this, value);
                 } else {
-                    RecordSet recs = this.recursive() || !Tools.hasId(record.id()) ? record
+                    RecordSet recs = this._recursive() || !Tools.hasId(record.id()) ? record
                             : _in_cache_without(record, this);
                     try {
                         compute_value(recs);
@@ -837,7 +837,7 @@ public class Field extends MetaField {
             try (Protecting a = records.env().protecting(field_computed, records)) {
                 new_records.call("modifiel", Arrays.asList(getName()), false);
                 write(new_records, value);
-                if (relational()) {
+                if (_relational()) {
                     new_records.call("modifiel", Arrays.asList(getName()), false);
                 }
             }
@@ -856,7 +856,7 @@ public class Field extends MetaField {
      */
     public void compute_value(RecordSet records) {
         Environment env = records.env();
-        if (compute_sudo()) {
+        if (_compute_sudo()) {
             records = records.sudo();
         }
         List<Field> fields = records.type()._field_computed.get(this);

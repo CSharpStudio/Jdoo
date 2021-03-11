@@ -16,7 +16,7 @@ public abstract class _RelationalMultiField<T extends _RelationalMultiField<T>> 
     public Object convert_to_record(Object value, RecordSet record) {
         Collection<Object> prefetch_ids = prefetch_x2many_ids(record, this);
         Collection<?> ids = value instanceof Collection ? (Collection<?>) value : new Tuple<>(value);
-        RecordSet corecords = record.pool(comodel_name()).browse(record.env(), ids, prefetch_ids);
+        RecordSet corecords = record.pool(_comodel_name()).browse(record.env(), ids, prefetch_ids);
         if (corecords.hasField("active") && (Boolean) record.env().context().getOrDefault("active_test", true)) {
             corecords = corecords.filtered("active").with_prefetch(prefetch_ids);
         }

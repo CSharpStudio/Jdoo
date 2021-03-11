@@ -43,18 +43,27 @@ public class FloatField extends BaseField<FloatField> {
         return (Pair<Integer, Integer>) digits;
     }
 
+    /** digits name from decimal.precision */
     public FloatField digits(String digits) {
         setattr(_digits, digits);
         return this;
     }
 
+    /** a pair(total, decimal) */
     public FloatField digits(Pair<Integer, Integer> digits) {
         setattr(_digits, digits);
         return this;
     }
 
+    /** total, decimal */
     public FloatField digits(int precision, int scale) {
         setattr(_digits, new Pair<>(precision, scale));
+        return this;
+    }
+
+    /** total */
+    public FloatField digits(int precision) {
+        setattr(_digits, new Pair<>(precision, 0));
         return this;
     }
 

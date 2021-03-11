@@ -1,5 +1,6 @@
 package jdoo.addons.base.models;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -64,5 +65,15 @@ public class CountryState extends Model {
             }
         }
         return new LazyNameGet(self.browse(state_ids).with_user(name_get_uid));
+    }
+
+    @Override
+    public List<Pair<Object, String>> name_get(RecordSet self) {
+        List<Pair<Object, String>> result = new ArrayList<>();
+        for (RecordSet record : self) {
+            result.add(new Pair<>(record.id(),
+                    MessageFormat.format("{0} ({1})", record.get(name), record.get("country_id.code"))));
+        }
+        return result;
     }
 }

@@ -43,7 +43,7 @@ public class ImageField extends _BinaryField<ImageField> {
     public RecordSet write(RecordSet records, Object value) {
         Object new_value = _image_process(value);
         RecordSet result = super.write(records, value);
-        Collection<String> related = related();
+        Collection<String> related = _related();
         records.env().cache().update(records, this,
                 Utils.mutli(Arrays.asList(related != null && !related.isEmpty() ? value : new_value), records.size()));
         return result;

@@ -387,14 +387,14 @@ public class Expression {
 
                 RecordSet model = leaf.model;
                 Field field = model.getField(path[0]);
-                String comodel_name = field.comodel_name();
+                String comodel_name = field._comodel_name();
                 RecordSet comodel = StringUtils.hasText(comodel_name) ? model.env(comodel_name) : null;
 
-                if (field.inherited()) {
+                if (field._inherited()) {
                     // comments about inherits'd fields
                     // { 'field_name': ('parent_model', 'm2o_field_to_reach_parent',
                     // field_column_obj, origina_parent_model), ... }
-                    RecordSet parent_model = model.env(field.related_field().model_name());
+                    RecordSet parent_model = model.env(field._related_field().model_name());
                     String parent_fname = model.type().inherits().get(parent_model.name());
                     leaf.add_join_context(parent_model, parent_fname, "id", parent_fname);
                     stack.add(leaf);
@@ -420,12 +420,12 @@ public class Expression {
                 // -> note: hack about columns.property should not be necessary anymore
                 // as after transforming the column, it will go through this loop once again
                 // ----------------------------------------
-                else if (path.length > 1 && field.store() && field instanceof Many2oneField
+                else if (path.length > 1 && field._store() && field instanceof Many2oneField
                         && ((Many2oneField) field).auto_join()) {
                     // res_partner.state_id = res_partner__state_id.id
                     leaf.add_join_context(comodel, path[0], "id", path[0]);
                     stack.add(create_substitution_leaf(leaf, new Tuple<>(path[1], operator, right), comodel, false));
-                } else if (path.length > 1 && field.store() && field instanceof One2manyField
+                } else if (path.length > 1 && field._store() && field instanceof One2manyField
                         && ((One2manyField) field).auto_join()) {
                     // res_partner.id = res_partner__bank_ids.partner_id
                     leaf.add_join_context(comodel, "id", ((One2manyField) field).inverse_name(), path[0]);
@@ -439,22 +439,22 @@ public class Expression {
                         }
                         stack.add(create_substitution_leaf(leaf, AND_OPERATOR, comodel, false));
                     }
-                } else if (path.length > 1 && field.store() && field instanceof Many2oneField) {
+                } else if (path.length > 1 && field._store() && field instanceof Many2oneField) {
                     Collection<?> right_ids = comodel.with_context(ctx -> ctx.put("active_test", false))
                             .search(d.on(path[1], (String) operator, right)).ids();
                     leaf.leaf = new Tuple<>(path[0], "in", right_ids);
                     stack.add(leaf);
                 }
                 // Making search easier when there is a left operand as one2many or many2many
-                else if (path.length > 1 && field.store()
+                else if (path.length > 1 && field._store()
                         && (field instanceof Many2manyField || field instanceof One2manyField)) {
                     Collection<?> right_ids = comodel.search(d.on(path[1], (String) operator, right)).ids();
                     leaf.leaf = new Tuple<>(path[0], "in", right_ids);
                     stack.add(leaf);
-                } else if (!field.store()) {
+                } else if (!field._store()) {
                     // Non-stored field should provide an implementation of search.
                     List<Object> domain;
-                    if (!field.search()) {
+                    if (!field._search()) {
                         _logger.error("Non-stored field {} cannot be searched.", field);
                         if (_logger.isDebugEnabled()) {
                             // _logger.debug(''.join(traceback.format_stack()))
@@ -487,10 +487,10 @@ public class Expression {
                         && ("child_of".equals(operator) || "parent_of".equals(operator))) {
                     Collection<Object> ids2 = to_ids(right, comodel, leaf.leaf);
                     List<Object> dom;
-                    if (field.comodel_name() != model.name()) {
+                    if (field._comodel_name() != model.name()) {
                         dom = "child_of".equals(operator)
-                                ? child_of_domain(left, ids2, model, null, field.comodel_name())
-                                : parent_of_domain(left, ids2, model, null, field.comodel_name());
+                                ? child_of_domain(left, ids2, model, null, field._comodel_name())
+                                : parent_of_domain(left, ids2, model, null, field._comodel_name());
                     } else {
                         dom = "child_of".equals(operator) ? child_of_domain("id", ids2, model, (String) left, "")
                                 : parent_of_domain("id", ids2, model, (String) left, "");
@@ -527,7 +527,7 @@ public class Expression {
                         }
                         if (ids2.isEmpty()) {
                             ids1 = Collections.emptyList();
-                        } else if (inverse_field.store()) {
+                        } else if (inverse_field._store()) {
                             ids1 = select_from_where(cr, f.inverse_name(), comodel.table(), "id", ids2,
                                     (String) operator);
                         } else {
@@ -540,7 +540,7 @@ public class Expression {
                         stack.add(create_substitution_leaf(leaf, new Tuple<>("id", op1, ids1), model, false));
                     } else {
                         Collection<Object> ids1;
-                        if (inverse_field.store() && !(inverse_is_int && !domain.isEmpty())) {
+                        if (inverse_field._store() && !(inverse_is_int && !domain.isEmpty())) {
                             ids1 = select_distinct_from_where_not_null(cr, f.inverse_name(), comodel.table());
                         } else {
                             Domain comodel_domain = d.on(f.inverse_name(), "!=", false);
@@ -581,7 +581,7 @@ public class Expression {
                             stack.add(create_substitution_leaf(leaf, new Tuple<>(left, operator, right), model, false));
                         }
                         result.add(leaf);
-                    } else if (field.translate() && right != null) {
+                    } else if (field._translate() && right != null) {
                         boolean need_wildcard = "like".equals(operator) || "ilike".equals(operator)
                                 || "not like".equals(operator) || "not ilike".equals(operator);
                         String sql_operator = (String) operator;

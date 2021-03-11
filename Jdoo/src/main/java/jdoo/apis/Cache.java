@@ -23,7 +23,7 @@ public class Cache {
     public boolean contains(RecordSet record, Field field) {
         if (_data.containsKey(field)) {
             Map<?, ?> values = _data.get(field);
-            if (!field.depends_context().isEmpty()) {
+            if (!field._depends_context().isEmpty()) {
                 if (values.containsKey(record.id())) {
                     Object key = field.cache_key(record.env());
                     Map<?, ?> map = (Map<?, ?>) values.get(record.id());
@@ -41,7 +41,7 @@ public class Cache {
             Map<?, ?> values = _data.get(field);
             if (values.containsKey(record.id())) {
                 Object value = values.get(record.id());
-                if (!field.depends_context().isEmpty()) {
+                if (!field._depends_context().isEmpty()) {
 
                     Map<?, ?> map = (Map<?, ?>) value;
                     value = map.get(field.cache_key(record.env()));
@@ -57,7 +57,7 @@ public class Cache {
             Map<?, ?> values = _data.get(field);
             if (values.containsKey(record.id())) {
                 Object value = values.get(record.id());
-                if (!field.depends_context().isEmpty()) {
+                if (!field._depends_context().isEmpty()) {
 
                     Map<?, ?> map = (Map<?, ?>) value;
                     value = map.get(field.cache_key(record.env()));
@@ -76,7 +76,7 @@ public class Cache {
             values = new HashMap<>();
             _data.put(field, values);
         }
-        if (!field.depends_context().isEmpty()) {
+        if (!field._depends_context().isEmpty()) {
             Object key = field.cache_key(record.env());
             Map<? super Object, ? super Object> map = new HashMap<>();
             map.put(key, value);
@@ -94,7 +94,7 @@ public class Cache {
             field_cache = new HashMap<>();
             _data.put(field, field_cache);
         }
-        if (!field.depends_context().isEmpty()) {
+        if (!field._depends_context().isEmpty()) {
             Object key = field.cache_key(records.env());
             for (Tuple<Object> t : Utils.zip(records.ids(), values)) {
                 String record_id = (String) t.get(0);
@@ -130,7 +130,7 @@ public class Cache {
             for (Object recrod_id : records.ids()) {
                 if (field_cache.containsKey(recrod_id)) {
                     Object value = field_cache.get(recrod_id);
-                    if (!field.depends_context().isEmpty()) {
+                    if (!field._depends_context().isEmpty()) {
 
                         Map<?, ?> map = (Map<?, ?>) value;
                         value = map.get(field.cache_key(records.env()));
@@ -171,7 +171,7 @@ public class Cache {
             if (!field_cache.containsKey(record.id())) {
                 continue;
             }
-            if (!field.depends_context().isEmpty()) {
+            if (!field._depends_context().isEmpty()) {
                 Object key = field.cache_key(record.env());
                 Map<Object, Object> map = (Map<Object, Object>) field_cache.get(record.id());
                 if (!map.containsKey(key)) {

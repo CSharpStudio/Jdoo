@@ -24,6 +24,7 @@ import jdoo.util.Tuple;
 public class Cursor implements AutoCloseable {
     private static Logger logger = LoggerFactory.getLogger(Cursor.class);
     static int IN_MAX = 1000;// decent limit on size of IN queries - guideline = Oracle limit
+    String tenant;
     Connection connection;
     PreparedStatement statement;
     ResultSet resultSet;
@@ -36,7 +37,8 @@ public class Cursor implements AutoCloseable {
         EndOfFetch,
     }
 
-    public Cursor(DataSource ds) {
+    public Cursor(String tenant, DataSource ds) {
+        this.tenant = tenant;
         try {
             connection = ds.getConnection();
         } catch (SQLException e) {
@@ -46,8 +48,13 @@ public class Cursor implements AutoCloseable {
     }
 
     public Cursor(Database ds) {
+        tenant = ds.getTenant();
         connection = ds.getConnection();
         setAutoCommit(false);
+    }
+
+    public String getTenant() {
+        return tenant;
     }
 
     public void setAutoCommit(boolean autoCommit) {
@@ -103,7 +110,7 @@ public class Cursor implements AutoCloseable {
         }
         resultSet = null;
         statement = null;
-        //rowcount = 0;
+        // rowcount = 0;
         state = CursorState.Unexecuted;
     }
 

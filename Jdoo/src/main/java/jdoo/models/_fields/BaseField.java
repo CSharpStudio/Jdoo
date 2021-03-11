@@ -1,6 +1,7 @@
 package jdoo.models._fields;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +11,7 @@ import java.util.function.Function;
 
 import jdoo.models.Field;
 import jdoo.models.RecordSet;
+import jdoo.util.Pair;
 
 public class BaseField<T extends BaseField<T>> extends Field {
 
@@ -98,7 +100,7 @@ public class BaseField<T extends BaseField<T>> extends Field {
         return (T) this;
     }
 
-    public T states(HashMap<String, Set<State>> states) {
+    public T states(HashMap<String, Collection<Pair<String, Boolean>>> states) {
         setattr(Slots.states, states);
         return (T) this;
     }
@@ -129,6 +131,10 @@ public class BaseField<T extends BaseField<T>> extends Field {
 
     public T inherited(boolean inherited) {
         setattr(Slots.inherited, inherited);
+        return (T) this;
+    }
+
+    public T invisible(boolean invisible){
         return (T) this;
     }
 }

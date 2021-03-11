@@ -35,7 +35,6 @@ public class TypeUtils {
         return null;
     }
 
-    @SuppressWarnings(value = "unchecked")
     public static <T> T parse(String str, Class<T> clazz) throws ParseException {
         try {
             if (clazz.equals(String.class)) {
@@ -69,7 +68,6 @@ public class TypeUtils {
         }
     }
 
-    @SuppressWarnings(value = "unchecked")
     public static <T> T as(Object o, Class<T> tClass) {
         return tClass.isInstance(o) ? (T) o : null;
     }
@@ -90,23 +88,37 @@ public class TypeUtils {
     public static int toInteger(Object value) {
         if (value == null) {
             return 0;
-        } else if (Integer.class.isInstance(value)) {
+        } else if (value instanceof Integer) {
             return (Integer) value;
+        } else if (value instanceof Long) {
+            return ((Long) value).intValue();
+        } else if (value instanceof Double) {
+            return ((Double) value).intValue();
+        } else if (value instanceof Float) {
+            return ((Float) value).intValue();
         } else if (value instanceof String) {
             return parse((String) value, Integer.class);
         }
-        return (int) value;
+        return parse(value.toString(), Integer.class);
     }
 
     public static double toDouble(Object value) {
         if (value == null) {
             return 0;
-        } else if (Double.class.isInstance(value)) {
+        } else if (value instanceof Double) {
             return (Double) value;
+        } else if (value instanceof Integer) {
+            return ((Integer) value).doubleValue();
+        } else if (value instanceof Long) {
+            return ((Long) value).doubleValue();
+        } else if (value instanceof Double) {
+            return ((Double) value).doubleValue();
+        } else if (value instanceof Float) {
+            return ((Float) value).doubleValue();
         } else if (value instanceof String) {
             return parse((String) value, Double.class);
         }
-        return (double) value;
+        return parse(value.toString(), Double.class);
     }
 
     public static boolean isInstance(Class<?> clazz, Object obj) {

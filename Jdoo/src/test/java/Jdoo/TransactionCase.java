@@ -19,9 +19,8 @@ public class TransactionCase {
 
     @Before
     public void setUp() {
-        Registry registry = Loader.getRegistry("test");
-        Database db = new Database("config/dbcp.properties");
-        env = Environment.create(registry, db.cursor(), "uid", new Kvalues(), false);
+        Database db = Database.get("test");
+        env = Environment.create(db.cursor(), init.SUPERUSER_ID, new Kvalues(), false);
         // env.cr().setAutoCommit(true);
     }
 

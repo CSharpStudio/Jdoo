@@ -49,8 +49,8 @@ public class MonetaryField extends BaseField<MonetaryField> {
     @Override
     public void _setup_related_full(RecordSet model) {
         super._setup_related_full(model);
-        if (inherited()) {
-            setattr(currency_field, related_field().getattr(currency_field));
+        if (_inherited()) {
+            setattr(currency_field, _related_field().getattr(currency_field));
         }
         _setup_currency_field(model);
     }

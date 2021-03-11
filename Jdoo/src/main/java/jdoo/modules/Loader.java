@@ -3,13 +3,16 @@ package jdoo.modules;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jdoo.data.Cursor;
 import jdoo.data.Database;
 import jdoo.util.DefaultDict;
 
 public class Loader {
+    static Logger _logger = LoggerFactory.getLogger(Loader.class);
     static DefaultDict<String, List<Class<?>>> module_to_models = new DefaultDict<>(ArrayList.class);
 
     static {
@@ -32,23 +35,6 @@ public class Loader {
         }
     }
 
-    static ConcurrentHashMap<String, Registry> registries = new ConcurrentHashMap<String, Registry>();
-
-    public static Registry getRegistry(String tenant) {
-        if (!registries.containsKey(tenant)) {
-            synchronized (Registry.class) {
-                if (!registries.containsKey(tenant)) {
-                    Database db = Database.get(tenant);
-                    Registry registry = new Registry(tenant);
-                    load_modules(db, registry);
-                    registries.put(tenant, registry);
-                    return registry;
-                }
-            }
-        }
-        return registries.get(tenant);
-    }
-
     public static void load_modules(Database db, Registry registry) {
         // jdoo.web.__init__.init();
         // jdoo.base.__init__.init();
@@ -60,10 +46,15 @@ public class Loader {
         // }
 
         try (Cursor cr = db.cursor()) {
+            if (!Db.is_initialized(cr)) {
+                _logger.info("init db");
+                Db.initialize(cr);
+            }
             load_module_graph(cr, registry);
-
+            registry.loaded = true;
             registry.setup_models(cr);
             registry.init_models(cr);
+
             cr.commit();
         }
 

@@ -19,7 +19,7 @@ public abstract class _StringField<T extends _StringField<T>> extends BaseField<
     }
 
     @Override
-    public boolean translate() {
+    public boolean _translate() {
         return getattr(Boolean.class, _StringField.translate);
     }
 
@@ -44,7 +44,7 @@ public abstract class _StringField<T extends _StringField<T>> extends BaseField<
         }
         cache.update(records, this, Utils.mutli(Arrays.asList(cache_value), records.size()));
 
-        if (!store()) {
+        if (!_store()) {
             return records;
         }
 
@@ -54,7 +54,7 @@ public abstract class _StringField<T extends _StringField<T>> extends BaseField<
         }
         boolean update_column = true;
         boolean update_trans = false;
-        if (translate()) {
+        if (_translate()) {
             // todo
         }
 

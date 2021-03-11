@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import jdoo.data.Cursor;
 import jdoo.data.Database;
+import jdoo.init;
 import jdoo.apis.Environment;
 import jdoo.util.Kvalues;
 import jdoo.https.json.JsonRpcParseException;
@@ -31,11 +32,11 @@ public class Controller implements Closeable {
     }
 
     public Environment env() {
-        return Environment.create("key", cr(), "uid", new Kvalues(), false);
+        return Environment.create(cr(), init.SUPERUSER_ID, new Kvalues(), false);
     }
 
     public RecordSet env(String model) {
-        return Environment.create("key", cr(), "uid", new Kvalues(), false).get(model);
+        return env().get(model);
     }
 
     protected JsonRpcRequest getRequest(String data) throws JsonRpcParseException {

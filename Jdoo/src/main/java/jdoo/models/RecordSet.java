@@ -39,7 +39,6 @@ public final class RecordSet implements Iterable<RecordSet> {
     Tuple<?> ids;
     Tuple<?> prefetchIds;
     static Map<Field, Collection<Field>> _field_computed;
-    Kvalues context;
 
     public Map<Field, Collection<Field>> _field_computed() {
         return _field_computed;
@@ -200,21 +199,54 @@ public final class RecordSet implements Iterable<RecordSet> {
     }
 
     /**
+     * Returns a new version of this recordset attached to the provided environment
+     * <p>
+     * .. warning:: The new environment will not benefit from the current
+     * environment's data cache, so later data access may incur extra delays while
+     * re-fetching from the database. The returned recordset has the same prefetch
+     * object as ``self``.
+     * </p>
+     * 
+     * @param env
+     * @return
+     */
+    public RecordSet with_env(Environment env) {
+        return meta.browse(env, ids, prefetchIds);
+    }
+
+    /**
      * with_context([context][, **overrides]) -> records
+     * 
+     * <pre>
+     *current context is {'key1': True} 
+     *r2 = records.with_context(new Kvalues(k->k.set("key2",true));
+     *-> r2._context is {'key2': True}
+     * </pre>
      * 
      * @param context
      * @return a new version of this recordset attached to an extended context.
      */
     public RecordSet with_context(Kvalues context) {
-        // todo
-        this.context = context;
-        return this;
+        return with_env(env.create(new Kwargs(k -> k.set("context", context))));
     }
 
+
+    /**
+     * with_context([context][, **overrides]) -> records
+     * 
+     * <pre>
+     *current context is {'key1': True} 
+     *r2 = records.with_context(k->k.set("key2",true));
+     *-> r2._context is {'key1': True, 'key2': True}
+     * </pre>
+     * 
+     * @param func
+     * @return a new version of this recordset attached to an extended context.
+     */
     public RecordSet with_context(Consumer<Kvalues> func) {
-        context = new Kvalues();
+        Kvalues context = new Kvalues(env.context());
         func.accept(context);
-        return this;
+        return with_env(env.create(new Kwargs(k -> k.set("context", context))));
     }
 
     public RecordSet with_user(Object uid) {
@@ -247,7 +279,8 @@ public final class RecordSet implements Iterable<RecordSet> {
 
     /** read the field of the first record in {@code this}. */
     public Object get(Field field) {
-        return field.get(this);
+        Field f = meta.getField(field.getName());
+        return f.get(this);
     }
 
     /** read the field of the first record in {@code this}. */
@@ -257,7 +290,8 @@ public final class RecordSet implements Iterable<RecordSet> {
 
     /** read the field of the first record in {@code this}. */
     public <T> T get(Class<? extends T> c, Field field) {
-        return (T) field.get(this);
+        Field f = meta.getField(field.getName());
+        return (T) f.get(this);
     }
 
     /** Assign the field to value in this record . */
@@ -268,7 +302,8 @@ public final class RecordSet implements Iterable<RecordSet> {
 
     /** Assign the field to {@code value} in this record . */
     public void set(Field field, Object value) {
-        field.set(this, value);
+        Field f = meta.getField(field.getName());
+        f.set(this, value);
     }
 
     // =================================================================================
@@ -673,7 +708,7 @@ public final class RecordSet implements Iterable<RecordSet> {
      */
     public List<Pair<Object, String>> name_search(String name, List<Object> args, @Default("ilike") String operator,
             @Default("100") Integer limit) {
-        return (List<Pair<Object, String>>) call("name_search", name, args, operator, limit);
+        return (List<Pair<Object, String>>) call("name_search", this, name, args, operator, limit);
     }
 
     /**
@@ -693,7 +728,7 @@ public final class RecordSet implements Iterable<RecordSet> {
      * @return list of pairs ``(id, text_repr)`` for all matching records.
      */
     public List<Pair<Object, String>> name_search(String name) {
-        return (List<Pair<Object, String>>) call("name_search", name);
+        return (List<Pair<Object, String>>) call("name_search", this, name);
     }
 
     /**
@@ -715,7 +750,7 @@ public final class RecordSet implements Iterable<RecordSet> {
      * @return list of pairs ``(id, text_repr)`` for all matching records.
      */
     public List<Pair<Object, String>> name_search(String name, List<Object> args) {
-        return (List<Pair<Object, String>>) call("name_search", name, args);
+        return (List<Pair<Object, String>>) call("name_search", this, name, args);
     }
 
     /**
@@ -730,7 +765,7 @@ public final class RecordSet implements Iterable<RecordSet> {
      *                                  read on the requested object.
      */
     public RecordSet search(List<Object> args) {
-        return (RecordSet) call("search", args, 0, null, null, false);
+        return (RecordSet) call("search", this, args, 0, null, null, false);
     }
 
     /**
@@ -747,7 +782,7 @@ public final class RecordSet implements Iterable<RecordSet> {
      *                                  read on the requested object.
      */
     public RecordSet search(List<Object> args, int offset, Integer limit) {
-        return (RecordSet) call("search", args, offset, limit, null, false);
+        return (RecordSet) call("search", this, args, offset, limit, null, false);
     }
 
     /**
@@ -765,7 +800,7 @@ public final class RecordSet implements Iterable<RecordSet> {
      *                                  read on the requested object.
      */
     public RecordSet search(List<Object> args, int offset, Integer limit, String order) {
-        return (RecordSet) call("search", args, offset, limit, order, false);
+        return (RecordSet) call("search", this, args, offset, limit, order, false);
     }
 
     /**
@@ -785,7 +820,7 @@ public final class RecordSet implements Iterable<RecordSet> {
      *                                  read on the requested object.
      */
     public Object search(List<Object> args, int offset, Integer limit, String order, boolean count) {
-        return call("search", args, offset, limit, order, count);
+        return call("search", this, args, offset, limit, order, count);
     }
 
     /**
@@ -801,6 +836,17 @@ public final class RecordSet implements Iterable<RecordSet> {
      *                                  read on the requested object.
      */
     public Object search(List<Object> args, Kwargs kwargs) {
-        return call("search", new Tuple<>(args), kwargs);
+        return call("search", this, new Tuple<>(args), kwargs);
+    }
+
+    /**
+     * Returns the number of records in the current model matching :ref:`the
+     * provided domain <reference/orm/domains>`.
+     * 
+     * @param args
+     * @return
+     */
+    public long search_count(List<Object> args) {
+        return (long) call("search_count", this, args);
     }
 }

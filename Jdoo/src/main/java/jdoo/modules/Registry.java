@@ -4,6 +4,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jdoo.models.MetaModel;
 import jdoo.models.RecordSet;
@@ -11,16 +12,35 @@ import jdoo.util.Kvalues;
 import jdoo.init;
 import jdoo.apis.Environment;
 import jdoo.data.Cursor;
+import jdoo.data.Database;
 import jdoo.exceptions.JdooException;
 import jdoo.exceptions.ModelException;
 
 public class Registry {
     HashMap<String, MetaModel> map = new HashMap<String, MetaModel>();
     String tenant;
-    boolean ready;
+    boolean ready;// whether everything is set up
+    boolean loaded;// whether all modules are loaded
+    Database db;
+    static ConcurrentHashMap<String, Registry> registries = new ConcurrentHashMap<>();
+
+    public static Registry getRegistry(String tenant) {
+        if (!registries.containsKey(tenant)) {
+            synchronized (Registry.class) {
+                if (!registries.containsKey(tenant)) {
+                    Registry registry = new Registry(tenant);
+                    registries.put(tenant, registry);
+                    Loader.load_modules(registry.db, registry);
+                    return registry;
+                }
+            }
+        }
+        return registries.get(tenant);
+    }
 
     public Registry(String tenant) {
         this.tenant = tenant;
+        db = Database.get(tenant);
     }
 
     public String tenant() {
@@ -29,6 +49,10 @@ public class Registry {
 
     public boolean ready() {
         return ready;
+    }
+
+    public boolean loaded() {
+        return loaded;
     }
 
     public MetaModel get(String model) {
@@ -47,7 +71,7 @@ public class Registry {
     }
 
     public void setup_models(Cursor cr) {
-        Environment env = Environment.create(this, cr, init.SUPERUSER_ID, new Kvalues(), true);
+        Environment env = Environment.create(cr, init.SUPERUSER_ID, new Kvalues(), true);
 
         List<RecordSet> models = new ArrayList<>();
         for (MetaModel m : map.values()) {
@@ -67,7 +91,7 @@ public class Registry {
     }
 
     public void init_models(Cursor cr) {
-        Environment env = Environment.create(this, cr, init.SUPERUSER_ID, new Kvalues(), true);
+        Environment env = Environment.create(cr, init.SUPERUSER_ID, new Kvalues(), true);
         List<RecordSet> models = new ArrayList<>();
         for (MetaModel m : map.values()) {
             RecordSet self = env.get(m.name());

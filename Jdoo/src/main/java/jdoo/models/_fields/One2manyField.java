@@ -74,7 +74,7 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
     public void _setup_regular_full(RecordSet model) {
         super._setup_regular_full(model);
         if (hasattr(inverse_name) && StringUtils.hasText(getattr(String.class, inverse_name))) {
-            RecordSet comodel = model.env(comodel_name());
+            RecordSet comodel = model.env(_comodel_name());
             Field invf = comodel.getField(getattr(String.class, inverse_name));
             if (invf instanceof Many2oneField || invf instanceof Many2oneReferenceField) {
                 model.type().field_inverses().add(this, invf);
@@ -85,11 +85,11 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
 
     @Override
     public boolean update_db(RecordSet model, Map<String, Kvalues> columns) {
-        if (model.type().pool().contains(comodel_name())) {
-            RecordSet comodel = model.env(comodel_name());
+        if (model.type().pool().contains(_comodel_name())) {
+            RecordSet comodel = model.env(_comodel_name());
             if (!comodel.hasField(getattr(String.class, inverse_name))) {
                 throw new UserErrorException(
-                        String.format("No inverse field %s found for %s", getattr(inverse_name), comodel_name()));
+                        String.format("No inverse field %s found for %s", getattr(inverse_name), _comodel_name()));
             }
         }
         return true;

@@ -3,6 +3,7 @@ package jdoo.addons.base.models;
 import jdoo.models.Field;
 import jdoo.models.Model;
 import jdoo.models.RecordSet;
+import jdoo.models.d;
 import jdoo.models.fields;
 import jdoo.util.Kvalues;
 
@@ -19,9 +20,9 @@ public class ResBank extends Model {
     public static Field street2 = fields.Char();
     public static Field zip = fields.Char();
     public static Field city = fields.Char();
-    // public static Field state = fields.Many2one("res.country.state", "Fed. State")
-    //         .domain(d.on("[('country_id', '=?', country)]"));
-    //public static Field country = fields.Many2one("res.country");
+    public static Field state = fields.Many2one("res.country.state", "Fed. State")
+            .domain(d.on("[('country_id', '=?', country)]"));
+    public static Field country = fields.Many2one("res.country");
     public static Field email = fields.Char();
     public static Field phone = fields.Char();
     public static Field active = fields.Boolean().$default(true);

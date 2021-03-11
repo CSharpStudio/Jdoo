@@ -20,7 +20,7 @@ public class Database {
             synchronized (Database.class) {
                 if (!databases.containsKey(tenant)) {
                     // db shoud be get from tenant
-                    Database db = new Database("config/dbcp.properties");
+                    Database db = new Database(tenant, "config/dbcp.properties");
                     databases.put(tenant, db);
                     return db;
                 }
@@ -29,10 +29,15 @@ public class Database {
         return databases.get(tenant);
     }
 
+    String tenant;
     DataSource dataSource;
 
     public DataSource getDataSource() {
         return dataSource;
+    }
+
+    public String getTenant() {
+        return tenant;
     }
 
     public Connection getConnection() {
@@ -43,11 +48,13 @@ public class Database {
         }
     }
 
-    public Database(DataSource ds) {
+    public Database(String tenant, DataSource ds) {
+        this.tenant = tenant;
         dataSource = ds;
     }
 
-    public Database(Properties properties) {
+    public Database(String tenant, Properties properties) {
+        this.tenant = tenant;
         try {
             dataSource = BasicDataSourceFactory.createDataSource(properties);
         } catch (Exception e) {
@@ -55,7 +62,8 @@ public class Database {
         }
     }
 
-    public Database(String file) {
+    public Database(String tenant, String file) {
+        this.tenant = tenant;
         try {
             try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(file)) {
                 if (is == null) {
@@ -71,6 +79,6 @@ public class Database {
     }
 
     public Cursor cursor() {
-        return new Cursor(dataSource);
+        return new Cursor(tenant, dataSource);
     }
 }

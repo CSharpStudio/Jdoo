@@ -112,9 +112,9 @@ public class BaseModel extends MetaModel {
         List<Field> inherited_field_list = new ArrayList<>();
         for (Field field : fields) {
             fnames.add(field.getName());
-            if (field.store()) {
+            if (field._store()) {
                 field_list.add(field);
-            } else if (field.base_field().store()) {
+            } else if (field.base_field()._store()) {
                 inherited_field_list.add(field);
             }
         }
@@ -124,8 +124,8 @@ public class BaseModel extends MetaModel {
         List<Field> fields_pre = new ArrayList<>();
         Stream.of(field_list, inherited_field_list).flatMap(Collection<Field>::stream).forEach(field -> {
             Field base_field = field.base_field();
-            if (!"id".equals(field.name) && base_field.store() && base_field.column_type() != null) {
-                if (!(field.inherited() && base_field.translate())) {
+            if (!"id".equals(field.name) && base_field._store() && base_field.column_type() != null) {
+                if (!(field._inherited() && base_field._translate())) {
                     fields_pre.add(field);
                 }
             }
@@ -173,7 +173,7 @@ public class BaseModel extends MetaModel {
             int i = 1;
             for (Field field : fields_pre) {
                 Tuple<Object> values = cols.get(i++);
-                if (context.containsKey("lang") && !field.inherited() && field.translate()) {
+                if (context.containsKey("lang") && !field._inherited() && field._translate()) {
                     // todo translate
                 }
                 env.cache().update(fetched, field, values);
@@ -182,7 +182,7 @@ public class BaseModel extends MetaModel {
                 if (field.column_type() == null) {
                     field.read(fetched);
                 }
-                if (field.deprecated()) {
+                if (field._deprecated()) {
                     _logger.warn("Field {} is deprecated", field);
                 }
             }
@@ -220,12 +220,12 @@ public class BaseModel extends MetaModel {
         Collection<Field> _fields = check_field_access_rights(self, "read", fields);
         List<Field> stored_fields = new ArrayList<Field>();
         for (Field field : _fields) {
-            if (field.store()) {
+            if (field._store()) {
                 stored_fields.add(field);
-            } else if (StringUtils.hasText(field.compute())) {
-                for (String dotname : field.depends()) {
+            } else if (StringUtils.hasText(field._compute())) {
+                for (String dotname : field._depends()) {
                     Field f = self.getField(dotname.split("\\.")[0]);
-                    if (f.prefetch() && (!StringUtils.hasText(f.groups()) || user_has_groups(self, f.groups()))) {
+                    if (f._prefetch() && (!StringUtils.hasText(f._groups()) || user_has_groups(self, f._groups()))) {
                         stored_fields.add(f);
                     }
                 }
@@ -271,6 +271,16 @@ public class BaseModel extends MetaModel {
             @Default String order, @Default("false") boolean count) {
         Object res = _search(self, args, offset, limit, order, count, null);
         return count ? res : self.browse(res);
+    }
+
+    /**
+     * Returns the number of records in the current model matching :ref:`the
+     * provided domain <reference/orm/domains>`.
+     */
+    @api.model
+    public long search_count(RecordSet self, List<Object> args) {
+        Object res = search(self, args, 0, 0, "", true);
+        return (long) res;
     }
 
     protected Object _search(RecordSet self, List<Object> args, @Default("0") int offset, @Default Integer limit,
@@ -416,12 +426,12 @@ public class BaseModel extends MetaModel {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            if (field.$default() != null) {
-                defaults.put(name, field.$default().apply(self));
+            if (field._default() != null) {
+                defaults.put(name, field._default().apply(self));
                 continue;
             }
-            if (field.inherited()) {
-                field = field.related_field();
+            if (field._inherited()) {
+                field = field._related_field();
                 parent_fields.get(field.model_name()).add(field.name);
             }
         }
@@ -612,24 +622,24 @@ public class BaseModel extends MetaModel {
                     System.out.printf("%s.create() with unknown fields: %s", self.name(), key);
                     continue;
                 }
-                if (field.company_dependent()) {
+                if (field._company_dependent()) {
 
                 }
-                if (field.store()) {
+                if (field._store()) {
                     stored.put(key, val);
                 }
-                if (field.inherited()) {
-                    if (inherited.containsKey(field.related_field().model_name())) {
-                        inherited.get(field.related_field().model_name()).put(key, val);
+                if (field._inherited()) {
+                    if (inherited.containsKey(field._related_field().model_name())) {
+                        inherited.get(field._related_field().model_name()).put(key, val);
                     } else {
                         Map<String, Object> m = new Kvalues().set(key, val);
-                        inherited.put(field.related_field().model_name(), m);
+                        inherited.put(field._related_field().model_name(), m);
                     }
-                } else if (field.inverse()) {
+                } else if (field._inverse()) {
                     inversed.put(key, val);
                     inversed_fields.add(field);
                 }
-                if (StringUtils.hasText(field.compute()) && !field.readonly()) {
+                if (StringUtils.hasText(field._compute()) && !field._readonly()) {
                     protected_.add(self.type()._field_computed.getOrDefault(field, Arrays.asList(field)));
                 }
             }
@@ -680,7 +690,7 @@ public class BaseModel extends MetaModel {
             if (self.type().log_access() && LOG_ACCESS_COLUMNS.contains(name) && val == null)
                 continue;
             Field field = self.getField(name);
-            assert field.store();
+            assert field._store();
             columns.add(String.format("\"%s\"=%s", name, field.column_format));
             params.add(val);
         }
@@ -765,17 +775,17 @@ public class BaseModel extends MetaModel {
         for (String fname : vals.keySet()) {
             Field field = self.getField(fname);
             fields.add(field);
-            if (field.inverse()) {
+            if (field._inverse()) {
                 String inverse = field.getattr(MetaField.Slots.inverse).toString();
                 determine_inverses.get(inverse).add(field);
             }
-            if (field.relational() || self.type().field_inverses().containsKey(field)) {
+            if (field._relational() || self.type().field_inverses().containsKey(field)) {
                 relational_names.add(fname);
             }
-            if (StringUtils.hasText(field.compute()) && !field.readonly()) {
+            if (StringUtils.hasText(field._compute()) && !field._readonly()) {
                 $protected.addAll(self.type()._field_computed.getOrDefault(field, Arrays.asList(field)));
             }
-            if ("company_id".equals(fname) || (field.relational() && field.check_company())) {
+            if ("company_id".equals(fname) || (field._relational() && field.check_company())) {
                 check_company = true;
             }
         }
@@ -823,7 +833,7 @@ public class BaseModel extends MetaModel {
                 try {
                     $fields.get(0).determine_inverse(real_recs);
                 } catch (AccessErrorException e) {
-                    if ($fields.get(0).inherited()) {
+                    if ($fields.get(0)._inherited()) {
                         // todo description = self.env['ir.model']._get(self._name).name
                         String description = self.type().description();
                         throw new AccessErrorException(String.format("%s\n\nImplicitly accessed through '%s' (%s).",
@@ -900,8 +910,8 @@ public class BaseModel extends MetaModel {
             for (String fname : fnames) {
                 Field field = self.getField(fname);
                 Utils.setdefault(model_fields, field.model_name(), ArrayList::new).add(field);
-                if (field.related_field() != null) {
-                    Utils.setdefault(model_fields, field.related_field().model_name(), ArrayList::new).add(field);
+                if (field._related_field() != null) {
+                    Utils.setdefault(model_fields, field._related_field().model_name(), ArrayList::new).add(field);
                 }
             }
             for (String model_name : model_fields.keySet()) {
@@ -976,8 +986,8 @@ public class BaseModel extends MetaModel {
             return self.getFields();
         }
         Function<Field, Boolean> valid = (field) -> {
-            if (StringUtils.hasText(field.groups())) {
-                return user_has_groups(self, field.groups());
+            if (StringUtils.hasText(field._groups())) {
+                return user_has_groups(self, field._groups());
             }
             return true;
         };
@@ -1107,8 +1117,8 @@ public class BaseModel extends MetaModel {
     protected void _init_column(RecordSet self, String column_name) {
         Field field = self.getField(column_name);
         Object value = null;
-        if (field.$default() != null) {
-            value = field.$default().apply(self);
+        if (field._default() != null) {
+            value = field._default().apply(self);
             value = field.convert_to_write(value, self);
             value = field.convert_to_column(value, self, null, true);
         }
@@ -1145,7 +1155,7 @@ public class BaseModel extends MetaModel {
         for (int i = cls._bases.size() - 1; i >= 0; i--) {
             MetaModel base = cls._bases.get(i);
             base.$fields.stream().sorted(Comparator.comparing(f -> f._sequence)).forEach(field -> {
-                if (!field.automatic() && !field.manual() && !field.inherited()) {
+                if (!field._automatic() && !field._manual() && !field._inherited()) {
                     Field new_field = self.type().findField(field.name);
                     if (new_field == null) {
                         new_field = field.$new(null);
@@ -1204,8 +1214,8 @@ public class BaseModel extends MetaModel {
         // TODO
         DefaultDict<String, List<Field>> groups = new DefaultDict<>(ArrayList::new);
         for (Field field : cls.getFields()) {
-            if (StringUtils.hasText(field.compute())) {
-                List<Field> group = groups.get(field.compute());
+            if (StringUtils.hasText(field._compute())) {
+                List<Field> group = groups.get(field._compute());
                 cls._field_computed.put(field, group);
                 group.add(field);
             }
@@ -1281,6 +1291,8 @@ public class BaseModel extends MetaModel {
      * @param self
      */
     protected void _auto_init(RecordSet self) {
+        // todo
+        self = self.with_context(ctx -> ctx.set("prefetch_fields", false));
         Cursor cr = self.env().cr();
         boolean must_create_table = !Sql.table_exists(cr, self.table());
         if (self.type()._auto) {
@@ -1291,11 +1303,11 @@ public class BaseModel extends MetaModel {
             Map<String, Kvalues> columns = Sql.table_columns(cr, self.table());
             List<Field> fields_to_compute = new ArrayList<>();
             for (Field field : self.getFields()) {
-                if (!field.store()) {
+                if (!field._store()) {
                     continue;
                 }
                 boolean $new = field.update_db(self, columns);
-                if ($new && StringUtils.hasText(field.compute())) {
+                if ($new && StringUtils.hasText(field._compute())) {
                     fields_to_compute.add(field);
                 }
             }
@@ -1316,8 +1328,8 @@ public class BaseModel extends MetaModel {
                     f.setattr(Slots.inherited_field, field);
                     f.setattr(Slots.related, new Tuple<>(parent_field, field.name));
                     f.setattr(Slots.compute_sudo, false);
-                    f.setattr(Slots.copy, field.copy());
-                    f.setattr(Slots.readonly, field.readonly());
+                    f.setattr(Slots.copy, field._copy());
+                    f.setattr(Slots.readonly, field._readonly());
                 }));
             }
         }
@@ -1390,8 +1402,16 @@ public class BaseModel extends MetaModel {
             List<Object> where_params = pair.second();
             return new Query(tables, where_clause, where_params);
         } else {
-            return new Query(Collections.emptyList(), Collections.emptyList(),
-                    Arrays.asList("\"" + self.table() + "\""));
+            return new Query(Arrays.asList("\"" + self.table() + "\""), Collections.emptyList(),
+                    Collections.emptyList());
+        }
+    }
+
+    @api.depends() // TODO @api.depends(lambda self: (self._rec_name,) if self._rec_name else ())
+    protected void _compute_display_name(RecordSet self) {
+        Map<Object, String> names = name_get(self).stream().collect(Collectors.toMap(p -> p.first(), p -> p.second()));
+        for (RecordSet record : self) {
+            record.set("display_name", names.get(record.id()));
         }
     }
 
@@ -1442,7 +1462,7 @@ public class BaseModel extends MetaModel {
     List<String> _generate_m2o_order_by(RecordSet self, String alias, String order_field, Query query,
             @Default("false") boolean reverse_direction, @Default Set<Object> seen) {
         Field field = self.getField(order_field);
-        if (field.inherited()) {
+        if (field._inherited()) {
             String qualified_field = _inherits_join_calc(self, alias, order_field, query, true, false);
             String[] sp = qualified_field.replace("\"", "").split("\\.", 2);
             alias = sp[0];
@@ -1452,14 +1472,14 @@ public class BaseModel extends MetaModel {
 
         assert field instanceof Many2oneField : "Invalid field passed to _generate_m2o_order_by()";
 
-        if (!field.store()) {
+        if (!field._store()) {
             _logger.warn(
                     "Many2one function/related fields must be stored to be used as ordering fields! Ignoring sorting for {}.{}",
                     self.name(), order_field);
             return Collections.emptyList();
         }
 
-        RecordSet dest_model = self.env(field.comodel_name());
+        RecordSet dest_model = self.env(field._comodel_name());
         String m2o_order = dest_model.type()._order;
         Tuple<String> join = new Tuple<>(alias, dest_model.table(), order_field, "id", order_field);
         String dest_alias = query.add_join(join, false, true, null, Collections.emptyList()).first();
@@ -1487,17 +1507,17 @@ public class BaseModel extends MetaModel {
             if ("id".equals(order_field)) {
                 order_by_elements.add(String.format("\"%s\".\"%s\" %s", alias, order_field, order_direction));
             } else {
-                if (field.inherited()) {
+                if (field._inherited()) {
                     field = field.base_field();
                 }
-                if (field.store() && field instanceof Many2oneField) {
-                    Tuple<Object> key = new Tuple<>(field.model_name, field.comodel_name(), order_field);
+                if (field._store() && field instanceof Many2oneField) {
+                    Tuple<Object> key = new Tuple<>(field.model_name, field._comodel_name(), order_field);
                     if (!seen.contains(key)) {
                         seen.add(key);
                         order_by_elements
                                 .addAll(_generate_m2o_order_by(self, alias, order_field, query, do_reverse, seen));
                     }
-                } else if (field.store() && field.column_type() != null) {
+                } else if (field._store() && field.column_type() != null) {
                     String qualifield_name = _inherits_join_calc(self, alias, order_field, query, false, true);
                     if (field instanceof BooleanField) {
                         qualifield_name = String.format("COALESCE(%s, false)", qualifield_name);
@@ -1516,18 +1536,18 @@ public class BaseModel extends MetaModel {
             @Default("true") boolean implicit, @Default("false") boolean outer) {
         RecordSet model = self;
         Field field = self.getField(fname);
-        while (field.inherited()) {
-            RecordSet parent_model = self.env(field.related_field().model_name());
-            String parent_fname = field.related().iterator().next();
+        while (field._inherited()) {
+            RecordSet parent_model = self.env(field._related_field().model_name());
+            String parent_fname = field._related().iterator().next();
 
             Pair<String, String> pair = query.add_join(
                     new Tuple<String>(alias, parent_model.table(), parent_fname, "id", parent_fname), implicit, outer,
                     null, Collections.emptyList());
             model = parent_model;
             alias = pair.first();
-            field = field.related_field();
+            field = field._related_field();
         }
-        if (field.translate()) {
+        if (field._translate()) {
             return _generate_translated_field(model, alias, fname, query);
         } else {
             return String.format("\"%s\".\"%s\"", alias, fname);
@@ -1581,11 +1601,12 @@ public class BaseModel extends MetaModel {
     static void _fetch_field(RecordSet self, Field field) {
         self.call("check_field_access_rights", "read", Arrays.asList(field.getName()));
         List<Field> fields = new ArrayList<>();
-        if (Boolean.TRUE.equals(self.context().getOrDefault("prefetch_fields", true)) && field.prefetch()) {
+        if (Boolean.TRUE.equals(self.context().getOrDefault("prefetch_fields", true)) && field._prefetch()) {
             for (Field f : self.getFields()) {
-                if (f.prefetch()
-                        && !(StringUtils.hasText(f.groups()) && !self.call(Boolean.class, "user_has_group", f.groups()))
-                        && !(StringUtils.hasText(f.compute()) && self.env().records_to_compute(f).hasId())) {
+                if (f._prefetch()
+                        && !(StringUtils.hasText(f._groups())
+                                && !self.call(Boolean.class, "user_has_group", f._groups()))
+                        && !(StringUtils.hasText(f._compute()) && self.env().records_to_compute(f).hasId())) {
                     fields.add(f);
                 }
             }
@@ -1600,8 +1621,8 @@ public class BaseModel extends MetaModel {
     }
 
     static void _compute_field_value(RecordSet self, Field field) {
-        self.call(field.compute());
-        if (field.store() && self.hasId()) {
+        self.call(field._compute());
+        if (field._store() && self.hasId()) {
             List<String> fnames = new ArrayList<>();
             for (Field f : self.type()._field_computed.get(field)) {
                 fnames.add(f.name);
