@@ -54,6 +54,7 @@ public class Many2manyField extends _RelationalMultiField<Many2manyField> {
 
     }
 
+    // TODO
     boolean _explicit = true;
     String relation;
     String column1;

@@ -16,7 +16,7 @@ import jdoo.util.Pair;
  */
 public class FloatField extends BaseField<FloatField> {
     /** digits argument passed to class initializer */
-    public static final Slot _digits = new Slot("_digits");
+    public static final Slot _digits = new Slot("_digits", null);
 
     public FloatField() {
         setattr(Slots.group_operator, "sum");

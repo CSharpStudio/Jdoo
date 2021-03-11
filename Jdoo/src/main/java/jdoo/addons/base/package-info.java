@@ -7,6 +7,7 @@
         Country.class, //
         CountryGroup.class, //
         CountryState.class, //
+        Lang.class, //
         PartnerCategory.class, //
         PartnerTitle.class, //
         Partner.class, //

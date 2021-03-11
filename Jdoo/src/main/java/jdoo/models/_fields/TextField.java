@@ -21,7 +21,7 @@ public class TextField extends _StringField<TextField> {
 
     @Override
     public Object convert_to_cache(Object value, RecordSet record, boolean validate) {
-        if (value == null) {
+        if (value == null || Boolean.FALSE.equals(value)) {
             return null;
         }
         return value.toString();

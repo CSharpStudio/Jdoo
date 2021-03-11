@@ -12,8 +12,8 @@ import jdoo.init;
 import jdoo.data.Cursor;
 import jdoo.models.Field;
 import jdoo.models.RecordSet;
-import jdoo.modules.Loader;
 import jdoo.modules.Registry;
+import jdoo.util.FrozenDict;
 import jdoo.util.Kvalues;
 import jdoo.util.Kwargs;
 import jdoo.tools.StackMap;
@@ -35,7 +35,7 @@ public class Environment {
         if (init.SUPERUSER_ID.equals(uid))
             su = true;
 
-        Tuple<Object> args = new Tuple<>(cr, uid, context, su);
+        Tuple<Object> args = new Tuple<>(cr, uid, new FrozenDict<>(context), su);
         Environments envs = envs();
         for (Environment env : envs) {
             if (env != null && env.args.equals(args)) {

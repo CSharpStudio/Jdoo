@@ -1,5 +1,7 @@
 package jdoo.models._fields;
 
+import java.util.Optional;
+
 import jdoo.models.RecordSet;
 import jdoo.util.Kvalues;
 import jdoo.util.Pair;
@@ -23,6 +25,6 @@ public class IntegerField extends BaseField<IntegerField> {
 
     @Override
     public Object convert_to_record(Object value, RecordSet record) {
-        return value == null ? 0 : value;
+        return Optional.of(value).orElse(0);
     }
 }

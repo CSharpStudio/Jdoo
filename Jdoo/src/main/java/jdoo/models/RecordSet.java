@@ -230,7 +230,6 @@ public final class RecordSet implements Iterable<RecordSet> {
         return with_env(env.create(new Kwargs(k -> k.set("context", context))));
     }
 
-
     /**
      * with_context([context][, **overrides]) -> records
      * 
@@ -848,5 +847,9 @@ public final class RecordSet implements Iterable<RecordSet> {
      */
     public long search_count(List<Object> args) {
         return (long) call("search_count", this, args);
+    }
+
+    public void unlink() {
+        call("unlink", this);
     }
 }

@@ -32,11 +32,8 @@ import jdoo.util.Pair;
  */
 public class SelectionField extends BaseField<SelectionField> {
 
-    public static final Slot selection = new Slot("selection");
-    public static final Slot validate = new Slot("validate");
-    static {
-        default_slots().put(validate, true);
-    }
+    public static final Slot selection = new Slot("selection", null);
+    public static final Slot validate = new Slot("validate", true);
 
     Function<RecordSet, Object> $selection;
 
@@ -78,6 +75,7 @@ public class SelectionField extends BaseField<SelectionField> {
     @Override
     public void _setup_regular_full(RecordSet model) {
         super._setup_regular_full(model);
+        // selection must be computed on related field
         SelectionField field = getattr(SelectionField.class, Slots.related_field);
         $selection = m -> field._description_selection(model.env());
     }

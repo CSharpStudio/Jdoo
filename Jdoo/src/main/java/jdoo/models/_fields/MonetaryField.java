@@ -1,5 +1,7 @@
 package jdoo.models._fields;
 
+import java.util.Optional;
+
 import jdoo.models.Field;
 import jdoo.models.RecordSet;
 import jdoo.tools.Slot;
@@ -10,12 +12,12 @@ import jdoo.util.TypeUtils;
 
 /**
  * The decimal precision and currency symbol are taken from the attribute.
- *  
+ * 
  * :param currency_field: name of the field holding the currency this monetary
  * field is expressed in (default: `currency_id`)
  */
 public class MonetaryField extends BaseField<MonetaryField> {
-    public static final Slot currency_field = new Slot("currency_field");
+    public static final Slot currency_field = new Slot("currency_field", null);
 
     public MonetaryField() {
         setattr(Slots.group_operator, "sum");
@@ -82,5 +84,10 @@ public class MonetaryField extends BaseField<MonetaryField> {
             value = currency.call("round", value);
         }
         return value;
+    }
+
+    @Override
+    public Object convert_to_record(Object value, RecordSet record) {
+        return Optional.of(value).orElse(0.0);
     }
 }

@@ -1,5 +1,6 @@
 package jdoo.models._fields;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.util.StringUtils;
@@ -36,12 +37,9 @@ import jdoo.util.Kvalues;
  */
 public class One2manyField extends _RelationalMultiField<One2manyField> {
 
-    public static final Slot inverse_name = new Slot("inverse_name");
-    public static final Slot auto_join = new Slot("auto_join");
-    public static final Slot limit = new Slot("limit");
-    static {
-        default_slots().put(auto_join, false);
-    }
+    public static final Slot inverse_name = new Slot("inverse_name", null);
+    public static final Slot auto_join = new Slot("auto_join", false);
+    public static final Slot limit = new Slot("limit", null);
 
     public One2manyField() {
         setattr(Slots.copy, false);
@@ -52,22 +50,22 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
         return this;
     }
 
-    public String inverse_name() {
-        return getattr(String.class, One2manyField.inverse_name);
-    }
-
     public One2manyField limit(int limit) {
         setattr(One2manyField.limit, limit);
         return this;
     }
 
-    public boolean auto_join() {
-        return getattr(Boolean.class, Many2oneField.auto_join);
-    }
-
     public One2manyField auto_join(boolean auto_join) {
         setattr(One2manyField.auto_join, auto_join);
         return this;
+    }
+
+    public String _inverse_name() {
+        return getattr(String.class, One2manyField.inverse_name);
+    }
+
+    public boolean _auto_join() {
+        return getattr(Boolean.class, Many2oneField.auto_join);
     }
 
     @Override
@@ -77,6 +75,8 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
             RecordSet comodel = model.env(_comodel_name());
             Field invf = comodel.getField(getattr(String.class, inverse_name));
             if (invf instanceof Many2oneField || invf instanceof Many2oneReferenceField) {
+                // setting one2many fields only invalidates many2one inverses;
+                // integer inverses (res_model/res_id pairs) are not supported
                 model.type().field_inverses().add(this, invf);
             }
             comodel.type().field_inverses().add(invf, this);
@@ -96,9 +96,16 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
     }
 
     @Override
+    public List<Object> get_domain_list(RecordSet model) {
+        // TODO Auto-generated method stub
+        return super.get_domain_list(model);
+    }
+
+    @Override
     public void read(RecordSet records) {
         // TODO Auto-generated method stub
         super.read(records);
     }
+
     // todo
 }

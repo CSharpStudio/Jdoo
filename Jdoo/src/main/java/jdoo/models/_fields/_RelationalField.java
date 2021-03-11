@@ -13,15 +13,10 @@ import jdoo.util.Kvalues;
 /** Abstract class for relational fields. */
 public abstract class _RelationalField<T extends _RelationalField<T>> extends BaseField<T> {
     /** domain for searching values */
-    public static final Slot domain = new Slot("domain");
+    public static final Slot domain = new Slot("domain", Collections.emptyList());
     /** context for searching values */
-    public static final Slot context = new Slot("context");
-    public static final Slot check_company = new Slot("check_company");
-    static {
-        default_slots().put(domain, new Domain());
-        default_slots().put(context, new Kvalues());
-        default_slots().put(check_company, false);
-    }
+    public static final Slot context = new Slot("context", Kvalues.empty());
+    public static final Slot check_company = new Slot("check_company", false);
 
     public _RelationalField() {
         relational = true;
@@ -57,17 +52,6 @@ public abstract class _RelationalField<T extends _RelationalField<T>> extends Ba
         return (T) this;
     }
 
-    public List<Object> get_domain_list(RecordSet model) {
-        Object d = getattr(_RelationalField.domain);
-        if (d instanceof Function) {
-            return ((Function<RecordSet, List<Object>>) d).apply(model);
-        }
-        if (d instanceof List) {
-            return (List<Object>) d;
-        }
-        return Collections.emptyList();
-    }
-
     @Override
     public Object get(RecordSet records) {
         // base case: do the regular access
@@ -81,6 +65,26 @@ public abstract class _RelationalField<T extends _RelationalField<T>> extends Ba
             list.add((RecordSet) super.get(record));
         }
         return comodel.union(list);
+    }
+
+    @Override
+    public void _setup_regular_base(RecordSet model) {
+        super._setup_regular_base(model);
+        if (!model.type().pool().contains(_comodel_name())) {
+            _logger.warn("Field {} with unknown comodel_name {}", this, _comodel_name());
+            comodel_name("_unknown");
+        }
+    }
+
+    public List<Object> get_domain_list(RecordSet model) {
+        Object d = getattr(_RelationalField.domain);
+        if (d instanceof Function) {
+            return ((Function<RecordSet, List<Object>>) d).apply(model);
+        }
+        if (d instanceof List) {
+            return (List<Object>) d;
+        }
+        return Collections.emptyList();
     }
     // todo
 }

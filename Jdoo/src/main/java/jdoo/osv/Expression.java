@@ -426,9 +426,9 @@ public class Expression {
                     leaf.add_join_context(comodel, path[0], "id", path[0]);
                     stack.add(create_substitution_leaf(leaf, new Tuple<>(path[1], operator, right), comodel, false));
                 } else if (path.length > 1 && field._store() && field instanceof One2manyField
-                        && ((One2manyField) field).auto_join()) {
+                        && ((One2manyField) field)._auto_join()) {
                     // res_partner.id = res_partner__bank_ids.partner_id
-                    leaf.add_join_context(comodel, "id", ((One2manyField) field).inverse_name(), path[0]);
+                    leaf.add_join_context(comodel, "id", ((One2manyField) field)._inverse_name(), path[0]);
                     List<Object> domain = ((One2manyField) field).get_domain_list(model);
                     stack.add(create_substitution_leaf(leaf, new Tuple<>(path[1], operator, right), comodel, false));
                     if (!domain.isEmpty()) {
@@ -502,7 +502,7 @@ public class Expression {
                 } else if (field instanceof One2manyField) {
                     One2manyField f = (One2manyField) field;
                     List<Object> domain = f.get_domain_list(model);
-                    Field inverse_field = comodel.getField(f.inverse_name());
+                    Field inverse_field = comodel.getField(f._inverse_name());
                     boolean inverse_is_int = inverse_field instanceof IntegerField;
 
                     if (right != null) {
@@ -528,28 +528,28 @@ public class Expression {
                         if (ids2.isEmpty()) {
                             ids1 = Collections.emptyList();
                         } else if (inverse_field._store()) {
-                            ids1 = select_from_where(cr, f.inverse_name(), comodel.table(), "id", ids2,
+                            ids1 = select_from_where(cr, f._inverse_name(), comodel.table(), "id", ids2,
                                     (String) operator);
                         } else {
                             RecordSet recs = comodel.browse(ids2).sudo()
                                     .with_context(ctx -> ctx.put("prefetch_fields", false));
                             ids1 = null;
-                            ids1 = (Collection<Object>) ((RecordSet) recs.mapped(f.inverse_name())).ids();
+                            ids1 = (Collection<Object>) ((RecordSet) recs.mapped(f._inverse_name())).ids();
                         }
                         String op1 = NEGATIVE_TERM_OPERATORS.contains(operator) ? "not in" : "in";
                         stack.add(create_substitution_leaf(leaf, new Tuple<>("id", op1, ids1), model, false));
                     } else {
                         Collection<Object> ids1;
                         if (inverse_field._store() && !(inverse_is_int && !domain.isEmpty())) {
-                            ids1 = select_distinct_from_where_not_null(cr, f.inverse_name(), comodel.table());
+                            ids1 = select_distinct_from_where_not_null(cr, f._inverse_name(), comodel.table());
                         } else {
-                            Domain comodel_domain = d.on(f.inverse_name(), "!=", false);
+                            Domain comodel_domain = d.on(f._inverse_name(), "!=", false);
                             if (inverse_is_int && !domain.isEmpty()) {
                                 comodel_domain.addAll(domain);
                             }
                             RecordSet recs = comodel.search(comodel_domain).sudo()
                                     .with_context(ctx -> ctx.put("prefetch_fields", false));
-                            ids1 = (Collection<Object>) ((RecordSet) recs.mapped(f.inverse_name())).ids();
+                            ids1 = (Collection<Object>) ((RecordSet) recs.mapped(f._inverse_name())).ids();
 
                         }
                         String op1 = NEGATIVE_TERM_OPERATORS.contains(operator) ? "in" : "not in";
@@ -564,7 +564,7 @@ public class Expression {
                 } else if (field instanceof Many2oneField) {
                     int todo = 0;
                     // TODO
-                } else if (field instanceof BinaryField && ((BinaryField) field).attachment()) {
+                } else if (field instanceof BinaryField && ((BinaryField) field)._attachment()) {
                     // TODO
                     int todo = 0;
                 } else {

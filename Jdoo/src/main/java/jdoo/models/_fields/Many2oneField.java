@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import jdoo.apis.Cache;
 import jdoo.exceptions.MissingErrorException;
 import jdoo.exceptions.ValueErrorException;
 import jdoo.models.Field;
@@ -46,15 +47,11 @@ import jdoo.util.Tuple;
  */
 public class Many2oneField extends _RelationalField<Many2oneField> {
     /** what to do when value is deleted */
-    public static final Slot ondelete = new Slot("ondelete");
+    public static final Slot ondelete = new Slot("ondelete", null);
     /** whether joins are generated upon search */
-    public static final Slot auto_join = new Slot("auto_join");
+    public static final Slot auto_join = new Slot("auto_join", false);
     /** whether self implements delegation */
-    public static final Slot delegate = new Slot("delegate");
-    static {
-        default_slots().put(auto_join, false);
-        default_slots().put(delegate, false);
-    }
+    public static final Slot delegate = new Slot("delegate", false);
 
     public Many2oneField() {
         column_type = new Pair<>("varchar", "varchar");
@@ -126,9 +123,20 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
         // todo model.pool.post_init(self.update_db_foreign_key, model, column)
     }
 
+    protected void update_db_foreign_key(RecordSet model, Kvalues column) {
+        // todo
+    }
+
+    /** Update the cached value of ``self`` for ``records`` with ``value``. */
+    public void _update(RecordSet records, Object value) {
+        Cache cache = records.env().cache();
+        for (RecordSet record : records)
+            cache.set(record, this, convert_to_cache(value, record, false));
+    }
+
     @Override
     public Object convert_to_column(Object value, RecordSet record, Kvalues values, boolean validate) {
-        return value;
+        return Boolean.FALSE.equals(value) ? null : value;
     }
 
     @Override
@@ -139,6 +147,7 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
 
     @Override
     public Object convert_to_record(Object value, RecordSet record) {
+        // use registry to avoid creating a recordset for the model
         Collection<Object> ids = value == null ? Collections.emptyList() : new Tuple<>(value);
         Collection<Object> prefetch_ids = prefetch_many2one_ids(record, this);
         return record.pool(_comodel_name()).browse(record.env(), ids, prefetch_ids);
@@ -159,11 +168,16 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
     @Override
     public Object convert_to_read(Object value, RecordSet record) {
         RecordSet rec = (RecordSet) value;
+        // evaluate name_get() as superuser, because the visibility of a
+        // many2one field value (id and name) depends on the current record's
+        // access rights, and not the value's access rights.
         if (rec.hasId()) {
             try {
+                // performance: value.sudo() prefetches the same records as value
                 return new Tuple<>(rec.id(), rec.sudo().get("display_name"));
             } catch (MissingErrorException e) {
-                return null;
+                // Should not happen, unless the foreign key is missing.
+                return false;
             }
         } else {
             return rec.id();

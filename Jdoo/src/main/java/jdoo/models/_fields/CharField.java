@@ -24,12 +24,9 @@ import jdoo.util.Pair;
  */
 public class CharField extends _StringField<CharField> {
     /** maximum size of values (deprecated) */
-    public static final Slot size = new Slot("size");
+    public static final Slot size = new Slot("size", null);
     /** whether value is trimmed (only by web client) */
-    public static final Slot trim = new Slot("trim");
-    static {
-        default_slots().put(trim, true);
-    }
+    public static final Slot trim = new Slot("trim", true);
 
     public CharField() {
         column_cast_from = new Tuple<>("text");
@@ -68,8 +65,10 @@ public class CharField extends _StringField<CharField> {
         if (value == null) {
             return null;
         }
+        // we need to convert the string to a unicode object to be able
+        // to evaluate its length (and possibly truncate it) reliably
         String str = value.toString().replace("'", "''");
-        if(hasattr(size)){
+        if (hasattr(size)) {
             str = str.substring(0, getattr(Integer.class, size));
         }
         return str;
@@ -81,7 +80,7 @@ public class CharField extends _StringField<CharField> {
             return null;
         }
         String str = value.toString().replace("'", "''");
-        if(hasattr(size)){
+        if (hasattr(size)) {
             str = str.substring(0, getattr(Integer.class, size));
         }
         return str;

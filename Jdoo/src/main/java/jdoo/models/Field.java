@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -283,6 +284,7 @@ import jdoo.util.Tuple;
  */
 public class Field extends MetaField {
     protected static Logger _schema = LoggerFactory.getLogger("jdoo.schema");
+    protected static Logger _logger = LoggerFactory.getLogger(Field.class);
 
     public Field $new(@Nullable Consumer<Field> consumer) {
         try {
@@ -405,20 +407,24 @@ public class Field extends MetaField {
         // TODO
     }
 
+    /** Compute the related field ``self`` on ``records``. */
     public void _compute_related(RecordSet records) {
-
+        // todo
     }
 
-    public Object _process_related(Object value) {
+    /** No transformation by default, but allows override. */
+    protected Object _process_related(Object value) {
         return value;
     }
 
+    /** Inverse the related field ``self`` on ``records``. */
     public void _inverse_related(RecordSet records) {
-
+        // TODO
     }
 
+    /** Determine the domain to search on field ``self``. */
     public Domain _search_related(RecordSet records, String operator, Object value) {
-        return d.on(org.apache.tomcat.util.buf.StringUtils.join(_related()), operator, value);
+        return d.on(String.join(".", _related()), operator, value);
     }
 
     public Field base_field() {
@@ -550,7 +556,7 @@ public class Field extends MetaField {
      * @return
      */
     public Object convert_to_export(Object value, RecordSet record) {
-        return value == null ? "" : value;
+        return Optional.of(value).orElse("");
     }
 
     /**
