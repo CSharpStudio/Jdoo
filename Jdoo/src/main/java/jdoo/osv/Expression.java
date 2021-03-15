@@ -421,7 +421,7 @@ public class Expression {
                 // as after transforming the column, it will go through this loop once again
                 // ----------------------------------------
                 else if (path.length > 1 && field._store() && field instanceof Many2oneField
-                        && ((Many2oneField) field).auto_join()) {
+                        && ((Many2oneField) field)._auto_join()) {
                     // res_partner.state_id = res_partner__state_id.id
                     leaf.add_join_context(comodel, path[0], "id", path[0]);
                     stack.add(create_substitution_leaf(leaf, new Tuple<>(path[1], operator, right), comodel, false));

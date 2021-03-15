@@ -1,6 +1,8 @@
 package jdoo.models._fields;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.springframework.util.StringUtils;
@@ -9,6 +11,7 @@ import jdoo.apis.Environment;
 import jdoo.data.PgVarchar;
 import jdoo.models.RecordSet;
 import jdoo.tools.Slot;
+import jdoo.util.DefaultDict;
 import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 
@@ -23,8 +26,11 @@ import jdoo.util.Pair;
  * The new values are inserted in an order that is consistent with the
  * overridden selection and this list::
  * 
- * selection = [('a', 'A'), ('b', 'B')] selection_add = [('c', 'C'), ('b',)] >
- * result = [('a', 'A'), ('c', 'C'), ('b', 'B')]
+ * <pre>
+ *selection = [('a', 'A'), ('b', 'B')] 
+ *selection_add = [('c', 'C'), ('b',)] 
+ *> result = [('a', 'A'), ('c', 'C'), ('b', 'B')]
+ * </pre>
  * 
  * The attribute ``selection`` is mandatory except in the case of :ref:`related
  * fields <field-related>` or :ref:`field extensions
@@ -84,6 +90,12 @@ public class SelectionField extends BaseField<SelectionField> {
     public void _setup_attrs(RecordSet model, String name) {
         super._setup_attrs(model, name);
         // todo
+    }
+
+    public Object _selection_modules(RecordSet model) {
+        // TODO
+        DefaultDict<String, Set<String>> value_modules = new DefaultDict<String, Set<String>>(HashSet.class);
+        return value_modules;
     }
 
     Object _description_selection(Environment env) {

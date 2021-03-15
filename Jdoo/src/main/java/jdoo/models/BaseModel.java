@@ -927,6 +927,17 @@ public class BaseModel extends MetaModel {
         }
     }
 
+    protected void _update_cache(RecordSet self, Map<String, Object> values, @Default("true") boolean validate) {
+        // todo
+        self.ensure_one();
+        Cache cache = self.env().cache();
+        List<Pair<Field, Object>> field_values = values.entrySet().stream()
+                .map(entry -> new Pair<>(self.getField(entry.getKey()), entry.getValue())).collect(Collectors.toList());
+
+        // convert monetary fields last in order to ensure proper rounding
+        // todo
+    }
+
     // ---------------------------------------------------
     // methods
     //
@@ -1182,7 +1193,7 @@ public class BaseModel extends MetaModel {
 
         // 4. initialize more field metadata
         cls._field_computed = new HashMap<>(); // fields computed with the same method
-        cls._field_inverses = new Collector(); // inverse fields for related fields
+        cls._field_inverses = new Collector<>(); // inverse fields for related fields
 
         cls._setup_done = true;
 

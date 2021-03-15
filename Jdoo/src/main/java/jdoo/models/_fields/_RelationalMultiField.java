@@ -1,29 +1,134 @@
 package jdoo.models._fields;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import jdoo.apis.Cache;
+import jdoo.exceptions.ValueErrorException;
 import jdoo.models.Field;
+import jdoo.models.NewId;
 import jdoo.models.RecordSet;
+import jdoo.util.OrderedSet;
 import jdoo.util.Pair;
 import jdoo.util.Tuple;
+import jdoo.util.Utils;
 
 /** Abstract class for relational fields *2many. */
 public abstract class _RelationalMultiField<T extends _RelationalMultiField<T>> extends _RelationalField<T> {
     // todos
 
+    /**
+     * Update the cached value of ``self`` for ``records`` with ``value``, and
+     * return whether everything is in cache.
+     */
     public boolean _update(RecordSet records, Object value) {
         // todo
-        return true;
+        boolean result = true;
+        if (Utils.bool(value)) {
+            Cache cache = records.env().cache();
+            for (RecordSet record : records) {
+                if (cache.contains(record, this)) {
+                    Object val = convert_to_cache(Optional.of(record.get(getName())).orElse(value), record, false);
+                    cache.set(record, this, val);
+                } else {
+                    result = false;
+                }
+            }
+        }
+        return result;
     }
 
     @Override
     public Object convert_to_cache(Object value, RecordSet record, boolean validate) {
         // cache format: tuple(ids)
-        // todo
-        return super.convert_to_cache(value, record, validate);
+        if (value instanceof RecordSet) {
+            RecordSet rec = (RecordSet) value;
+            if (validate && rec.name() != _comodel_name()) {
+                throw new ValueErrorException("Wrong value for %s: %s".formatted(this, value));
+            }
+            if (record.hasId() && !Utils.bool(record.id())) {
+                // x2many field value of new record is new records
+                List<Object> ids = new ArrayList<>();
+                for (Object it : rec.ids()) {
+                    ids.add(new NewId(it, null));
+                }
+                return ids;
+            }
+            return rec.ids();
+        } else if (value instanceof List) {
+            // value is a list/tuple of commands, dicts or record ids
+            RecordSet comodel = record.env(_comodel_name());
+            Function<Object, RecordSet> browse;
+            // if record is new, the field's value is new records
+            if (record.hasId() && !Utils.bool(record.id())) {
+                browse = it -> comodel.browse(new NewId(it, null));
+            } else {
+                browse = comodel::browse;
+            }
+            // determine the value ids
+            Set<Object> ids = new HashSet<>(
+                    validate ? ((RecordSet) record.get(getName())).ids() : Collections.emptyList());
+            // modify ids with the commands
+            for (Object command : (Collection<?>) value) {
+                if (command instanceof List) {
+                    List<Object> list = (List<Object>) command;
+                    if (list.get(0).equals(0)) {
+                        // (0, _, values)adds a new record created from the provided ``value`` dict.
+                        ids.add(comodel.$new((Map<String, Object>) list.get(2), null, list.get(1)).id());
+                    } else if (list.get(0).equals(1)) {
+                        // (1, id, values)updates an existing record of id ``id`` with the values in
+                        // ``values``. Can not be used in :meth:`~.create`.
+                        RecordSet line = browse.apply(list.get(1));
+                        if (validate) {
+                            line.update((Map<String, Object>) list.get(2));
+                        } else {
+                            line.call("_update_cache", list.get(2), false);
+                        }
+                        ids.add(line.id());
+                    } else if (list.get(0).equals(2) || list.get(0).equals(3)) {
+                        // (2, id, _) removes the record of id ``id`` from the set, then deletes it
+                        // (from the database). Can not be used in :meth:`~.create`.
+                        // (3, id, _)removes the record of id ``id`` from the set, but does not delete
+                        // it. Can not be used on :class:`~odoo.fields.One2many`. Can not be used in
+                        // :meth:`~.create`.
+                        ids.remove(browse.apply(list.get(1)).id());
+                    } else if (list.get(0).equals(4)) {
+                        // (4, id, _)adds an existing record of id ``id`` to the set. Can not be used on
+                        // :class:`~odoo.fields.One2many`.
+                        ids.add(browse.apply(list.get(1)).id());
+                    } else if (list.get(0).equals(5)) {
+                        // (5, _, _)removes all records from the set, equivalent to using the command
+                        // ``3`` on every record explicitly. Can not be used on
+                        // :class:`~odoo.fields.One2many`. Can not be used in :meth:`~.create`.
+                        ids.clear();
+                    } else if (list.get(0).equals(6)) {
+                        // (6, _, ids)replaces all existing records in the set by the ``ids`` list,
+                        // equivalent to using the command ``5`` followed by a command ``4`` for each
+                        // ``id`` in ``ids``.
+                        ids = new HashSet<>(((Collection<Object>) list.get(2)).stream().map(it -> browse.apply(it).id())
+                                .collect(Collectors.toList()));
+                    }
+                } else if (command instanceof Map) {
+                    ids.add(comodel.$new((Map<String, Object>) command).id());
+                } else {
+                    ids.add(browse.apply(command).id());
+                }
+            }
+            // return result as a tuple
+            return Tuple.fromCollection(ids);
+        } else if (!Utils.bool(value)) {
+            return Collections.emptyList();
+        }
+        throw new ValueErrorException("Wrong value for %s: %s".formatted(this, value));
     }
 
     @Override
@@ -44,19 +149,31 @@ public abstract class _RelationalMultiField<T extends _RelationalMultiField<T>> 
     }
 
     @Override
-    public Object convert_to_write(java.lang.Object value, RecordSet record) {
-        // TODO Auto-generated method stub
-        return super.convert_to_write(value, record);
+    public Object convert_to_write(Object value, RecordSet record) {
+        if (value == null || Boolean.FALSE.equals(value)) {
+            return Arrays.asList(new Tuple<>(5));
+        }
+
+        if (value instanceof Tuple) {
+            value = record.env(_comodel_name()).browse(value);
+        }
+        if (value instanceof RecordSet && ((RecordSet) value).name() == _comodel_name()) {
+            // todo
+        }
+        if (value instanceof List) {
+            return value;
+        }
+        throw new ValueErrorException("Wrong value for %s: %s".formatted(this, value));
     }
 
     @Override
-    public Object convert_to_export(java.lang.Object value, RecordSet record) {
+    public Object convert_to_export(Object value, RecordSet record) {
         // TODO Auto-generated method stub
         return super.convert_to_export(value, record);
     }
 
     @Override
-    public String convert_to_display_name(java.lang.Object value, RecordSet record) {
+    public String convert_to_display_name(Object value, RecordSet record) {
         throw new UnsupportedOperationException();
     }
 

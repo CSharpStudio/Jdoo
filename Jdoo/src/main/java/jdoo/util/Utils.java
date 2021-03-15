@@ -14,6 +14,8 @@ import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jdoo.models.NewId;
+
 public class Utils {
     public static <T> ArrayList<T> asList(T... e) {
         ArrayList<T> list = new ArrayList<>();
@@ -169,6 +171,8 @@ public class Utils {
             return !((Short) obj).equals((short) 0);
         } else if (obj instanceof Byte) {
             return !((Byte) obj).equals((byte) 0);
+        } else if (obj instanceof NewId) {
+            return false;
         }
 
         return true;

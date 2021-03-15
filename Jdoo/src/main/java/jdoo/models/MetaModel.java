@@ -90,7 +90,7 @@ public class MetaModel {
     static final String CONCURRENCY_CHECK_FIELD = "__last_update";
     boolean _setup_done;
     Map<Field, List<Field>> _field_computed;
-    Collector _field_inverses;
+    Collector<Field, Field> _field_inverses;
 
     Registry pool;
 
@@ -106,7 +106,7 @@ public class MetaModel {
         return _name;
     }
 
-    public Collector field_inverses() {
+    public Collector<Field, Field> field_inverses() {
         return _field_inverses;
     }
 

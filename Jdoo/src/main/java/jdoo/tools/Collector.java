@@ -5,11 +5,11 @@ import java.util.HashMap;
 
 import jdoo.util.Utils;
 
-public class Collector extends HashMap<Object, ArrayList<Object>> {
+public class Collector<K, V> extends HashMap<K, ArrayList<V>> {
     private static final long serialVersionUID = 1L;
 
-    public void add(Object key, Object val) {
-        ArrayList<Object> vals = Utils.setdefault(this, key, () -> new ArrayList<Object>());
+    public void add(K key, V val) {
+        ArrayList<V> vals = Utils.setdefault(this, key, ArrayList::new);
         if (!vals.contains(val)) {
             vals.add(val);
         }

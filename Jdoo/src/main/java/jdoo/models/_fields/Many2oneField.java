@@ -1,21 +1,27 @@
 package jdoo.models._fields;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import jdoo.apis.Cache;
 import jdoo.exceptions.MissingErrorException;
 import jdoo.exceptions.ValueErrorException;
+import jdoo.models.BaseModel;
 import jdoo.models.Field;
+import jdoo.models.NewId;
 import jdoo.models.RecordSet;
+import jdoo.tools.IdValues;
 import jdoo.tools.Slot;
 import jdoo.tools.Tools;
 import jdoo.util.Kvalues;
 import jdoo.util.Pair;
 import jdoo.util.Tuple;
+import jdoo.util.Utils;
 
 /**
  * The value of such a field is a recordset of size 0 (no record) or 1 (a single
@@ -67,13 +73,17 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
         return this;
     }
 
-    public boolean auto_join() {
-        return getattr(Boolean.class, Many2oneField.auto_join);
-    }
-
     public Many2oneField auto_join(boolean auto_join) {
         setattr(Many2oneField.auto_join, auto_join);
         return this;
+    }
+
+    boolean _delegate() {
+        return getattr(Boolean.class, delegate);
+    }
+
+    public boolean _auto_join() {
+        return getattr(Boolean.class, Many2oneField.auto_join);
     }
 
     @Override
@@ -141,8 +151,26 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
 
     @Override
     public Object convert_to_cache(Object value, RecordSet record, boolean validate) {
-        // todo
-        return super.convert_to_cache(value, record, validate);
+        // cache format: id or None
+        Object id_ = null;
+        if (value instanceof String || value instanceof NewId) {
+            id_ = value;
+        } else if (value instanceof RecordSet) {
+            RecordSet rec = (RecordSet) value;
+            if (validate && (rec.name() != _comodel_name() || rec.size() > 1)) {
+                throw new ValueErrorException("Wrong value for %s: %s".formatted(this, value));
+            }
+            id_ = rec.hasId() ? rec.get(0) : null;
+        } else if (value instanceof Tuple) {
+            // value is either a pair (id, name), or a tuple of ids
+            id_ = Utils.bool(value) ? ((Tuple<?>) value).get(0) : null;
+        } else if (value instanceof Map) {
+            id_ = record.env(_comodel_name()).$new((Map<String, Object>) value).id();
+        }
+        if (_delegate() && record.hasId() && Boolean.FALSE.equals(record.id())) {
+            id_ = Utils.bool(id_) ? new NewId(id_, null) : null;
+        }
+        return id_;
     }
 
     @Override
@@ -186,33 +214,110 @@ public class Many2oneField extends _RelationalField<Many2oneField> {
 
     @Override
     public Object convert_to_write(Object value, RecordSet record) {
-        // TODO Auto-generated method stub
-        return super.convert_to_write(value, record);
+        if (value instanceof String || value instanceof NewId) {
+            return value;
+        }
+        if (!Utils.bool(value)) {
+            return false;
+        }
+        if (value instanceof RecordSet && ((RecordSet) value).name() == _comodel_name()) {
+            return ((RecordSet) value).id();
+        }
+        if (value instanceof Tuple) {
+            // value is either a pair (id, name), or a tuple of ids
+            return Utils.bool(value) ? ((Tuple<?>) value).get(0) : false;
+        }
+        if (value instanceof Map) {
+            return record.env(_comodel_name()).$new((Map<String, Object>) value).id();
+        }
+        throw new ValueErrorException("Wrong value for %s: %s".formatted(this, value));
     }
 
     @Override
     public Object convert_to_export(Object value, RecordSet record) {
-        // TODO Auto-generated method stub
-        return super.convert_to_export(value, record);
+        if (value instanceof RecordSet) {
+            return ((RecordSet) value).get("display_name");
+        }
+        return "";
     }
 
     @Override
     public String convert_to_display_name(Object value, RecordSet record) {
-        // TODO Auto-generated method stub
-        return super.convert_to_display_name(value, record);
+        return (String) ((RecordSet) value).get("display_name");
     }
 
     @Override
     public Object convert_to_onchange(Object value, RecordSet record, Collection<String> names) {
         if (value == null || !Tools.hasId(((RecordSet) value).id())) {
-            return null;
+            return false;
         }
         return super.convert_to_onchange(value, record, names);
     }
 
     @Override
     public RecordSet write(RecordSet records, Object value) {
-        // todo
+        // discard recomputation of self on records
+        Cache cache = records.env().cache();
+        Object cache_value = convert_to_cache(value, records, true);
+        records = cache.get_records_different_from(records, this, cache_value);
+        if (!records.hasId()) {
+            return records;
+        }
+        // remove records from the cache of one2many fields of old corecords
+        _remove_inverses(records, cache_value);
+        // update the cache of self
+        cache.update(records, this, Utils.mutli(Arrays.asList(cache_value), records.size()));
+
+        // update the cache of one2many fields of new corecord
+        _update_inverses(records, cache_value);
+
+        if (_store()) {
+            IdValues towrite = records.env().all().towrite(model_name());
+            for (RecordSet record : records.filtered("id")) {
+                // cache_value is already in database format
+                towrite.set(record.id(), getName(), cache_value);
+            }
+        }
         return records;
+    }
+
+    /** Remove `records` from the cached values of the inverse fields of `self`. */
+    void _remove_inverses(RecordSet records, Object value) {
+        Cache cache = records.env().cache();
+        Set<Object> record_ids = new HashSet<>(records.ids());
+        for (Field invf : records.type().field_inverses().get(this)) {
+            RecordSet corecords = records.env(_comodel_name()).browse(cache.get_values(records, this));
+            for (RecordSet corecord : corecords) {
+                Collection<Object> ids0 = (Collection<Object>) cache.get(corecord, invf, null);
+                if (ids0 != null) {
+                    Object ids1 = ids0.stream().filter(id_ -> !record_ids.contains(id_)).collect(Collectors.toList());
+                    cache.set(corecord, invf, ids1);
+                }
+            }
+        }
+    }
+
+    /** Add `records` to the cached values of the inverse fields of `self`. */
+    void _update_inverses(RecordSet records, Object value) {
+        if (value == null) {
+            return;
+        }
+        Cache cache = records.env().cache();
+        RecordSet corecord = (RecordSet) convert_to_record(value, records);
+        for (Field invf : records.type().field_inverses().get(this)) {
+            RecordSet valid_records = records.filtered_domain(((_RelationalField<?>) invf).get_domain_list(corecord));
+            if (!valid_records.hasId()) {
+                continue;
+            }
+            Collection<Object> ids0 = (Collection<Object>) cache.get(corecord, invf, null);
+            // if the value for the corecord is not in cache, but this is a new
+            // record, assign it anyway, as you won't be able to fetch it from
+            // database (see `test_sale_order`)
+            if (ids0 != null || !Utils.bool(corecord.id())) {
+                ids0.addAll(valid_records.ids());
+                Object ids1 = ids0.stream().distinct().collect(Collectors.toList());
+                cache.set(corecord, invf, ids1);
+            }
+        }
     }
 }

@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -560,9 +561,29 @@ public final class RecordSet implements Iterable<RecordSet> {
                 .collect(Collectors.toList()));
     }
 
+    public RecordSet filtered_domain(List<Object> domain) {
+        // todo
+        return this;
+    }
+
     // =================================================================================
     // model methods
     //
+
+    public RecordSet $new(Map<String, Object> values) {
+        RecordSet record = browse(new NewId(null, null));
+        record.call("_update_cache", values, false);
+        return record;
+    }
+
+    public RecordSet $new(Map<String, Object> values, @Nullable Object origin, @Nullable Object ref) {
+        if (origin instanceof RecordSet) {
+            origin = ((RecordSet) origin).id();
+        }
+        RecordSet record = browse(new NewId(origin, ref));
+        record.call("_update_cache", values, false);
+        return record;
+    }
 
     /**
      * Creates new records for the model.
@@ -580,6 +601,15 @@ public final class RecordSet implements Iterable<RecordSet> {
      */
     public RecordSet create(Object values) {
         return call(RecordSet.class, "create", this, values);
+    }
+
+    /** Update the records in ``self`` with ``values``. */
+    public void update(Map<String, Object> values) {
+        for (RecordSet record : this) {
+            for (Entry<String, Object> entry : values.entrySet()) {
+                record.set(entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     /**
