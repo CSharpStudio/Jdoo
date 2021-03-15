@@ -139,7 +139,7 @@ public class Environment {
             Set<Object> ids_ = new HashSet<>();
             Collection<Object> ids = $protected.get(field, Tuple.emptyTuple());
             ids_.addAll(ids);
-            ids_.addAll(records.ids());
+            ids_.addAll(records._ids());
             map.put(field, ids_);
         }
         return new Protecting();
@@ -159,7 +159,7 @@ public class Environment {
         if (ids == null) {
             return;
         }
-        ids.removeAll(records.ids());
+        ids.removeAll(records._ids());
         if (ids.isEmpty()) {
             all.tocompute().remove(field);
         }

@@ -96,7 +96,7 @@ public class Cache {
         }
         if (!field._depends_context().isEmpty()) {
             Object key = field.cache_key(records.env());
-            for (Tuple<Object> t : Utils.zip(records.ids(), values)) {
+            for (Tuple<Object> t : Utils.zip(records._ids(), values)) {
                 String record_id = (String) t.get(0);
                 Object value = t.get(1);
                 if (field_cache.containsKey(record_id)) {
@@ -109,7 +109,7 @@ public class Cache {
                 }
             }
         } else {
-            for (Tuple<Object> t : Utils.zip(records.ids(), values)) {
+            for (Tuple<Object> t : Utils.zip(records._ids(), values)) {
                 field_cache.put(t.get(0), t.get(1));
             }
         }
@@ -127,7 +127,7 @@ public class Cache {
         List<Object> values = new ArrayList<>();
         if (_data.containsKey(field)) {
             Map<Object, Object> field_cache = _data.get(field);
-            for (Object recrod_id : records.ids()) {
+            for (Object recrod_id : records._ids()) {
                 if (field_cache.containsKey(recrod_id)) {
                     Object value = field_cache.get(recrod_id);
                     if (!field._depends_context().isEmpty()) {
@@ -143,19 +143,19 @@ public class Cache {
     }
 
     public RecordSet get_records_different_from(RecordSet records, Field field, Object value) {
-        List<Object> ids = new ArrayList<>();
+        List<Object> _ids = new ArrayList<>();
         Map<Object, Object> field_cache = _data.get(field);
-        for (Object record_id : records.ids()) {
+        for (Object record_id : records._ids()) {
             if (field_cache != null && field_cache.containsKey(record_id)) {
                 Object val = field_cache.get(record_id);
                 if (!ObjectUtils.nullSafeEquals(val, value)) {
-                    ids.add(record_id);
+                    _ids.add(record_id);
                 }
             } else {
-                ids.add(record_id);
+                _ids.add(record_id);
             }
         }
-        return records.browse(ids);
+        return records.browse(_ids);
     }
 
     public Collection<Field> get_fields(RecordSet record) {
@@ -198,7 +198,7 @@ public class Cache {
         }
         Map<Object, Object> field_cache = _data.get(field);
         Collection<Object> result = new ArrayList<>();
-        for (Object id : records.ids()) {
+        for (Object id : records._ids()) {
             if (!field_cache.containsKey(id)) {
                 result.add(id);
             }

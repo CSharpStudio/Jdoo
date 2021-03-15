@@ -2,10 +2,10 @@ package jdoo.addons.web.models;
 
 import java.util.List;
 
-import jdoo.models.Model;
+import jdoo.models.AbstractModel;
 import jdoo.models.RecordSet;
 
-public class Base extends Model {
+public class Base extends AbstractModel {
     public Base() {
         _inherit = "base";
     }

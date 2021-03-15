@@ -135,7 +135,7 @@ public abstract class _RelationalMultiField<T extends _RelationalMultiField<T>> 
     public Object convert_to_record(Object value, RecordSet record) {
         // use registry to avoid creating a recordset for the model
         Collection<Object> prefetch_ids = prefetch_x2many_ids(record, this);
-        Collection<?> ids = value instanceof Collection ? (Collection<?>) value : new Tuple<>(value);
+        Collection<Object> ids = value instanceof Collection ? (Collection<Object>) value : new Tuple<>(value);
         RecordSet corecords = record.pool(_comodel_name()).browse(record.env(), ids, prefetch_ids);
         if (corecords.hasField("active") && (Boolean) record.env().context().getOrDefault("active_test", true)) {
             corecords = corecords.filtered("active").with_prefetch(prefetch_ids);
@@ -155,10 +155,34 @@ public abstract class _RelationalMultiField<T extends _RelationalMultiField<T>> 
         }
 
         if (value instanceof Tuple) {
+            // a tuple of ids, this is the cache format
             value = record.env(_comodel_name()).browse(value);
         }
         if (value instanceof RecordSet && ((RecordSet) value).name() == _comodel_name()) {
-            // todo
+            // make result with new and existing records
+            Map<String, Field> inv_names = record.type().field_inverses().get(this).stream()
+                    .collect(Collectors.toMap(field -> field.getName(), field -> field));
+            List<Tuple<Object>> result = Utils.asList(new Tuple<>(6, 0, new ArrayList<Object>()));
+            for (RecordSet rec : (RecordSet) value) {
+                RecordSet origin = rec.origin();
+                if (!origin.hasId()) {
+                    Object values = rec._convert_to_write(
+                            rec._cache().keySet().stream().filter(name -> !inv_names.containsKey(name))
+                                    .collect(Collectors.toMap(name -> name, name -> rec.get(name))));
+                    result.add(new Tuple<>(0, 0, values));
+                } else {
+                    ((List<Object>) result.get(0).get(2)).add(origin.id());
+                    if (!rec.equals(origin)) {
+                        Object values = rec._convert_to_write(rec._cache().keySet().stream().filter(
+                                name -> !inv_names.containsKey(name) && !rec.get(name).equals(origin.get(name)))
+                                .collect(Collectors.toMap(name -> name, name -> rec.get(name))));
+                        if (Utils.bool(values)) {
+                            result.add(new Tuple<>(1, origin.id(), values));
+                        }
+                    }
+                }
+            }
+            return result;
         }
         if (value instanceof List) {
             return value;
@@ -168,8 +192,11 @@ public abstract class _RelationalMultiField<T extends _RelationalMultiField<T>> 
 
     @Override
     public Object convert_to_export(Object value, RecordSet record) {
-        // TODO Auto-generated method stub
-        return super.convert_to_export(value, record);
+        if (value == null || !(value instanceof RecordSet)) {
+            return "";
+        }
+        return String.join(",",
+                ((RecordSet) value).name_get().stream().map(p -> p.second()).collect(Collectors.toList()));
     }
 
     @Override
@@ -179,8 +206,24 @@ public abstract class _RelationalMultiField<T extends _RelationalMultiField<T>> 
 
     @Override
     public void _setup_regular_full(RecordSet model) {
-        // TODO Auto-generated method stub
         super._setup_regular_full(model);
+        Object d = getattr(domain);
+        if (d instanceof List && ((List<?>) d).size() > 0) {
+            Collection<String> _depends = _depends();
+            List<String> depends = new ArrayList<>();
+            if (_depends != null) {
+                depends.addAll(_depends);
+            }
+            for (Object arg : (List<Object>) d) {
+                if (arg instanceof List) {
+                    Object a = ((List<Object>) arg).get(0);
+                    if (a instanceof String) {
+                        depends.add(getName() + "." + a);
+                    }
+                }
+            }
+            depends(depends);
+        }
     }
 
     @Override

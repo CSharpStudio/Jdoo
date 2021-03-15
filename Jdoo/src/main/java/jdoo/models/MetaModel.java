@@ -292,10 +292,10 @@ public class MetaModel {
         return null;
     }
 
-    public RecordSet browse(Environment env, Collection<?> ids, Collection<?> prefetchIds) {
+    public RecordSet browse(Environment env, Collection<Object> ids, Collection<Object> prefetchIds) {
         RecordSet m = new RecordSet(this, env);
-        m.ids = Tuple.fromCollection(ids);
-        m.prefetchIds = Tuple.fromCollection(prefetchIds);
+        m._ids = Tuple.fromCollection(ids);
+        m._prefetch_ids = Tuple.fromCollection(prefetchIds);
         return m;
     }
 
@@ -585,6 +585,11 @@ public class MetaModel {
             throw new AccessErrorException(
                     String.format("Private methods (such as %s) cannot be called remotely.", name));
         }
+    }
+
+    @Override
+    public String toString() {
+        return _name;
     }
 
     static class Util {

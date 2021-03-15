@@ -34,7 +34,7 @@ public class BaseField<T extends BaseField<T>> extends Field {
         return (T) this;
     }
 
-    public T depends(String[] depends) {
+    public T depends(Collection<String> depends) {
         setattr(Slots.depends, depends);
         return (T) this;
     }
@@ -133,7 +133,7 @@ public class BaseField<T extends BaseField<T>> extends Field {
         return (T) this;
     }
 
-    public T invisible(boolean invisible){
+    public T invisible(boolean invisible) {
         return (T) this;
     }
 }

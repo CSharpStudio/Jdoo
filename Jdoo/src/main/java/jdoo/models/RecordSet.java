@@ -1,15 +1,20 @@
 package jdoo.models;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -37,8 +42,9 @@ import jdoo.data.Cursor;
 public final class RecordSet implements Iterable<RecordSet> {
     private MetaModel meta;
     private Environment env;
-    Tuple<?> ids;
-    Tuple<?> prefetchIds;
+    private Kvalues _lazy_properties;
+    Tuple<Object> _ids;
+    Tuple<Object> _prefetch_ids;
     static Map<Field, Collection<Field>> _field_computed;
 
     public Map<Field, Collection<Field>> _field_computed() {
@@ -48,6 +54,18 @@ public final class RecordSet implements Iterable<RecordSet> {
     public RecordSet(MetaModel cls, Environment env) {
         this.meta = cls;
         this.env = env;
+    }
+
+    <T> T lazy_property(String p, Supplier<T> func) {
+        if (_lazy_properties == null) {
+            _lazy_properties = new Kvalues();
+        }
+        if (_lazy_properties.containsKey(p)) {
+            return (T) _lazy_properties.get(p);
+        }
+        T obj = func.get();
+        _lazy_properties.put(p, obj);
+        return obj;
     }
 
     /** the model name */
@@ -102,8 +120,8 @@ public final class RecordSet implements Iterable<RecordSet> {
      *         environment.
      */
     public RecordSet browse(Object id) {
-        if (id instanceof Collection<?>) {
-            return meta.browse(env, (Collection<?>) id, (Collection<?>) id);
+        if (id instanceof Collection) {
+            return meta.browse(env, (Collection<Object>) id, (Collection<Object>) id);
         }
         Tuple<Object> ids = new Tuple<>(id);
         return meta.browse(env, ids, ids);
@@ -122,22 +140,27 @@ public final class RecordSet implements Iterable<RecordSet> {
     /** */
     public Object id() {
         if (hasId())
-            return ids.get(0);
+            return _ids.get(0);
         return false;
     }
 
     /** Return the list of actual record ids corresponding to this. */
     public List<?> ids() {
-        return ids;
+        return origin_ids(_ids);
+    }
+
+    /** Return the list of record _ids corresponding to this. */
+    public List<?> _ids() {
+        return _ids;
     }
 
     public List<?> prefetch_ids() {
-        return prefetchIds;
+        return _prefetch_ids;
     }
 
     /** Test whether this is nonempty. */
     public boolean hasId() {
-        return ids != null && ids.size() > 0;
+        return _ids != null && _ids.size() > 0;
     }
 
     /** get field by name */
@@ -160,7 +183,7 @@ public final class RecordSet implements Iterable<RecordSet> {
      * otherwise.
      */
     public void ensure_one() {
-        if (ids == null || ids.size() > 1) {
+        if (_ids == null || _ids.size() > 1) {
             throw new ValueErrorException(String.format("Expected singleton: %s", this));
         }
     }
@@ -212,7 +235,7 @@ public final class RecordSet implements Iterable<RecordSet> {
      * @return
      */
     public RecordSet with_env(Environment env) {
-        return meta.browse(env, ids, prefetchIds);
+        return meta.browse(env, _ids, _prefetch_ids);
     }
 
     /**
@@ -260,11 +283,11 @@ public final class RecordSet implements Iterable<RecordSet> {
      * @return a new version of this recordset that uses the given prefetch ids, or
      *         this's ids if not given.
      */
-    public RecordSet with_prefetch(@Nullable Collection<?> prefetch_ids) {
+    public RecordSet with_prefetch(@Nullable Collection<Object> prefetch_ids) {
         if (prefetch_ids == null) {
-            prefetch_ids = ids;
+            prefetch_ids = _ids;
         }
-        return type().browse(env, ids, prefetch_ids);
+        return type().browse(env, _ids, prefetch_ids);
     }
 
     // =================================================================================
@@ -369,17 +392,17 @@ public final class RecordSet implements Iterable<RecordSet> {
 
     /** the size of this {@code RecordSet} */
     public int size() {
-        return ids.size();
+        return _ids.size();
     }
 
     /** get the record from this {@code RecordSet} */
     public RecordSet get(int index) {
-        return browse(ids.get(index));
+        return browse(_ids.get(index));
     }
 
     /** subset of this {@code RecordSet} */
     public RecordSet get(int from, int to) {
-        return browse(new Tuple<>(ids.toArray(from, to)));
+        return browse(new Tuple<>(_ids.toArray(from, to)));
     }
 
     class SelfIterator implements Iterator<RecordSet> {
@@ -387,18 +410,18 @@ public final class RecordSet implements Iterable<RecordSet> {
 
         @Override
         public boolean hasNext() {
-            return cusor < ids.size();
+            return cusor < _ids.size();
         }
 
         @Override
         public RecordSet next() {
-            return browse(ids.get(cusor++));
+            return browse(_ids.get(cusor++));
         }
     }
 
     @Override
     public String toString() {
-        return String.format("%s%s", name(), ids());
+        return String.format("%s%s", name(), _ids());
     }
 
     @Override
@@ -410,12 +433,7 @@ public final class RecordSet implements Iterable<RecordSet> {
         if (!name().equals(other.name()) || size() != other.size()) {
             return false;
         }
-        for (Object id : other.ids()) {
-            if (!ids.contains(id)) {
-                return false;
-            }
-        }
-        return true;
+        return new HashSet<>(_ids).equals(new HashSet<>(other._ids));
     }
 
     // =================================================================================
@@ -500,6 +518,30 @@ public final class RecordSet implements Iterable<RecordSet> {
         return browse(ids);
     }
 
+    public Map<String, Object> _convert_to_record(Map<String, Object> values) {
+        Map<String, Object> map = new HashMap<>();
+        for (Entry<String, Object> e : values.entrySet()) {
+            map.put(e.getKey(), getField(e.getKey()).convert_to_record(e.getValue(), this));
+        }
+        return map;
+    }
+
+    public Map<String, Object> _convert_to_write(Map<String, Object> values) {
+        Map<String, Object> result = new HashMap<>();
+        for (Entry<String, Object> e : values.entrySet()) {
+            String name = e.getKey();
+            Object value = e.getValue();
+            if (hasField(name)) {
+                Field field = getField(name);
+                value = field.convert_to_write(value, this);
+                if (!(value instanceof NewId)) {
+                    result.put(name, value);
+                }
+            }
+        }
+        return result;
+    }
+
     Object _mapped_func(Function<RecordSet, Object> func) {
         if (hasId()) {
             List<Object> vals = StreamSupport.stream(this.spliterator(), false).map(rec -> func.apply(rec))
@@ -564,6 +606,31 @@ public final class RecordSet implements Iterable<RecordSet> {
     public RecordSet filtered_domain(List<Object> domain) {
         // todo
         return this;
+    }
+
+    /** Return the actual records corresponding to ``self``. */
+    public RecordSet origin() {
+        List<Object> ids = origin_ids(this._ids);
+        List<Object> prefetch_ids = origin_ids(this._prefetch_ids);
+        return meta.browse(env, ids, prefetch_ids);
+    }
+
+    List<Object> origin_ids(List<Object> ids) {
+        List<Object> ids_ = new ArrayList<>();
+        for (Object id : ids) {
+            if (id instanceof NewId) {
+                ids_.add(((NewId) id).origin());
+            } else if (!Boolean.FALSE.equals(id)) {
+                ids_.add(id);
+            }
+        }
+        return ids_;
+    }
+
+    public Map<String, Object> _cache() {
+        return lazy_property("_cache", () -> {
+            return new RecordCache(this);
+        });
     }
 
     // =================================================================================
@@ -882,4 +949,84 @@ public final class RecordSet implements Iterable<RecordSet> {
     public void unlink() {
         call("unlink", this);
     }
+}
+
+class RecordCache implements Map<String, Object> {
+
+    RecordSet _record;
+
+    public RecordCache(RecordSet record) {
+        assert record.size() == 1 : "Unexpected RecordCache(%s)".formatted(record);
+        _record = record;
+    }
+
+    @Override
+    public int size() {
+        return _record.env().cache().get_fields(_record).size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return size() > 0;
+    }
+
+    @Override
+    public boolean containsKey(Object key) {
+        Field field = _record.getField((String) key);
+        return _record.env().cache().contains(_record, field);
+    }
+
+    @Override
+    public boolean containsValue(Object value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object get(Object key) {
+        Field field = _record.getField((String) key);
+        return _record.env().cache().get(_record, field);
+    }
+
+    @Override
+    public Object put(String key, Object value) {
+        Field field = _record.getField((String) key);
+        _record.env().cache().set(_record, field, value);
+        return value;
+    }
+
+    @Override
+    public Object remove(Object key) {
+        Field field = _record.getField((String) key);
+        return _record.env().cache().remove(_record, field);
+    }
+
+    @Override
+    public void putAll(Map<? extends String, ? extends Object> m) {
+        for (Entry<? extends String, ? extends Object> e : m.entrySet()) {
+            put(e.getKey(), e.getValue());
+        }
+    }
+
+    @Override
+    public void clear() {
+        for (Field field : _record.getFields()) {
+            _record.env().cache().remove(_record, field);
+        }
+    }
+
+    @Override
+    public Set<String> keySet() {
+        return _record.env().cache().get_fields(_record).stream().map(f -> f.getName()).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Collection<Object> values() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<Entry<String, Object>> entrySet() {
+        throw new UnsupportedOperationException();
+    }
+
 }

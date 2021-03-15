@@ -800,7 +800,7 @@ public class Field extends MetaField {
     }
 
     private RecordSet _in_cache_without(RecordSet record, Field field) {
-        RecordSet recs = record.browse(record.prefetchIds);
+        RecordSet recs = record.browse(record._prefetch_ids);
         List<Object> ids = new ArrayList<>(record.ids());
         for (Object record_id : record.env().cache().get_missing_ids(recs.subtract(record), field)) {
             if (!Tools.hasId(record_id)) {

@@ -140,7 +140,7 @@ public abstract class MetaField {
     }
 
     /** get slot depends */
-    Collection<String> _depends() {
+    protected Collection<String> _depends() {
         return (Collection<String>) getattr(Slots.depends);
     }
 

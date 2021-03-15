@@ -196,7 +196,7 @@ public class BaseModel extends MetaModel {
             if (extras.hasId()) {
                 throw new AccessErrorException(MessageFormat.format(
                         "Database fetch misses ids ({0}) and has extra ids ({1}), may be caused by a type incoherence in a previous request",
-                        missing.ids, extras.ids));
+                        missing._ids, extras._ids));
             }
             RecordSet forbidden = exists(missing);
             if (forbidden.hasId()) {
@@ -420,17 +420,12 @@ public class BaseModel extends MetaModel {
                 defaults.put(name, ir_defaults.get(name));
                 continue;
             }
-            Field field = null;
-            try {
-                field = self.getField(name);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            if (field._default() != null) {
+            Field field = self.type().findField(name);
+            if (field != null && field._default() != null) {
                 defaults.put(name, field._default().apply(self));
                 continue;
             }
-            if (field._inherited()) {
+            if (field != null && field._inherited()) {
                 field = field._related_field();
                 parent_fields.get(field.model_name()).add(field.name);
             }
@@ -466,7 +461,7 @@ public class BaseModel extends MetaModel {
     public RecordSet exists(RecordSet self) {
         List<Object> ids = new ArrayList<>();
         List<Object> new_ids = new ArrayList<>();
-        for (Object i : self.ids) {
+        for (Object i : self._ids) {
             if (Tools.hasId(i)) {
                 ids.add(i);
             } else {
@@ -710,7 +705,7 @@ public class BaseModel extends MetaModel {
             StringBuilder sb = new StringBuilder();
             org.apache.tomcat.util.buf.StringUtils.join(columns.toArray(new String[0]), ',', sb);
             String query = String.format("UPDATE \"%s\" SET %s WHERE id IN %%s", self.table(), sb.toString());
-            for (Tuple<?> sub_ids : cr.split_for_in_conditions(self.ids)) {
+            for (Tuple<?> sub_ids : cr.split_for_in_conditions(self._ids)) {
                 List<Object> p = new ArrayList<>();
                 p.addAll(params);
                 p.addAll(Arrays.asList(sub_ids));
