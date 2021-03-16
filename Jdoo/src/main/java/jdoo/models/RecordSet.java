@@ -272,6 +272,24 @@ public final class RecordSet implements Iterable<RecordSet> {
         return with_env(env.create(new Kwargs(k -> k.set("context", context))));
     }
 
+    /**
+     * with_context([context][, **overrides]) -> records
+     * 
+     * <pre>
+     *current context is {'key1': True} 
+     *r2 = records.with_context(k->k.set("key2",true));
+     *-> r2._context is {'key1': True, 'key2': True}
+     * </pre>
+     * 
+     * @param func
+     * @return a new version of this recordset attached to an extended context.
+     */
+    public RecordSet with_context(Supplier<Map<String, Object>> func) {
+        Kvalues context = new Kvalues(env.context());
+        context.putAll(func.get());
+        return with_env(env.create(new Kwargs(k -> k.set("context", context))));
+    }
+
     public RecordSet with_user(Object uid) {
         return this;
     }

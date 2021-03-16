@@ -136,4 +136,9 @@ public class BaseField<T extends BaseField<T>> extends Field {
     public T invisible(boolean invisible) {
         return (T) this;
     }
+
+    public T prefetch(boolean prefetch) {
+        setattr(Slots.prefetch, prefetch);
+        return (T) this;
+    }
 }

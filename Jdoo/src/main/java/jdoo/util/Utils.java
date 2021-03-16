@@ -144,6 +144,9 @@ public class Utils {
      * <p>
      * {@code !Byte.equals((byte) 0)}
      * </p>
+     * <p>
+     * {@code !obj instanceof NewId}
+     * </p>
      * 
      * @param obj the obj to test
      * @return the test result

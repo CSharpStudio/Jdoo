@@ -1,9 +1,11 @@
 package jdoo.models;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import jdoo.models._fields.*;
+import jdoo.tools.Selector;
 import jdoo.util.Pair;
 
 public class fields {
@@ -109,6 +111,12 @@ public class fields {
 
     public static SelectionField Selection() {
         return new SelectionField();
+    }
+
+    public static SelectionField Selection(Consumer<Selector> selection) {
+        Selector s = new Selector();
+        selection.accept(s);
+        return new SelectionField().selection(s);
     }
 
     public static SelectionField Selection(List<Pair<String, String>> selection) {

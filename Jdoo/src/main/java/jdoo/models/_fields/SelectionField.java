@@ -75,7 +75,7 @@ public class SelectionField extends BaseField<SelectionField> {
     @Override
     public void _setup_regular_base(RecordSet model) {
         super._setup_regular_base(model);
-        assert hasattr(selection) : String.format("Field %s with non-str value in selection", this);
+        //assert hasattr(selection) : String.format("Field %s with non-str value in selection", this);
     }
 
     @Override

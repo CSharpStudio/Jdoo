@@ -19,7 +19,7 @@ public class IrModelAccess extends Model {
             "If you uncheck the active field, it will disable the ACL without deleting it (if you delete a native ACL, it will be re-created when you reload the module).");
     static Field model_id = fields.Many2one("ir.model", "Object").required(true).domain(d.on("transient", "=", false))
             .index(true).ondelete("cascade");
-    //static Field group_id = fields.Many2one("res.groups", "Group").ondelete("cascade").index(true);
+    static Field group_id = fields.Many2one("res.groups", "Group").ondelete("cascade").index(true);
     static Field perm_read = fields.Boolean("Read Access");
     static Field perm_write = fields.Boolean("Write Access");
     static Field perm_create = fields.Boolean("Create Access");

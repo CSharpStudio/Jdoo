@@ -701,7 +701,7 @@ public class Field extends MetaField {
      * @param value   a value in any format
      * @return the subset of `records` that have been modified
      */
-    public RecordSet write(RecordSet records, Object value) {
+    public Object write(RecordSet records, Object value) {
         records.env().remove_to_compute(this, records);
         Cache cache = records.env().cache();
         Object cache_value = convert_to_cache(value, records, true);

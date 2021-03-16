@@ -34,7 +34,8 @@ public class Partner extends Model {
             .domain(d.on("active", "=", true));// # force "active_test" domain to bypass _search() override
 
     static Field ref = fields.Char().string("Reference").index(true);
-    static Field lang = fields.Selection(self -> _lang_get(self)).string("Language").$default(self -> self.env().lang())
+    static Field lang = fields.Selection((RecordSet self) -> _lang_get(self)).string("Language")
+            .$default(self -> self.env().lang())
             .help("All the emails and documents sent to this contact will be translated in this language.");
     static Field active_lang_count = fields.Integer().compute("_compute_active_lang_count");
     static Field tz = fields.Selection(Partner::_tz_get).string("Timezone").$default(self -> self.context().get("tz"))

@@ -34,6 +34,10 @@ public class DateTimeField extends BaseField<DateTimeField> {
         }
     }
 
+    public static Date now(Object args) {
+        return new Date();
+    }
+
     @Override
     public Object convert_to_cache(Object value, RecordSet record, boolean validate) {
         return to_datetime(value);
@@ -41,7 +45,7 @@ public class DateTimeField extends BaseField<DateTimeField> {
 
     @Override
     public Object convert_to_export(Object value, RecordSet record) {
-        if(value == null){
+        if (value == null) {
             return "";
         }
         return to_datetime(value);

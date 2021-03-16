@@ -1,9 +1,11 @@
 package jdoo.models._fields;
 
+import java.util.List;
 import java.util.Map;
 
 import jdoo.models.RecordSet;
 import jdoo.util.Kvalues;
+import jdoo.util.Pair;
 
 /**
  * Many2many field; the value of such a field is the recordset.
@@ -108,5 +110,11 @@ public class Many2manyField extends _RelationalMultiField<Many2manyField> {
     @Override
     public boolean update_db(RecordSet model, Map<String, Kvalues> columns) {
         return true;
+    }
+
+    @Override
+    protected Object write_real(List<Pair<RecordSet, Object>> records_commands_list, boolean create) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

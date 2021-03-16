@@ -21,20 +21,22 @@ public class IrModel extends Model {
         _name = "ir.model";
         _description = "Models";
         _order = "model";
+        _sql_constraints = Arrays.asList(new Tuple<>("obj_name_uniq", "unique (model)", "Each model must be unique!"));
     }
 
     static Field name = fields.Char("Model Description").translate(true).required(true);
     static Field model = fields.Char().$default("x_").required(true).index(true);
     static Field info = fields.Text().string("Information");
-    // static Field field_id = fields.One2many("ir.model.fields", "model_id").string("Fields").required(true).copy(true)
-    //         .$default("_default_field_id");
+    static Field field_id = fields.One2many("ir.model.fields", "model_id").string("Fields").required(true).copy(true)
+            .$default("_default_field_id");
     static Field inherited_model_ids = fields.Many2many("ir.model").compute("_inherited_models")
             .string("Inherited models").help("The list of models that extends the current model.");
     static Field state = fields
             .Selection(Arrays.asList(new Pair<>("manual", "Custom Object"), new Pair<>("base", "Base Object")))
             .string("Type").$default("manual").readonly(true);
     static Field access_ids = fields.One2many("ir.model.access", "model_id").string("Access");
-    //static Field rule_ids = fields.One2many("ir.rule", "model_id").string("Record Rules");
+    // static Field rule_ids = fields.One2many("ir.rule", "model_id").string("Record
+    // Rules");
     static Field $transient = fields.Boolean().string("Transient Model");
     static Field modules = fields.Char().compute("_in_modules").string("In Apps")
             .help("List of modules in which the object is defined or inherited");
@@ -47,7 +49,7 @@ public class IrModel extends Model {
             return Collections.emptyList();// no default field when importing
         }
         return Arrays.asList(new Tuple<>(0, 0,
-                new Kvalues(k->k.set("name", "x_name").set("field_description", "Name").set("ttype", "char"))));
+                new Kvalues(k -> k.set("name", "x_name").set("field_description", "Name").set("ttype", "char"))));
     }
 
     @api.depends()

@@ -121,7 +121,7 @@ public class _BinaryField<T extends _BinaryField<T>> extends BaseField<T> {
     }
 
     @Override
-    public RecordSet write(RecordSet records, Object value) {
+    public Object write(RecordSet records, Object value) {
         if (!_attachment()) {
             return super.write(records, value);
         }

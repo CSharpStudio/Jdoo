@@ -1,15 +1,23 @@
 package jdoo.models._fields;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
 import org.springframework.util.StringUtils;
 
+import jdoo.apis.Cache;
 import jdoo.exceptions.UserErrorException;
 import jdoo.models.Field;
 import jdoo.models.RecordSet;
 import jdoo.tools.Slot;
+import jdoo.util.DefaultDict;
 import jdoo.util.Kvalues;
+import jdoo.util.Pair;
+import jdoo.util.Tuple;
 
 /**
  * One2many field; the value of such a field is the recordset of all the records
@@ -61,11 +69,15 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
     }
 
     public String _inverse_name() {
-        return getattr(String.class, One2manyField.inverse_name);
+        return getattr(String.class, inverse_name);
     }
 
     public boolean _auto_join() {
-        return getattr(Boolean.class, Many2oneField.auto_join);
+        return getattr(Boolean.class, auto_join);
+    }
+
+    Integer _limit() {
+        return getattr(Integer.class, limit);
     }
 
     @Override
@@ -96,15 +108,60 @@ public class One2manyField extends _RelationalMultiField<One2manyField> {
     }
 
     @Override
-    public List<Object> get_domain_list(RecordSet model) {
-        // TODO Auto-generated method stub
-        return super.get_domain_list(model);
+    public List<Object> get_domain_list(RecordSet records) {
+        RecordSet comodel = records.env(_comodel_name());
+        Field inverse_field = comodel.getField(_inverse_name());
+        List<Object> domain = super.get_domain_list(records);
+        if (inverse_field instanceof Many2oneReferenceField) {
+            domain.add(new Tuple<>(((Many2oneReferenceField) inverse_field)._model_field(), "=", records.name()));
+        }
+        return domain;
     }
 
     @Override
     public void read(RecordSet records) {
-        // TODO Auto-generated method stub
-        super.read(records);
+        // retrieve the lines in the comodel
+        Kvalues context = new Kvalues().set("active_test", false);
+        context.putAll(_context());
+        RecordSet comodel = records.env(_comodel_name()).with_context(() -> context);
+        String inverse = _inverse_name();
+        Field inverse_field = comodel.getField(inverse);
+        List<Object> domain = get_domain_list(records);
+        domain.add(new Tuple<>(inverse, "in", records.ids()));
+        RecordSet lines = comodel.search(domain, 0, _limit());
+        Function<Object, Object> get_id = inverse_field instanceof Many2manyField ? rec -> ((RecordSet) rec).id()
+                : v -> v;
+        // group lines by inverse field (without prefetching other fields)
+        DefaultDict<Object, List<Object>> group = new DefaultDict<>(ArrayList::new);
+        for (RecordSet line : lines.with_context(ctx -> ctx.set("prefetch_fields", false))) {
+            group.get(get_id.apply(line.get(inverse))).add(line.id());
+        }
+        // store result in cache
+        Cache cache = records.env().cache();
+        for (RecordSet record : records) {
+            cache.set(record, this, new Tuple<>(group.get(record.id())));
+        }
+    }
+
+    /** Update real records. */
+    @Override
+    protected Object write_real(List<Pair<RecordSet, Object>> records_commands_list, boolean create) {
+        if (records_commands_list.isEmpty()) {
+            return null;
+        }
+        RecordSet model = records_commands_list.get(0).first().browse();
+        RecordSet comodel = model.env(_comodel_name()).with_context(() -> _context());
+
+        Set<Object> ids = new HashSet<>();
+        records_commands_list.forEach(i -> ids.add(i.first().ids()));
+        RecordSet records = records_commands_list.get(0).first().browse(ids);
+
+        if (_store()) {
+            // todo
+        } else {
+            // todo
+        }
+        return records;
     }
 
     // todo

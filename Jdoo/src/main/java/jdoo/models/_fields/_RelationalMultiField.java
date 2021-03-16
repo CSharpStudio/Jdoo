@@ -173,8 +173,8 @@ public abstract class _RelationalMultiField<T extends _RelationalMultiField<T>> 
                 } else {
                     ((List<Object>) result.get(0).get(2)).add(origin.id());
                     if (!rec.equals(origin)) {
-                        Object values = rec._convert_to_write(rec._cache().keySet().stream().filter(
-                                name -> !inv_names.containsKey(name) && !rec.get(name).equals(origin.get(name)))
+                        Object values = rec._convert_to_write(rec._cache().keySet().stream()
+                                .filter(name -> !inv_names.containsKey(name) && !rec.get(name).equals(origin.get(name)))
                                 .collect(Collectors.toMap(name -> name, name -> rec.get(name))));
                         if (Utils.bool(values)) {
                             result.add(new Tuple<>(1, origin.id(), values));
@@ -226,22 +226,58 @@ public abstract class _RelationalMultiField<T extends _RelationalMultiField<T>> 
         }
     }
 
+    /**
+     * Write the value of ``self`` on the given records, which have just been
+     * created.
+     * 
+     * @param record_values a list of pairs ``(record, value)``, where ``value`` is
+     *                      in the format of method :meth:`BaseModel.write`
+     */
     @Override
     public void create(List<Pair<RecordSet, Object>> record_values) {
-        // TODO Auto-generated method stub
-        super.create(record_values);
+        write_batch(record_values, true);
     }
 
     @Override
-    public RecordSet write(RecordSet records, Object value) {
-        // TODO Auto-generated method stub
-        return super.write(records, value);
+    public Object write(RecordSet records, Object value) {
+        // discard recomputation of self on records
+        records.env().remove_to_compute(this, records);
+        return write_batch(Arrays.asList(new Pair<>(records, value)), false);
     }
 
-    RecordSet write_batch() {
-        // todo
+    Object write_batch(List<Pair<RecordSet, Object>> records_commands_list, boolean create) {
+        if (records_commands_list.isEmpty()) {
+            return false;
+        }
+
+        List<Object> record_ids = new ArrayList<>();
+        for (int i = 0; i < records_commands_list.size(); i++) {
+            RecordSet recs = records_commands_list.get(i).first();
+            Object value = records_commands_list.get(i).second();
+            if (value instanceof Tuple) {
+                value = Arrays.asList(new Tuple<>(6, 0, value));
+            } else if (value instanceof RecordSet && ((RecordSet) value).name() == _comodel_name()) {
+                value = Arrays.asList(new Tuple<>(6, 0, ((RecordSet) value)._ids()));
+            } else if (value == null || Boolean.FALSE.equals(value)) {
+                value = Arrays.asList(new Tuple<>(5));
+            } else if (value instanceof List && !((List<?>) value).isEmpty()
+                    && !(((List<?>) value).get(0) instanceof List)) {
+                value = Arrays.asList(new Tuple<>(6, 0, new Tuple<>(value)));
+            }
+            if (!(value instanceof List)) {
+                throw new ValueErrorException("Wrong value for %s: %s".formatted(this, value));
+            }
+            records_commands_list.set(i, new Pair<>(recs, value));
+            record_ids.addAll(recs._ids());
+        }
+        if (record_ids.stream().allMatch(rid -> Utils.bool(rid))) {
+            return write_real(records_commands_list, create);
+        }
+
         return null;
     }
+
+    protected abstract Object write_real(List<Pair<RecordSet, Object>> records_commands_list, boolean create);
 
     Collection<Object> prefetch_x2many_ids(RecordSet record, Field field) {
         RecordSet records = record.browse(record.prefetch_ids());
