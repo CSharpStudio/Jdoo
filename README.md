@@ -14,7 +14,7 @@ package org.jdoo.models;
 
 import org.jdoo.*;
 
-@Entity(name = "test.model", description = "模型元数据")
+@Model.Meta(name = "test.model", description = "模型元数据")
 public class TestModel extends Model {
     static Field name = Field.Char().label("名称").help("模型名称")
         .index(true).required(true);//.translate();
@@ -71,6 +71,7 @@ public class TestModel extends Model {
     }
 
     /** Model method demo */
+    @Model.ServiceMethod
     public void test(Records rec) {
         for (TestModel testModel : rec.of(TestModel.class)) {
             testModel.set_type("integer");
