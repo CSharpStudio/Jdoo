@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+
+    <view id='view_field_type_ext_search' inherit_id='demo.view_field_type_search' type='search' name='demo.field_type.search' model='demo.field_type'>
+        <field name="f_char_ext"/>
+    </view>
+    <view id='view_field_type_ext_grid' inherit_id='demo.view_field_type_grid' type='grid' name='demo.field_type.grid' model='demo.field_type'>
+        <xpath expr="field[name=f_char]" position="after">
+            <field name="f_char_ext"/>
+        </xpath>
+    </view>
+    <view id='view_field_type_ext_form' inherit_id='demo.view_field_type_form' type='form'  name='demo.field_type.form' model='demo.field_type'>
+        <xpath expr="field[name=f_char]" position="after">
+            <field name="f_char_ext"/>
+        </xpath>
+    </view>
+</data>

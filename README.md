@@ -1,94 +1,114 @@
-# Jdoo
-Java odoo
+### Java版本odoo
 
-move python code to java
 
-python model declare
-```python
-class Partner(models.Model):
-    _description = 'Contact'
-    _inherit = ['format.address.mixin', 'image.mixin']
-    _name = "res.partner"
-    _order = "display_name"
-```
+###  核心设计思想
+    一切皆模型，所有模型皆可扩展
 
-java model declare
+### 开源协议
+    LGPL v3.0
+
+### 模型示例代码
+
 ```java
-public class Partner extends Model {
-    public Partner() {
-        _description = "Contact";
-        _inherit = Arrays.asList("format.address.mixin", "image.mixin");
-        _name = "res.partner";
-        _order = "display_name";
+package org.jdoo.models;
+
+import org.jdoo.*;
+
+@Entity(name = "test.model", description = "模型元数据")
+public class TestModel extends Model {
+    static Field name = Field.Char().label("名称").help("模型名称")
+        .index(true).required(true);//.translate();
+    static Field description = Field.Char().label("描述").help("模型说明");
+    static Field inherit = Field.Char().label("继承").help("模型的继承，多个使用逗号','分隔");
+    static Field type = Field.Selection().label("类型").help("模型的类型：普通、抽象、瞬态");
+    static Field type_name = Field.Char().label("类名")
+        .compute(Callable.script("r->r.get('name')+'('+r.get('type')+')'"))
+        .store(false).depends("name", "type");
+
+    /** 名称 */
+    public String getName() {
+        return (String) get(name);
+    }
+
+    /** 名称 */
+    public void setName(String value) {
+        set(name, value);
+    }
+
+    /** 描述 */
+    public String getDescription() {
+        return (String) get(description);
+    }
+
+    /** 描述 */
+    public void setDescription(String value) {
+        set(description, value);
+    }
+
+    /** 继承 */
+    public String getInherit() {
+        return (String) get(inherit);
+    }
+
+    /** 继承 */
+    public void setInherit(String value) {
+        set(inherit, value);
+    }
+
+    /** 类型 */
+    public String getType() {
+        return (String) get(type);
+    }
+
+    /** 类型 */
+    public void set_type(String value) {
+        set(type, value);
+    }	
+
+    /** 类型 */
+    public String getTypeName() {
+        return (String) get(type_name);
+    }
+
+    /** Model method demo */
+    public void test(Records rec) {
+        for (TestModel testModel : rec.of(TestModel.class)) {
+            testModel.set_type("integer");
+            System.out.println(testModel.get_name());
+        }
+        //do something else
     }
 }
 ```
 
-python fields declare
-```python
-class Partner(models.Model):
-    name = fields.Char(index=True)
-    display_name = fields.Char(compute='_compute_display_name', store=True, index=True)
-    date = fields.Date(index=True)
-    title = fields.Many2one('res.partner.title')
-    parent_id = fields.Many2one('res.partner', string='Related Company', index=True)
-    parent_name = fields.Char(related='parent_id.name', readonly=True, string='Parent name')
-    child_ids = fields.One2many('res.partner', 'parent_id', string='Contact', domain=[('active', '=', True)])  # force "active_test" domain to bypass _search() override
-    ref = fields.Char(string='Reference', index=True)
-    lang = fields.Selection(_lang_get, string='Language', default=lambda self: self.env.lang,
-                            help="All the emails and documents sent to this contact will be translated in this language.")
-    active_lang_count = fields.Integer(compute='_compute_active_lang_count')
-    tz = fields.Selection(_tz_get, string='Timezone', default=lambda self: self._context.get('tz'),
-                          help="When printing documents and exporting/importing data, time values are computed according to this timezone.\n"
-                               "If the timezone is not set, UTC (Coordinated Universal Time) is used.\n"
-                               "Anywhere else, time values are computed according to the time offset of your web client.")
-```
+### 建模工具
+![输入图片说明](ModelFirst.png)
 
-java fields declare
-```java
-public class Partner extends Model {
-    static Field name = fields.Char().index(true);
-    static Field display_name = fields.Char().compute("_compute_display_name").store(true).index(true);
-    static Field date = fields.Date().index(true);
-    static Field title = fields.Many2one("res.partner.title");
-    static Field parent_id = fields.Many2one("res.partner").string("Related Company").index(true);
-    static Field parent_name = fields.Char().related("parent_id.name").readonly(true).string("Parent name");
-    static Field child_ids = fields.One2many("res.partner", "parent_id").string("Contact")
-            .domain(d.on("active", "=", true));// # force "active_test" domain to bypass _search() override
-    static Field ref = fields.Char().string("Reference").index(true);
-    static Field lang = fields.Selection(self -> _lang_get(self)).string("Language").default_(self -> self.env().lang())
-            .help("All the emails and documents sent to this contact will be translated in this language.");
-    static Field active_lang_count = fields.Integer().compute("_compute_active_lang_count");
-    static Field tz = fields.Selection(self -> _tz_get(self)).string("Timezone")
-            .default_(self -> self.context().get("tz"))
-            .help("When printing documents and exporting/importing data, time values are computed according to this timezone.\n"
-                    + "If the timezone is not set, UTC (Coordinated Universal Time) is used.\n"
-                    + "Anywhere else, time values are computed according to the time offset of your web client.");
-}
-```
 
-python methods declare
-```python
-class Partner(models.Model):
-    @api.depends('is_company', 'name', 'parent_id.name', 'type', 'company_name')
-    @api.depends_context('show_address', 'show_address_only', 'show_email', 'html_format', 'show_vat')
-    def _compute_display_name(self):
-        diff = dict(show_address=None, show_address_only=None, show_email=None, html_format=None, show_vat=None)
-        names = dict(self.with_context(**diff).name_get())
-        for partner in self:
-            partner.display_name = names.get(partner.id)
-```
 
-java methods declare
-```java
-public class Partner extends Model {
-    @api.depends({ "is_company", "name", "parent_id.name", "type", "company_name" })
-    @api.depends_context({ "show_address", "show_address_only", "show_email", "html_format", "show_vat" })
-    public void _compute_display_name(Self self) {
-        self.with_context(new Kvalues().set("show_address",null).set("show_address_only",null).set("show_email",null).set("html_format",null).set("show_vat",null));
-        Kvalues names = self.call(Kvalues.class, "name_get");
-        for (Self partner : self)
-            partner.set(display_name, names.get(partner.id()));
-    }
-}
-```
+### 项目计划
+
+1. 模型引擎
+
+    - 实现模型构建
+    - 基础CURD
+
+2. 前端框架
+
+    - 自动生成页面
+    - 页面扩展
+
+3. 0代码构建应用
+
+    - 建模型工具构建应用
+    - IDE集成
+
+4. 服务编排
+
+    - 工作流
+    - 业务流
+
+
+
+
+

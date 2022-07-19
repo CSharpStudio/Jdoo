@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <view id='view_mom_work_order_search' name='工单查询' model='mom.work_order'>
+        <search>
+            <field name="name"/>
+            <field name="item_id"/>
+        </search>
+    </view>
+    <view id='view_mom_work_order_grid' name='工单列表' model='mom.work_order'>
+        <grid>
+            <toolbar buttons="default"></toolbar>
+            <field name="name"/>
+            <field name="item_id"/>
+        </grid>
+    </view>
+    <view id='view_mom_work_order_form' name='工单表单' model='mom.work_order'>
+        <form>
+            <toolbar buttons="default"></toolbar>
+            <field name="name"/>
+            <field name="item_id"/>
+        </form>
+    </view>
+</data>

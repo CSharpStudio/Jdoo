@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <web id="web_login" name="web.login">
+        <html lang="en">
+            <head>
+                <meta charset="utf-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                <title>{{TITLE}}</title>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/fontawesome-free/css/all.min.css"/>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/icheck-bootstrap/icheck-bootstrap.min.css"/>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/dist/css/adminlte.min.css"/>
+            </head>
+            <body class="hold-transition login-page">
+                <noscript>抱歉，你的浏览器不支持 JavaScript</noscript>
+                <div class="login-box">
+                    <div class="card card-outline card-primary">
+                        <div class="card-header text-center">
+                            <h1 class="m-0">
+                                <b>
+                                    <t>JDOO</t>
+                                </b>
+                            </h1>
+                        </div>
+                        <div class="card-body">
+                            <form id="loginForm">
+                                <div class="form-group mb-3">
+                                    <div class="input-group">
+                                        <input name="account" type="input" class="form-control" placeholder="账号/手机号/邮箱"/>
+                                        <div class="input-group-append">
+                                            <div class="input-group-text">
+                                                <span class="fas fa-envelope"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <div class="input-group">
+                                        <input name="password" type="password" class="form-control" placeholder="密码"/>
+                                        <div class="input-group-append">
+                                            <div class="input-group-text">
+                                                <span class="fas fa-lock"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <button name="loginSubmit" type="submit" class="btn btn-primary btn-block">
+                                        <t>登录</t>
+                                    </button>
+                                    <span name="errorMessage" class="text-danger"></span>
+                                </div>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <div class="icheck-primary">
+                                            <input type="checkbox" id="remember"/>
+                                            <label for="remember">
+                                                <t>记住密码</t>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="social-auth-links text-center mt-2 mb-3">
+                                <div class="info-box mb-3 bg-success">
+                                    <span class="info-box-icon">
+                                        <i class="far fa-heart"></i>
+                                    </span>
+                                    <div class="info-box-content">
+                                        <t>科技造福人类，创新引领未来</t>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="mb-1">
+                                <a role="forgot-password" href="#">
+                                    <t>忘记密码</t>
+                                </a>
+                            </p>
+                            <p class="mb-0">
+                                <a role="register" href="#" class="text-center">
+                                    <t>注册</t>
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <script src="/org/jdoo/base/statics/plugins/jquery/jquery.min.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/jquery-validation/jquery.validate.min.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/jquery-validation/additional-methods.min.js"></script>
+                <script src="/org/jdoo/base/statics/dist/js/adminlte.min.js"></script>
+                <script src="/org/jdoo/base/statics/js/src/util.js"></script>
+                <script src="/org/jdoo/base/statics/js/login.js"></script>
+            </body>
+        </html>
+    </web>
+    <web id="web_view" name="web.view">
+        <html>
+            <head>
+                <meta charset="utf-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                <title></title>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/fontawesome-free/css/all.min.css"/>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/datatables-bs4/css/dataTables.bootstrap4.css"/>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/datatables-responsive/css/responsive.bootstrap4.css"/>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css"/>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/select2/css/select2.min.css"/>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/dist/css/adminlte.css"/>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/css/view.css"/>
+
+                <script src="/org/jdoo/base/statics/plugins/jquery/jquery.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/bootstrap/js/bootstrap.bundle.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/select2/js/select2.full.min.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/datatables/jquery.dataTables.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/datatables-bs4/js/dataTables.bootstrap4.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/datatables-responsive/js/dataTables.responsive.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/datatables-responsive/js/responsive.bootstrap4.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/daterangepicker/daterangepicker.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/moment/moment.min.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/bootstrap-input-spinner/js/bootstrap-input-spinner.js"></script>
+                <script src="/org/jdoo/base/statics/dist/js/adminlte.js"></script>
+                <script src="/org/jdoo/base/statics/js/src/util.js"></script>
+                <script src="/org/jdoo/base/statics/js/src/view.js"></script>
+            </head>
+            <body class="page-body">
+            </body>
+        </html>
+    </web>
+    <web id="web_home" name="web.home">
+        <html>
+            <head>
+                <meta charset="utf-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                <title>{{TITLE}}</title>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/fontawesome-free/css/all.min.css"/>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/overlayScrollbars/css/OverlayScrollbars.min.css"/>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/bootstrap-submenu/css/bootstrap-submenu.css"/>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/dist/css/adminlte.css"/>
+                <link rel="stylesheet" href="/org/jdoo/base/statics/css/web.css" />
+            </head>
+            <body class="hold-transition sidebar-mini layout-fixed" data-panel-auto-height-mode="height">
+                <div class="wrapper">
+                    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                                    <i class="fas fa-bars"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <ul class="navbar-nav" role="appmenu"></ul>
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link" data-toggle="dropdown" href="#">
+                                    <i class="far fa-comments"></i>
+                                    <span class="badge badge-danger navbar-badge">3</span>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link" data-toggle="dropdown" href="#">
+                                    <i class="far fa-bell"></i>
+                                    <span class="badge badge-warning navbar-badge">15</span>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                                    <i class="fas fa-expand-arrows-alt"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
+                                    <i class="fas fa-th-large"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+                        <a href="#" class="brand-link">
+                            <img src="org/jdoo/base/statics/dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8"/>
+                            <span class="brand-text font-weight-light">{{TITLE}}</span>
+                        </a>
+                        <div class="sidebar">
+                            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                                <div class="image">
+                                    <img src="org/jdoo/base/statics/dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image"/>
+                                </div>
+                                <div class="info">
+                                    <a href="#" class="d-block">{{USERNAME}}</a>
+                                </div>
+                            </div>
+                            <div class="form-inline">
+                                <div class="input-group" data-widget="sidebar-search">
+                                    <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search"/>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-sidebar">
+                                            <i class="fas fa-search fa-fw"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <nav class="mt-2">
+                                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                                </ul>
+                            </nav>
+                        </div>
+                    </aside>
+                    <div class="content-wrapper jframe-mode" data-widget="jframe" data-loading-screen="750">
+                        <div class="nav navbar navbar-expand navbar-white navbar-light border-bottom p-0">
+                            <div class="nav-item dropdown bg-light">
+                                <a class="nav-link" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </a>
+                                <div class="dropdown-menu mt-0">
+                                    <a class="dropdown-item" href="#" data-widget="jframe-close" data-type="all">
+                                        <t>关闭所有</t>
+                                    </a>
+                                    <a class="dropdown-item" href="#" data-widget="jframe-close" data-type="all-other">
+                                        <t>关闭其它</t>
+                                    </a>
+                                </div>
+                            </div>
+                            <a class="nav-link bg-light" href="#" data-widget="jframe-scrollleft">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                            <ul class="navbar-nav overflow-hidden" role="tablist"></ul>
+                            <a class="nav-link bg-light" href="#" data-widget="jframe-scrollright">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                            <a class="nav-link bg-light" href="#" data-widget="jframe-fullscreen">
+                                <i class="fas fa-expand"></i>
+                            </a>
+                        </div>
+                        <div class="tab-content">
+                            <div class="tab-empty">
+                                <h2 class="display-4">
+                                    <t>未有打开功能</t>
+                                </h2>
+                            </div>
+                            <div class="tab-loading">
+                                <div>
+                                    <h2 class="display-4">
+                                        <t>加载中</t>
+                                        <i class="fa fa-sync fa-spin"></i>
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="main-footer">
+                        <strong>{{COPYRIGHT}}
+                        </strong>All rights reserved.
+                        <div class="float-right d-none d-sm-inline-block">
+                            <b>{{VERSION}}</b> 3.1.0
+                        </div>
+                    </footer>
+                </div>
+                <script src="/org/jdoo/base/statics/plugins/jquery/jquery.min.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/bootstrap-submenu/bootstrap-submenu.js"></script>
+                <script src="/org/jdoo/base/statics/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+                <script src="/org/jdoo/base/statics/dist/js/adminlte.js"></script>
+                <script src="/org/jdoo/base/statics/js/src/util.js"></script>
+                <script src="/org/jdoo/base/statics/js/src/web.js"></script>
+            </body>
+        </html>
+    </web>
+</data>

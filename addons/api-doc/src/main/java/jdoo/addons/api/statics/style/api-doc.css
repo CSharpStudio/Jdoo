@@ -1,0 +1,225 @@
+html {
+    box-sizing: border-box;
+    overflow: -moz-scrollbars-vertical;
+    overflow-y: scroll;
+}
+body {
+    margin: 0;
+    font-family: Segoe UI, Tahoma, Helvetica, sans-serif;
+    background: #fafafa;
+}
+button {
+    cursor: pointer;
+}
+.topbar {
+    background-color: #1b1b1b;
+    padding: 10px 0;
+}
+.topbar a {
+    color: #fff;
+    flex: 1;
+    font-family: sans-serif;
+    font-size: 1.5em;
+    font-weight: 700;
+    max-width: 300px;
+    text-decoration: none;
+}
+.wrapper {
+    box-sizing: border-box;
+    margin: 0 auto;
+    max-width: 1460px;
+    padding: 0 20px;
+    width: 100%;
+}
+.opblock-model-section {
+    display: flex;
+    flex-direction: column;
+}
+.opblock-model {
+    color: #3b4151;
+    font-family: sans-serif;
+    font-size: 24px;
+    margin: 0 0 5px;
+    align-items: center;
+    border-bottom: 1px solid rgba(59, 65, 81, .3);
+    cursor: pointer;
+    display: flex;
+    padding: 10px 20px 10px 10px;
+    transition: all .2s;
+}
+.expand-operation {
+    background: none;
+    border: none;
+    height: 24pt;
+    cursor: pointer;
+    padding: 0;
+}
+.opblock-model a {
+    padding: 0 5px;
+}
+.opblock-model small {
+    color: #3b4151;
+    flex: 1;
+    font-family: sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 0 10px;
+}
+.opblock {
+    border: 1px solid #000;
+    border-radius: 4px;
+    box-shadow: 0 0 3px rgb(0 0 0 / 19%);
+    margin: 0 0 15px;
+    background: rgba(97, 175, 254, .1);
+    border-color: #61affe;
+}
+.opblock .opblock-summary {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    padding: 5px;
+    border-color: #61affe;
+}
+.opblock-fields {
+    border: 1px solid #61affe;
+    border-radius: 4px;
+    box-shadow: 0 0 3px rgb(0 0 0 / 19%);
+    margin: 0 0 15px;
+    background: rgba(97, 175, 254, .1);
+}
+.opblock-fields-body{
+    border: 1px solid #61affe;
+    width: 100%;
+    border-collapse: collapse;/*关键代码*/
+}
+.opblock-fields-body td, .opblock-fields-body th{
+    border: 1px solid #61affe;
+    padding: 2px 5px;
+}
+.opblock-fields .opblock-summary {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    padding: 5px;
+    border-color: #61affe;
+}
+.opblock .opblock-summary.is-open {
+    border-bottom: 1px solid #61affe;
+}
+.opblock-summary-control {
+    all: inherit;
+    border-bottom: 0;
+    cursor: pointer;
+    flex: 1;
+    padding: 0;
+    height: 29px;
+}
+.opblock .opblock-summary-method {
+    background: #000;
+    border-radius: 3px;
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 80px;
+    padding: 6px 15px;
+    text-align: center;
+    text-shadow: 0 1px 0 rgb(0 0 0 / 10%);
+    background: #61affe;
+}
+.opblock-summary-description {
+    color: #3b4151;
+    flex: 1 1 auto;
+    font-family: sans-serif;
+    font-size: 13px;
+    word-break: break-word;
+    padding: 10px;
+}
+.opblock-description-wrapper {
+    color: #3b4151;
+    font-family: sans-serif;
+    font-size: 12px;
+    margin: 0 0 5px;
+    padding: 15px 20px;
+}
+.opblock .opblock-section-header {
+    align-items: center;
+    background: hsla(0, 0%, 100%, .8);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+    display: flex;
+    min-height: 50px;
+    padding: 8px 20px;
+}
+.opblock .opblock-section-header h4 {
+    color: #3b4151;
+    flex: 1;
+    font-family: sans-serif;
+    font-size: 14px;
+    margin: 0;
+}
+.highlight-code {
+    display: block;
+    overflow-x: auto;
+    padding: 0.5em;
+    background: rgb(51, 51, 51);
+    color: white;
+}
+.opblock-body pre.microlight {
+    word-wrap: break-word;
+    background: #333;
+    border-radius: 4px;
+    color: #fff;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 600;
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
+    hyphens: auto;
+    margin: 0;
+    padding: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    display: block;
+    overflow-x: auto;
+}
+.microlight .strval{
+    color: rgb(162, 252, 162);
+}
+.microlight .boolval{
+    color: rgb(211, 99, 99);
+}
+.arrow {
+    color: #000;
+    font-size: 24pt;
+}
+.try-btn {
+    background: transparent;
+    border: 2px solid grey;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+    color: #3b4151;
+    font-family: sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 5px 23px;
+    transition: all .3s;
+}
+.execute-wrapper {
+    padding: 20px;
+    text-align: right;
+}
+.try-btn.execute {
+    background-color: #4990e2;
+    border-color: #4990e2;
+    color: #fff;
+}
+.execute-wrapper .try-btn {
+    padding: 8px 40px;
+    width: 100%;
+}
+.try-btn.cancel {
+    background-color: transparent;
+    border-color: #ff6060;
+    color: #ff6060;
+    font-family: sans-serif;
+}

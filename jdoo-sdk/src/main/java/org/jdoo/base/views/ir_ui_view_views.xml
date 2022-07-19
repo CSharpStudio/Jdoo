@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <menu id="menu_ir_ui_view" name="视图" model="ir.ui.view" view="grid,form" seq="6" parent="menu_model"/>
+    
+    <view id='view_search' name='视图-查询' model='ir.ui.view'>
+        <search>
+            <field name="name"/>
+            <field name="model"/>
+        </search>
+    </view>
+    <view id='view_grid' name='视图-表格' model='ir.ui.view'>
+        <grid>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="model"/>
+            <field name="key"/>
+            <field name="priority"/>
+            <field name="type"/>
+            <field name="inherit_id"/>
+            <field name="mode"/>
+            <field name="active"/>
+        </grid>
+    </view>
+    <view id='view_form' name='视图-表单' model='ir.ui.view'>
+        <form>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="model"/>
+            <field name="key"/>
+            <field name="priority"/>
+            <field name="type"/>
+            <field name="inherit_id"/>
+            <field name="mode"/>
+            <field name="active"/>
+            <field name="arch" editor="text" colspan="3" rows="6"/>
+        </form>
+    </view>
+</data>

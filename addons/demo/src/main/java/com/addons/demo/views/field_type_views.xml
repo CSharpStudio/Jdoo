@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+
+    <menu id="menu_demo" name="示例" model="demo.field_type" view="grid,form" icon="/org/jdoo/base/statics/img/modules.png"/>
+
+    <view id='view_field_type_search' name='demo.field_type.search' model='demo.field_type'>
+        <search>
+            <field name="f_char"/>
+            <field name="f_bool"/>
+            <field name="f_date"/>
+            <field name="f_datetime"/>
+            <field name="f_float"/>
+            <field name="f_html"/>
+            <field name="f_int"/>
+            <field name="f_selection"/>
+            <field name="f_text"/>
+        </search>
+    </view>
+    <view id='view_field_type_grid' name='demo.field_type.grid' type='grid' model='demo.field_type'>
+        <grid>
+            <toolbar buttons="default"></toolbar>
+            <field name="f_char"/>
+            <field name="f_bool"/>
+            <field name="f_date"/>
+            <field name="f_datetime"/>
+            <field name="f_float"/>
+            <field name="f_html"/>
+            <field name="f_int"/>
+            <field name="f_selection"/>
+            <field name="f_text"/>
+        </grid>
+    </view>
+    <view id='view_field_type_form' name='demo.field_type.form' model='demo.field_type'>
+        <form>
+            <toolbar buttons="default"></toolbar>
+            <field name="f_char" colspan="2" />
+            <field name="f_bool"/>
+            <field name="f_date"/>
+            <field name="f_datetime"/>
+            <field name="f_float"/>
+            <field name="f_html"/>
+            <field name="f_int"/>
+            <field name="f_selection"/>
+            <field name="f_text" colspan="3" rows="3"/>
+        </form>
+    </view>
+</data>

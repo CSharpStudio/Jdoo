@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+
+    <menu id="menu_mes_item" name="物料" model="mom.item" parent="menu_mes" view="grid,form"/>
+
+    <view id='view_mes_item_search' inherit_id='mom.view_mom_item_search' type='search' name='MES物料查询' model='mom.item'>
+        <field name="type"/>
+        <field name="barcode"/>
+    </view>
+    <view id='view_mes_item_grid' inherit_id='mom.view_mom_item_grid' type='grid' name='MES物料列表' model='mom.item'>
+        <xpath expr="field[name=code]" position="after">
+            <field name="type"/>
+            <field name="barcode"/>
+        </xpath>
+    </view>
+    <view id='view_mes_item_form' inherit_id='mom.view_mom_item_form' type='form' name='demo.field_type.form' model='mom.item'>
+        <xpath expr="field[name=code]" position="after">
+            <field name="type"/>
+            <field name="barcode"/>
+        </xpath>
+    </view>
+</data>

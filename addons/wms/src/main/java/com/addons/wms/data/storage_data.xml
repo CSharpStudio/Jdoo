@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <record id="wms.storage.w001" model="wms.storage">
+        <field name="name">成品仓</field>
+        <field name="code">w001</field>
+    </record>
+    <record id="wms.storage.w002" model="wms.storage">
+        <field name="name">半成品仓</field>
+        <field name="code">w002</field>
+    </record>
+    <record id="wms.storage.w003" model="wms.storage">
+        <field name="name">辅料仓</field>
+        <field name="code">w003</field>
+    </record>
+    <record id="wms.storage.w004" model="wms.storage">
+        <field name="name">不良品仓</field>
+        <field name="code">w004</field>
+    </record>
+</data>

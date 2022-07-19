@@ -1,0 +1,213 @@
+.img-app {
+    width: 17px;
+}
+
+.a-link {
+    display: block;
+    padding: 0.5rem 1rem;
+}
+
+.a-link:hover, .a-link:focus {
+    text-decoration: none;
+}
+
+.a-link.disabled {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: default;
+}
+
+.nav-sidebar .a-link>.right,
+.nav-sidebar .a-link>p>.right {
+    position: absolute;
+    right: 1rem;
+    top: .7rem;
+}
+
+.nav-sidebar .a-link>.right i,
+.nav-sidebar .a-link>.right span,
+.nav-sidebar .a-link>p>.right i,
+.nav-sidebar .a-link>p>.right span {
+    margin-left: .5rem;
+}
+
+.nav-sidebar .a-link>.right:nth-child(2),
+.nav-sidebar .a-link>p>.right:nth-child(2) {
+    right: 2.2rem;
+}
+
+.nav-sidebar .nav-item>.a-link {
+    position: relative;
+}
+
+.sidebar-mini .main-sidebar .a-link, .sidebar-mini-md .main-sidebar .a-link, .sidebar-mini-xs .main-sidebar .a-link {
+    width: calc(250px - 0.5rem * 2);
+    transition: width ease-in-out 0.3s;
+}
+
+.nav-sidebar .a-link p {
+    display: inline;
+    margin: 0;
+    white-space: normal;
+}
+
+.sidebar-dark-primary .nav-sidebar>.nav-item>.a-link.active, .sidebar-light-primary .nav-sidebar>.nav-item>.a-link.active {
+    background-color: #007bff;
+    color: #fff;
+}
+
+/*jframe*/
+body.jframe-mode .main-sidebar {
+    display: none;
+}
+
+body.jframe-mode .content-wrapper {
+    margin-left: 0 !important;
+    margin-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+body.jframe-mode .main-header,
+body.jframe-mode .main-footer {
+    display: none;
+}
+
+body.jframe-mode-fullscreen {
+    overflow: hidden;
+}
+
+body.jframe-mode-fullscreen.layout-navbar-fixed .wrapper .content-wrapper {
+    margin-top: 0 !important;
+}
+
+.content-wrapper {
+    height: 100%;
+}
+
+.content-wrapper.jframe-mode .btn-jframe-close {
+    color: #dc3545;
+    position: absolute;
+    line-height: 1;
+    right: .125rem;
+    top: .125rem;
+    z-index: 10;
+    visibility: hidden;
+}
+
+.content-wrapper.jframe-mode .btn-jframe-close:hover, .content-wrapper.jframe-mode .btn-jframe-close:focus {
+    -webkit-animation-name: fadeIn;
+    animation-name: fadeIn;
+    -webkit-animation-duration: 0.3s;
+    animation-duration: 0.3s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+    visibility: visible;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .content-wrapper.jframe-mode .btn-jframe-close {
+        visibility: visible;
+    }
+}
+
+.content-wrapper.jframe-mode .navbar-nav {
+    overflow-y: auto;
+    width: 100%;
+}
+
+.content-wrapper.jframe-mode .navbar-nav .nav-link {
+    white-space: nowrap;
+}
+
+.content-wrapper.jframe-mode .navbar-nav .nav-item {
+    position: relative;
+}
+
+.content-wrapper.jframe-mode .navbar-nav .nav-item:hover .btn-jframe-close, .content-wrapper.jframe-mode .navbar-nav .nav-item:focus .btn-jframe-close {
+    -webkit-animation-name: fadeIn;
+    animation-name: fadeIn;
+    -webkit-animation-duration: 0.3s;
+    animation-duration: 0.3s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+    visibility: visible;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .content-wrapper.jframe-mode .navbar-nav .nav-item:hover .btn-jframe-close, .content-wrapper.jframe-mode .navbar-nav .nav-item:focus .btn-jframe-close {
+        visibility: visible;
+    }
+}
+
+.content-wrapper.jframe-mode .tab-content {
+    position: relative;
+}
+
+.content-wrapper.jframe-mode .tab-pane+.tab-empty {
+    display: none;
+}
+
+.content-wrapper.jframe-mode .tab-empty {
+    width: 100%;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+.content-wrapper.jframe-mode .tab-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: none;
+    background-color: #f4f6f9;
+}
+
+.content-wrapper.jframe-mode .tab-loading>div {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -ms-flex-align: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.content-wrapper.jframe-mode iframe {
+    border: 0;
+    width: 100%;
+    height: 100%;
+    margin-bottom: -8px;
+}
+
+.content-wrapper.jframe-mode iframe .content-wrapper {
+    padding-bottom: 0 !important;
+}
+
+body.jframe-mode-fullscreen .content-wrapper.jframe-mode {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin-left: 0 !important;
+    height: 100%;
+    min-height: 100%;
+    z-index: 1048;
+}
+
+.permanent-btn-jframe-close .btn-jframe-close {
+    -webkit-animation: none !important;
+    animation: none !important;
+    visibility: visible !important;
+    opacity: 1;
+}
+
+.dark-mode .content-wrapper.jframe-mode .tab-loading {
+    background-color: #343a40;
+}
+/*jframe end*/

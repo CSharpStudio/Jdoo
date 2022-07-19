@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <record id="wms.rohs.pb" model="wms.rohs">
+        <field name="name">铅</field>
+        <field name="code">Pb</field>
+    </record>
+    <record id="wms.rohs.hg" model="wms.rohs">
+        <field name="name">汞</field>
+        <field name="code">Hg</field>
+    </record>
+    <record id="wms.rohs.cd" model="wms.rohs">
+        <field name="name">镉</field>
+        <field name="code">Cd</field>
+    </record>
+    <record id="wms.rohs.cr" model="wms.rohs">
+        <field name="name">六价铬</field>
+        <field name="code">Cr 6+</field>
+    </record>
+    <record id="wms.rohs.pbb" model="wms.rohs">
+        <field name="name">多溴联苯</field>
+        <field name="code">PBB</field>
+    </record>
+    <record id="wms.rohs.pbde" model="wms.rohs">
+        <field name="name">多溴二苯醚</field>
+        <field name="code">PBDE</field>
+    </record>
+</data>

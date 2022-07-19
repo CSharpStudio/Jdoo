@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <menu id="menu_ir_ui_menu" name="菜单" model="ir.ui.menu" view="grid,form" seq="6" parent="menu_model"/>
+
+    <view id='menu_search' name='菜单-查询' model='ir.ui.menu'>
+        <search>
+            <field name="name"/>
+            <field name="model"/>
+        </search>
+    </view>
+    <view id='menu_grid' name='菜单-表格' model='ir.ui.menu'>
+        <grid>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="model"/>
+            <field name="view"/>
+            <field name="url"/>
+        </grid>
+    </view>
+    <view id='menu_form' name='菜单-表单' model='ir.ui.menu'>
+        <form>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="model"/>
+            <field name="view"/>
+            <field name="sequence"/>
+            <field name="parent_id"/>
+            <field name="icon"/>
+            <field name="css"/>
+            <field name="click"/>
+            <field name="active"/>
+        </form>
+    </view>
+</data>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<artifactId>jdoo</artifactId>
+		<groupId>org.jdoo</groupId>
+		<version>1.0</version>
+	</parent>
+	<artifactId>addons</artifactId>
+	<name>jdoo-addons</name>
+	<description>Addons</description>
+	<packaging>pom</packaging>
+    <modules>
+        <module>api-doc</module>
+        <module>tenants</module>
+        <module>demo</module>
+        <module>demo-plus</module>
+        <module>aps</module>
+        <module>mes</module>
+        <module>qms</module>
+        <module>wms</module>
+        <module>mom</module>
+    </modules>
+</project>

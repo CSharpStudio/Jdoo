@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <menu id="menu_aps_item" name="物料" model="mom.item" parent="menu_aps" view="grid,form"/>
+
+    <view id='view_aps_item_search' inherit_id='mom.view_mom_item_search' type='search' name='APS物料查询' model='mom.item'>
+        <field name="buyer_id"/>
+    </view>
+    <view id='view_aps_item_grid' inherit_id='mom.view_mom_item_grid' type='grid' name='APS物料列表' model='mom.item'>
+        <xpath expr="field[name=code]" position="after">
+            <field name="buyer_id"/>
+        </xpath>
+    </view>
+    <view id='view_aps_item_form' inherit_id='mom.view_mom_item_form' type='form' name='APS物料表单' model='mom.item'>
+        <xpath has_not="tabs" expr="form > field:last-child" position="after">
+            <tabs>
+            </tabs>
+        </xpath>
+        <xpath expr="tabs" position="inside">
+            <tab label="采购信息">
+                <field name="buyer_id"/>
+                <field name="purchase_lead_time"/>
+            </tab>
+        </xpath>
+    </view>
+</data>

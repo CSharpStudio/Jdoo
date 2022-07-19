@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <menu id="menu_aps" name="高级计划" model="aps.plan_task" view="grid,form" icon="/org/jdoo/base/statics/img/modules.png"/>
+
+    <view id='view_aps_plan_task_search' name='APS计划任务查询' model='aps.plan_task'>
+        <search>
+            <field name="name"/>
+            <field name="item_id"/>
+        </search>
+    </view>
+    <view id='view_aps_plan_task_grid' name='APS计划任务列表' model='aps.plan_task'>
+        <grid>
+            <toolbar buttons="default"></toolbar>
+            <field name="name"/>
+            <field name="start_time"/>
+            <field name="end_time"/>
+            <field name="item_id"/>
+            <field name="qty"/>
+        </grid>
+    </view>
+    <view id='view_aps_plan_task_form' name='APS计划任务表单' model='aps.plan_task'>
+        <form>
+            <toolbar buttons="default"></toolbar>
+            <field name="name"/>
+            <field name="start_time"/>
+            <field name="end_time"/>
+            <field name="item_id"/>
+            <field name="qty"/>
+        </form>
+    </view>
+</data>

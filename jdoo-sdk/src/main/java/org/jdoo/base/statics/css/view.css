@@ -1,0 +1,249 @@
+.btn-row {
+  margin: 9px 9px 0 9px;
+}
+
+.toolbar {
+  display: inline-flex;
+  height: 38px;
+}
+
+.toolbar-right {
+  margin-top: 7px;
+}
+
+.page-body {
+  background-color: #f8f9fa
+}
+
+.content-header {
+  border-bottom: 1px solid #dee2e6;
+  background-color: white;
+}
+
+/*search*/
+.jsearch-container {
+  box-sizing: border-box;
+  display: inline-block;
+  position: relative;
+  -webkit-flex: 1 1 auto;
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto;
+  max-width: 800px;
+  margin: 0;
+  position: relative;
+  vertical-align: middle;
+}
+
+.jsearch-container .jsearch-selection {
+  box-sizing: border-box;
+  cursor: pointer;
+  display: block;
+  min-height: 39px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.jsearch-container .jsearch-selection .jsearch-selection-body {
+  display: inline-block;
+  overflow: hidden;
+  padding-left: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jsearch-container .jsearch-selection {
+  background-color: white;
+  border: 1px solid #ddd;
+  cursor: text;
+}
+
+.jsearch-container .jsearch-selection .jsearch-selection-body {
+  box-sizing: border-box;
+  list-style: none;
+  margin: 0;
+  padding: 0 5px;
+  width: 100%;
+}
+
+.jsearch-container .jsearch-selection .jsearch-selection-body li {
+  list-style: none;
+}
+
+.jsearch-container .jsearch-selection .jsearch-choice {
+  border: 1px solid #aaa;
+  background-color: #007bff;
+  border-color: #006fe6;
+  color: #fff;
+  padding: 0 10px;
+  margin-top: 0.31rem;
+  border-radius: 4px;
+  cursor: default;
+  float: left;
+  margin-right: 5px;
+  margin-top: 5px;
+  padding: 0 5px;
+}
+
+.jsearch-container .jsearch-selection .jsearch-choice-remove {
+  color: rgba(255, 255, 255, .7);
+  margin-left: 5px;
+  margin-right: -2px;
+  cursor: pointer;
+  display: inline-block;
+  font-weight: bold;
+  margin-right: 2px;
+}
+
+.jsearch-container .jsearch-selection .jsearch-choice-remove:hover {
+  color: #fff;
+}
+
+.search-dropdown {
+  padding: 0;
+}
+
+table.dataTable tbody tr.selected, table.dataTable tbody th.selected, table.dataTable tbody td.selected {
+  color: white;
+}
+
+table.dataTable tbody>tr.selected, table.dataTable tbody>tr>.selected {
+  background-color: #F78A09;
+}
+
+.loading {
+  position: absolute;
+  top: 50%;
+  color: #fff;
+  font-size: 2rem;
+  text-align: center;
+  width: 100%;
+  opacity: 0.7;
+  z-index: 9999;
+  -moz-border-radius: 20px;
+  -webkit-border-radius: 20px;
+  border-radius: 20px;
+  filter: progid:DXImageTransform.Microsoft.Alpha(opacity=70);
+}
+
+.datepicker .table td {
+  border: none;
+}
+
+.custom-control {
+  height: calc(2.25rem + 2px);
+}
+
+.checked-column, .unchecked-column {
+  position: relative;
+  margin-bottom: 0;
+  vertical-align: top;
+}
+
+.checked-column:before {
+  position: absolute;
+  top: 0.25rem;
+  display: block;
+  height: 1rem;
+  content: "";
+  width: 1.75rem;
+  border-radius: 0.5rem;
+  border-color: #007bff;
+  background-color: #007bff;
+}
+
+.checked-column:after {
+  position: absolute;
+  content: "";
+  top: calc(0.25rem + 2px);
+  left: calc(0.75rem + 2px);
+  width: calc(1rem - 4px);
+  height: calc(1rem - 4px);
+  background-color: #dee2e6;
+  border-radius: 0.5rem;
+}
+
+.unchecked-column:before {
+  position: absolute;
+  top: 0.25rem;
+  display: block;
+  height: 1rem;
+  content: "";
+  width: 1.75rem;
+  border-radius: 0.5rem;
+  background-color: #dee2e6;
+  border: #adb5bd solid 1px;
+  box-shadow: inset 0 0.25rem 0.25rem rgb(0 0 0 / 10%);
+}
+
+.unchecked-column:after {
+  position: absolute;
+  content: "";
+  top: calc(0.25rem + 2px);
+  left: calc(2px);
+  width: calc(1rem - 4px);
+  height: calc(1rem - 4px);
+  background-color: #adb5bd;
+  border-radius: 0.5rem;
+}
+
+form .table td {
+  padding: 0.3rem 0.75rem;
+}
+
+form .table th {
+  padding: 0.5rem 0.75rem;
+}
+
+.grid-edit-tbar {
+  padding: 0.75rem;
+}
+
+.table .form-group {
+  margin-bottom: 0.5rem;
+}
+
+.table .card-body {
+  padding: 0.5rem 0.75rem 0 0.75rem;
+}
+
+form table.dataTable>thead .sorting:before,
+form table.dataTable>thead .sorting:after,
+form table.dataTable>thead .sorting_asc:before,
+form table.dataTable>thead .sorting_asc:after,
+form table.dataTable>thead .sorting_desc:before,
+form table.dataTable>thead .sorting_desc:after,
+form table.dataTable>thead .sorting_asc_disabled:before,
+form table.dataTable>thead .sorting_asc_disabled:after,
+form table.dataTable>thead .sorting_desc_disabled:before,
+form table.dataTable>thead .sorting_desc_disabled:after {
+  bottom: 0.5em;
+}
+
+.bootstrap-datetimepicker-widget.dropdown-menu {
+  width: auto;
+}
+
+.bootstrap-datetimepicker-widget table td, .bootstrap-datetimepicker-widget table th {
+  padding: 0.5rem;
+}
+
+.dropdown-lookup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  float: left;
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  margin: 0.125rem 0 0;
+  font-size: 1rem;
+  color: #212529;
+  text-align: left;
+  list-style: none;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.25rem;
+  box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 18%);
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <view id='view_mom_item_search' name='物料查询' model='mom.item'>
+        <search>
+            <field name="name"/>
+            <field name="code"/>
+        </search>
+    </view>
+    <view id='view_mom_item_grid' name='物料列表' model='mom.item'>
+        <grid>
+            <toolbar buttons="default"></toolbar>
+            <field name="name"/>
+            <field name="code"/>
+        </grid>
+    </view>
+    <view id='view_mom_item_form' name='物料表单' model='mom.item'>
+        <form>
+            <toolbar buttons="default"></toolbar>
+            <field name="name"/>
+            <field name="code"/>
+        </form>
+    </view>
+</data>

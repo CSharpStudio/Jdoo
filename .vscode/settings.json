@@ -1,5 +1,10 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
-    "editor.tabSize": 4,
-    "editor.detectIndentation": false
+    "vscodeP3C.rulesets": ["p3c-ruleset.xml"],
+    "code-runner.executorMap":{
+        "cpp":"chcp 65001 "
+    },
+    "java.help.shareDiagnostics": true,
+    "maven.view": "hierarchical",
+    "java.inlayHints.parameterNames.enabled": "none"
 }

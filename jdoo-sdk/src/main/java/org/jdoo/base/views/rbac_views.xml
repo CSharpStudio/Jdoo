@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <view id='view_user_search' name='用户-查询' model='rbac.user'>
+        <search>
+            <field name="name"/>
+            <field name="login"/>
+        </search>
+    </view>
+    <view id='view_user_grid' name='用户-表格' type='grid' model='rbac.user'>
+        <grid>
+            <toolbar buttons="default">
+                <button type="object" label="重置密码" service="resetPassword"/>
+            </toolbar>
+            <field name="name"/>
+            <field name="login"/>
+            <field name="email"/>
+            <field name="mobile"/>
+        </grid>
+    </view>
+    <view id='view_user_form' name='用户-表单' model='rbac.user'>
+        <form>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="login"/>
+            <field name="email"/>
+            <field name="mobile"/>
+            <field colspan="3" name="role_ids" nolabel="1">
+                <grid label="Views">
+                    <field name="name"/>
+                    <field name="is_admin"/>
+                </grid>
+            </field>
+        </form>
+    </view>
+
+    <view id='rbac_role_resource' name='角色-资源' model='rbac.role'>
+        <resource>
+            <link rel="stylesheet" href="/org/jdoo/base/statics/css/role.css"></link>
+            <script src="/org/jdoo/base/statics/js/role.js"></script>
+        </resource>
+    </view>
+
+    <view id='view_role_search' name='角色-查询' model='rbac.role'>
+        <search>
+            <field name="name"/>
+        </search>
+    </view>
+
+    <view id='view_role_grid' name='角色-表格' type='grid' model='rbac.role'>
+        <grid>
+            <toolbar buttons="default">
+                <button type="object" auth="savePermission" label="权限" active="id" click="editPermission()"/>
+            </toolbar>
+            <field name="name"/>
+            <field name="is_admin"/>
+        </grid>
+    </view>
+
+    <view id='view_role_form' name='角色-表单' model='rbac.role'>
+        <form>
+            <toolbar buttons="default">
+                <button type="object" label="权限" click="editPermission()"/>
+            </toolbar>
+            <field name="name"/>
+            <field name="is_admin" readonly="1"/>
+            <field colspan="3" name="user_ids" nolabel="1">
+                <grid label="Views">
+                    <field name="name"/>
+                    <field name="login"/>
+                    <field name="email"/>
+                    <field name="mobile"/>
+                </grid>
+            </field>
+        </form>
+    </view>
+
+    <view id='view_permission_search' name='权限-查询' model='rbac.permission'>
+        <search>
+            <field name="name"/>
+            <field name="auth"/>
+            <field name="model"/>
+        </search>
+    </view>
+
+    <view id='view_permission_grid' name='权限-表格' type='grid' model='rbac.permission'>
+        <grid>
+            <toolbar buttons="default">
+                <button type="object" label="更新" service="refresh"/>
+            </toolbar>
+            <field name="name"/>
+            <field name="auth"/>
+            <field name="model"/>
+        </grid>
+    </view>
+
+    <view id='view_permission_form' name='权限-表单' model='rbac.permission'>
+        <form>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="auth"/>
+            <field name="model"/>
+        </form>
+    </view>
+</data>

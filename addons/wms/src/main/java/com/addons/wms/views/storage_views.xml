@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <menu id="menu_wms" name="仓库管理" model="wms.storage" view="grid,form" icon="/org/jdoo/base/statics/img/modules.png"/>
+
+    <view id='view_wms_storage_search' name='仓库查询' model='wms.storage'>
+        <search>
+            <field name="name"/>
+            <field name="code"/>
+        </search>
+    </view>
+    <view id='view_wms_storage_grid' name='仓库列表' model='wms.storage'>
+        <grid>
+            <toolbar buttons="default"></toolbar>
+            <field name="name"/>
+            <field name="code"/>
+        </grid>
+    </view>
+    <view id='view_wms_storage_form' name='仓库表单' model='wms.storage'>
+        <form>
+            <toolbar buttons="default"></toolbar>
+            <field name="name"/>
+            <field name="code"/>
+        </form>
+    </view>
+</data>

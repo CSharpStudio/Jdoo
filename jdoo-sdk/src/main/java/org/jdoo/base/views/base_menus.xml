@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+
+    <menu id="menu_apps" name="应用" seq="1000" model="ir.module" view="grid,card,form" icon="/org/jdoo/base/statics/img/modules.png"/>
+    <menu id="menu_apps_store" name="应用商城" parent="menu_apps" seq="5" url="https://blog.csdn.net/"/>
+    <action id="app_update">
+    </action>
+    <menu id="menu_apps_update" name="更新的应用" parent="menu_apps" seq="10" action="app_update"/>
+
+
+    <menu id="menu_system" name="系统" seq="1100" model="res.config.settings" view="form" icon="/org/jdoo/base/statics/img/modules.png"/>
+    
+    <menu id="menu_system_users" name="用户管理" seq="10" parent="menu_system"/>    
+    <menu id="menu_system_users_user" name="用户" seq="10" model="rbac.user" view="grid,form" parent="menu_system_users"/>
+    <menu id="menu_system_users_role" name="角色" seq="20" model="rbac.role" view="grid,form" parent="menu_system_users"/>
+    <menu id="menu_system_users_permission" name="权限" seq="30" model="rbac.permission" view="grid,form" parent="menu_system_users"/>
+    
+    <!-- <menu id="menu_system_users_link" name="连接" seq="30" parent="menu_system_users"/>
+    <menu id="menu_system_users_link1" name="连接1" seq="30" parent="menu_system_users_link" url="https://blog.csdn.net?a"/>
+    <menu id="menu_system_users_link2" name="连接2" seq="30" parent="menu_system_users_link" url="https://blog.csdn.net?b"/> -->
+
+</data>

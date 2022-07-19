@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <menu id="menu_wms_item" name="物料" model="mom.item" parent="menu_wms" view="grid,form"/>
+
+    <view id='view_aps_item_form' inherit_id='mom.view_mom_item_form' type='form' name='APS物料表单' model='mom.item'>
+        <xpath has_not="tabs" expr="form > field:last-child" position="after">
+            <tabs>
+            </tabs>
+        </xpath>
+        <xpath expr="tabs" position="inside">
+            <tab label="库存资料">
+                <field name="rohs_id"/>
+                <field name="is_batch"/>
+                <field name="quality_guarantee_period"/>
+            </tab>
+            <tab label="收发控制">
+                <field name="receive_send_control_ids" colspan="3" nolabel="1">
+                    <grid>
+                        <field name="storage_id"/>
+                        <field name="over_receive_rate"/>
+                        <field name="over_receive_qty"/>
+                        <field name="over_send_rate"/>
+                        <field name="over_send_qty"/>
+                        <edit>
+                            <field name="storage_id"/>
+                            <field name="over_receive_rate"/>
+                            <field name="over_receive_qty"/>
+                            <field name="over_send_rate"/>
+                            <field name="over_send_qty"/>
+                        </edit>
+                    </grid>
+                </field>
+            </tab>
+        </xpath>
+    </view>
+</data>

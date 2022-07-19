@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <view id='view_settings_form' name='配置-表单' model='res.config.settings'>
+        <form log_access="0">开发中
+        </form>
+    </view>
+</data>

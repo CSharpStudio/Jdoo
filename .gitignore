@@ -1,4 +1,3 @@
-.vscode/*
-*.class
-jdoo/target/*
-webapi/target/*
+**/target/
+!**/src/main/**/target/
+!**/src/test/**/target/

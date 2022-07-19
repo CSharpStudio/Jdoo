@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <menu id="menu_model" name="模型管理" seq="5" parent="menu_system"/>
+    <menu id="menu_ir_model" name="模型" model="ir.model" view="grid,form" seq="5" parent="menu_model"/>
+    <!-- <menu id="menu_ir_model_field" name="字段" model="ir.model.field" view="grid,form" seq="10" parent="menu_model"/> -->
+
+    <view id='model_search' name='模型-查询' model='ir.model'>
+        <search>
+            <field name="name"/>
+            <field name="model"/>
+            <field name="state"/>
+        </search>
+    </view>
+    <view id='model_grid' name='模型-表格' model='ir.model'>
+        <grid>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="model"/>
+            <field name="inherit"/>
+            <field name="table"/>
+            <field name="state"/>
+        </grid>
+    </view>
+    <view id='model_form' name='模型-表单' model='ir.model'>
+        <form>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="model"/>
+            <field name="inherit"/>
+            <field name="table"/>
+            <field name="order"/>
+            <field name="present"/>
+            <field name="is_transient"/>
+            <field name="state"/>
+            <tabs>
+                <tab label = "字段">
+                    <field name="field_ids" colspan="3" nolabel="1">
+                        <grid label="Views">
+                            <field name="name"/>
+                            <field name="field_type"/>
+                            <field name="label"/>
+                            <field name="required"/>
+                            <field name="readonly"/>
+                            <field name="index"/>
+                            <field name="store"/>
+                            <field name="state"/>
+                            <edit>
+                                <field name="name"/>
+                                <field name="field_type"/>
+                                <field name="label"/>
+                                <field name="help"/>
+                                <field name="required"/>
+                                <field name="readonly"/>
+                                <field name="index"/>
+                                <field name="store"/>
+                                <field name="copy"/>
+                                <field name="depends"/>
+                                <field name="state"/>
+                            </edit>
+                        </grid>
+                    </field>
+                </tab>
+            </tabs>
+        </form>
+    </view>
+
+    <view id='model_field_search' name='字段-查询' model='ir.model.field'>
+        <search>
+            <field name="name"/>
+            <field name="label"/>
+            <field name="state"/>
+        </search>
+    </view>
+    <view id='model_field_grid' name='字段-表格' model='ir.model.field'>
+        <grid>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="model_id"/>
+            <field name="field_type"/>
+            <field name="label"/>
+            <field name="required"/>
+            <field name="readonly"/>
+            <field name="index"/>
+            <field name="store"/>
+            <field name="state"/>
+        </grid>
+    </view>
+    <view id='model_field_form' name='字段-表单' model='ir.model.field'>
+        <form>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="model_id"/>
+            <field name="field_type"/>
+            <field name="label"/>
+            <field name="help"/>
+            <field name="required"/>
+            <field name="readonly"/>
+            <field name="index"/>
+            <field name="store"/>
+            <field name="copy"/>
+            <field name="depends"/>
+            <field name="state"/>
+        </form>
+    </view>
+</data>

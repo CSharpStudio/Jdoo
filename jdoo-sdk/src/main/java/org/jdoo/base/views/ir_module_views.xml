@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <view id='module_search' name='模块-查询' model='ir.module'>
+        <search>
+            <field name="name"/>
+            <field name="state"/>
+            <field name="license"/>
+        </search>
+    </view>
+    <view id='module_grid' name='模块-表格' model='ir.module'>
+        <grid>
+            <toolbar buttons="create|copy|edit|delete|export">
+                <button type="object" active="id" label="安装" service="install"/>
+                <button type="object" active="id" label="更新应用数据" service="updateData"/>
+                <button type="object" label="更新应用清单" service="updateModules"/>
+                <button type="object" label="重启租户" service="resetTenant"/>
+            </toolbar>
+            <field name="name"/>
+            <field name="summary"/>
+            <field name="category_id"/>
+            <field name="author"/>
+            <field name="license"/>
+            <field name="state"/>
+        </grid>
+    </view>
+    <view id='module_card' name='模块-卡片' model='ir.module'>
+        <card>
+            <toolbar buttons="default">
+                <button type="object" label="测试" service="test"/>
+            </toolbar>
+            <field name="name"/>
+            <field name="summary"/>
+            <field name="author"/>
+            <field name="license"/>
+            <template>
+                <div class="card-header">
+                    <h3 class="card-title">基本信息</h3>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">#{name}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">#{author}</h6>
+                    <p class="card-text">#{summary}</p>
+                    #{license}
+                </div>
+            </template>
+        </card>
+    </view>
+    <view id='module_form' name='模块-表单' model='ir.module'>
+        <form>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="summary"/>
+            <field name="category_id"/>
+            <field name="author"/>
+            <field name="license"/>
+            <field name="state" readonly="1"/>
+        </form>
+    </view>
+</data>

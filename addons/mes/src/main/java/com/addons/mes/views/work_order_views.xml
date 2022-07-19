@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <menu id="menu_mes" name="制造执行" model="mom.work_order" view="grid,form" icon="/org/jdoo/base/statics/img/modules.png"/>
+</data>
