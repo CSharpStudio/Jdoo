@@ -25,47 +25,47 @@ public class TestModel extends Model {
         .compute(Callable.script("r->r.get('name')+'('+r.get('type')+')'"))
         .store(false).depends("name", "type");
 
-    /** 名称 */
+    /** 获取名称 */
     public String getName() {
         return (String) get(name);
     }
 
-    /** 名称 */
+    /** 设置名称 */
     public void setName(String value) {
         set(name, value);
     }
 
-    /** 描述 */
+    /** 获取描述 */
     public String getDescription() {
         return (String) get(description);
     }
 
-    /** 描述 */
+    /** 设置描述 */
     public void setDescription(String value) {
         set(description, value);
     }
 
-    /** 继承 */
+    /** 获取继承 */
     public String getInherit() {
         return (String) get(inherit);
     }
 
-    /** 继承 */
+    /** 设置继承 */
     public void setInherit(String value) {
         set(inherit, value);
     }
 
-    /** 类型 */
+    /** 获取类型 */
     public String getType() {
         return (String) get(type);
     }
 
-    /** 类型 */
-    public void set_type(String value) {
+    /** 设置类型 */
+    public void setType(String value) {
         set(type, value);
     }	
 
-    /** 类型 */
+    /** 获取类型名称 */
     public String getTypeName() {
         return (String) get(type_name);
     }
@@ -74,7 +74,7 @@ public class TestModel extends Model {
     @Model.ServiceMethod
     public void test(Records rec) {
         for (TestModel testModel : rec.of(TestModel.class)) {
-            testModel.set_type("integer");
+            testModel.setType("integer");
             System.out.println(testModel.get_name());
         }
         //do something else
@@ -82,7 +82,11 @@ public class TestModel extends Model {
 }
 ```
 
+应用安装示例：
+https://github.com/CSharpStudio/Jdoo/blob/main/apps.mp4?raw=true
 
+低代码示例：
+https://github.com/CSharpStudio/Jdoo/blob/main/lowcode.mp4?raw=true
 
 
 
