@@ -79,7 +79,7 @@ public class TestModel extends Model {
     public void test(Records rec) {
         for (TestModel testModel : rec.of(TestModel.class)) {
             testModel.setType("integer");
-            System.out.println(testModel.get_name());
+            System.out.println(testModel.getName());
         }
         //do something else
     }
@@ -88,5 +88,14 @@ public class TestModel extends Model {
 
 
 
+API文档：
+![api文档](https://github.com/CSharpStudio/Jdoo/blob/main/resources/api-doc.screenshots.png?raw=true)
 
+登录界面：
+![登录界面](https://github.com/CSharpStudio/Jdoo/blob/main/resources/login.screenshots.png?raw=true)
 
+表格界面：
+![表格界面](https://github.com/CSharpStudio/Jdoo/blob/main/resources/grid.screenshots.png?raw=true)
+
+编辑界面：
+![编辑界面](https://github.com/CSharpStudio/Jdoo/blob/main/resources/form.screenshots.png?raw=true)
