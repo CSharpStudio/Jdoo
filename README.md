@@ -14,64 +14,68 @@ package org.jdoo.models;
 
 import org.jdoo.*;
 
-@Model.Meta(name = "test.model", description = "模型元数据")
+@Entity(name = "test.model", description = "模型元数据")
 public class TestModel extends Model {
     static Field name = Field.Char().label("名称").help("模型名称")
         .index(true).required(true);//.translate();
     static Field description = Field.Char().label("描述").help("模型说明");
-    static Field inherit = Field.Char().label("继承").help("模型的继承，多个使用逗号','分隔");
-    static Field type = Field.Selection().label("类型").help("模型的类型：普通、抽象、瞬态");
+    static Field inherit = Field.Char().label("继承").help("模型的继承，多个使用逗号','分隔");	
+    static Field state = Field.Selection().label("状态").selection(Selection.value(new HashMap<String, String>() {
+		{
+			put("base", "Base");
+			put("manual", "Manual");
+		}
+	})).defaultValue(Default.value("manual"));
     static Field type_name = Field.Char().label("类名")
         .compute(Callable.script("r->r.get('name')+'('+r.get('type')+')'"))
         .store(false).depends("name", "type");
 
-    /** 获取名称 */
+    /** 名称 */
     public String getName() {
         return (String) get(name);
     }
 
-    /** 设置名称 */
+    /** 名称 */
     public void setName(String value) {
         set(name, value);
     }
 
-    /** 获取描述 */
+    /** 描述 */
     public String getDescription() {
         return (String) get(description);
     }
 
-    /** 设置描述 */
+    /** 描述 */
     public void setDescription(String value) {
         set(description, value);
     }
 
-    /** 获取继承 */
+    /** 继承 */
     public String getInherit() {
         return (String) get(inherit);
     }
 
-    /** 设置继承 */
+    /** 继承 */
     public void setInherit(String value) {
         set(inherit, value);
     }
 
-    /** 获取类型 */
+    /** 类型 */
     public String getType() {
         return (String) get(type);
     }
 
-    /** 设置类型 */
+    /** 类型 */
     public void setType(String value) {
         set(type, value);
     }	
 
-    /** 获取类型名称 */
+    /** 类型 */
     public String getTypeName() {
         return (String) get(type_name);
     }
 
     /** Model method demo */
-    @Model.ServiceMethod
     public void test(Records rec) {
         for (TestModel testModel : rec.of(TestModel.class)) {
             testModel.setType("integer");
@@ -82,11 +86,7 @@ public class TestModel extends Model {
 }
 ```
 
-应用安装示例：
-https://github.com/CSharpStudio/Jdoo/blob/main/apps.mp4?raw=true
 
-低代码示例：
-https://github.com/CSharpStudio/Jdoo/blob/main/lowcode.mp4?raw=true
 
 
 

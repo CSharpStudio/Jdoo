@@ -11,8 +11,11 @@ import javax.sql.DataSource;
 import org.jdoo.data.mysql.MySqlDialect;
 import org.jdoo.data.postgresql.PgSqlDialect;
 import org.jdoo.exceptions.DataException;
+import org.jdoo.data.oracle.OracleDialect;
+//import org.apache.commons.dbcp.BasicDataSourceFactory;
 
-import org.apache.commons.dbcp.BasicDataSourceFactory;
+import com.alibaba.druid.pool.DruidDataSource;
+import com.alibaba.druid.pool.DruidDataSourceFactory;
 
 /**
  * 数据库配置
@@ -35,6 +38,7 @@ public class Database {
     }
 
     static {
+        sqlDialects.put("oracle.jdbc.OracleDriver", new OracleDialect());
         sqlDialects.put("org.postgresql.Driver", new PgSqlDialect());
         sqlDialects.put("com.mysql.cj.jdbc.Driver", new MySqlDialect());
         sqlDialects.put("com.mysql.jdbc.Driver", new MySqlDialect());        
@@ -63,7 +67,7 @@ public class Database {
     public Database(Properties properties) {
         try {
             driver = properties.getProperty("driverClassName");
-            dataSource = BasicDataSourceFactory.createDataSource(properties);
+            dataSource = DruidDataSourceFactory.createDataSource(properties);
         } catch (Exception e) {
             e.printStackTrace();
             throw new DataException("创建DataSource失败", e);
@@ -76,11 +80,17 @@ public class Database {
                 Properties properties = new Properties();
                 properties.load(is);
                 driver = properties.getProperty("driverClassName");
-                dataSource = BasicDataSourceFactory.createDataSource(properties);
+                dataSource = DruidDataSourceFactory.createDataSource(properties);
             }
         } catch (Exception e) {
             e.printStackTrace();
             throw new DataException("创建DataSource失败", e);
+        }
+    }
+
+    public void close() {
+        if (dataSource instanceof DruidDataSource) {
+            ((DruidDataSource) dataSource).close();
         }
     }
 

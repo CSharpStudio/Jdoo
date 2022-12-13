@@ -1,19 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data>
 
-    <menu id="menu_demo" name="示例" model="demo.field_type" view="grid,form" icon="/org/jdoo/base/statics/img/modules.png"/>
+    <menu id="menu_demo" name="示例" icon="/res/org/jdoo/base/statics/img/modules.png"/>
+    <menu id="menu_field_type" name="字段类型" model="demo.field_type" view="grid,form" parent="menu_demo"/>
 
     <view id='view_field_type_search' name='demo.field_type.search' model='demo.field_type'>
         <search>
-            <field name="f_char"/>
-            <field name="f_bool"/>
+            <field name="f_char" default="char"/>
+            <field name="f_bool" default="true"/>
             <field name="f_date"/>
             <field name="f_datetime"/>
-            <field name="f_float"/>
-            <field name="f_html"/>
+            <field name="f_date_range" editor="date_range"/>
+            <field name="f_datetime_range" editor="datetime_range"/>
+            <field name="f_float" criteria='["|", ["f_float","&gt;",value], ["f_float","&lt;",3]]'/>
+            <field name="f_html" editor="text"/>
+
             <field name="f_int"/>
             <field name="f_selection"/>
             <field name="f_text"/>
+
+            <field name="f_radio" editor="radio"/>
+            <field name="f_m2o_id"/>
+
         </search>
     </view>
     <view id='view_field_type_grid' name='demo.field_type.grid' type='grid' model='demo.field_type'>
@@ -26,22 +34,60 @@
             <field name="f_float"/>
             <field name="f_html"/>
             <field name="f_int"/>
-            <field name="f_selection"/>
+            <field name="f_selection" />
+            <field name="f_compute" />
             <field name="f_text"/>
+            <field name="f_m2o_id"/>
+
         </grid>
     </view>
     <view id='view_field_type_form' name='demo.field_type.form' model='demo.field_type'>
         <form>
             <toolbar buttons="default"></toolbar>
-            <field name="f_char" colspan="2" />
-            <field name="f_bool"/>
-            <field name="f_date"/>
-            <field name="f_datetime"/>
-            <field name="f_float"/>
-            <field name="f_html"/>
-            <field name="f_int"/>
-            <field name="f_selection"/>
-            <field name="f_text" colspan="3" rows="3"/>
+            <field name="f_char" colspan="2" required="1" length="10" trim="1"/>
+            <field name="f_bool" required="1"/>
+            <group label="分组" collapsable="1">
+                <field name="f_date" required="1" min="2020-1-1" max="2201-1-1"/>
+                <field name="f_datetime" required="1" min="2020-1-1" max="2023-1-1"/>
+                <field name="f_float" required="1" min="0" max="5" step="0.5"/>
+                <field name="f_html" required="1" rowspan="2"/>
+                <field name="f_int" required="1" min="4" max="10" step="2"/>
+                <field name="f_selection" required="1"/>
+            </group>
+            <group label="分组2" collapsable="1" colspan="2">
+                <field name="f_text" colspan="2" rowspan="2" rows="3" required="1"/> 
+            </group>
+            <group label="分组3" colspan="2">
+                <field name="f_m2o_id" required="1"/>
+            </group>
+            <!-- <field name="f_image" size="20"/> -->
+            <field name="f_m2m_tags" editor="many2many_tags" />
+            <field name="f_radio" editor="radio" />
+            <field name ="f_priority" editor="priority" />
+            <!--      <field name="f_selection" edtior="priority"/> -->
+            <tabs>
+                <tab label="一对多">
+                    <field name="f_o2m_ids" colspan="4" nolabel="1">
+                        <grid>
+                            <toolbar></toolbar>
+                            <field name="name"/>
+                            <field name="book"/>
+                            <edit>
+                                <field name="name"/>
+                                <field name="book"/>
+                            </edit>
+                        </grid>
+                    </field>
+                </tab>
+                <tab label="多对多">
+                    <field name="f_m2m_ids" colspan="4" nolabel="1">
+                        <grid>
+                            <toolbar></toolbar>
+                            <field name="name"/>
+                        </grid>
+                    </field>
+                </tab>
+            </tabs>
         </form>
     </view>
 </data>

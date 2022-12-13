@@ -2,17 +2,16 @@ package org.jdoo.https;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
-import java.util.Properties;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.jdoo.utils.PathUtils;
+import org.jdoo.utils.PropertiesUtils;
 import org.jdoo.utils.Utils;
-import org.springframework.core.io.support.PropertiesLoaderUtils;
+import org.jdoo.utils.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.util.ClassUtils;
@@ -26,15 +25,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
  */
 @org.springframework.stereotype.Controller
 public class StaticsController {
-    @RequestMapping(value = "**/statics/**", method = RequestMethod.GET)
+    @RequestMapping(value = "/res/**", method = RequestMethod.GET)
     public void handle(HttpServletRequest request, HttpServletResponse response) {
         String path = request.getServletPath();
-        String seperator = "/";
-        if (path.startsWith(seperator)) {
-            path = path.substring(1);
-        }
-        // ClassLoader loader = ClassUtils.getDefaultClassLoader();
-        // InputStream input = loader.getResourceAsStream(path);
+        path = path.startsWith("/") ? path.substring(5) : path.substring(4);
         InputStream input = getResource(path);
         Optional<MediaType> o = MediaTypeFactory.getMediaType(path);
         if (o.isPresent()) {
@@ -54,24 +48,30 @@ public class StaticsController {
     }
 
     InputStream getResource(String path) {
-        Properties properties;
-        try {
-            properties = PropertiesLoaderUtils.loadAllProperties("application.properties");
-            if ("dev".equals(properties.get("spring.profiles.active"))) {
-                properties = PropertiesLoaderUtils.loadAllProperties("application-dev.properties");
-                String root = (String) properties.get("staticPath");
-                String fileName = PathUtils.combine(root, path);
-                File file = new File(fileName);
-                if (file.exists()) {
-                    return new FileInputStream(file);
+        String rootPath = (String) PropertiesUtils.getProperty("rootPath");
+        if (StringUtils.isNotEmpty(rootPath)) {
+            String addons = (String) PropertiesUtils.getProperty("addons");
+            if (StringUtils.isNotEmpty(addons)) {
+                for (String root : rootPath.split(",")) {
+                    for (String addon : addons.split(",")) {
+                        String fileName = PathUtils.combine(root, addon, "src/main/java", path);
+                        File file = new File(fileName);
+                        if (file.exists()) {
+                            try {
+                                return new FileInputStream(file);
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
+        }
         ClassLoader loader = ClassUtils.getDefaultClassLoader();
-        InputStream input = loader.getResourceAsStream(path);
-        return input;
+        if (loader != null) {
+            return loader.getResourceAsStream(path);
+        }
+        return null;
     }
 }

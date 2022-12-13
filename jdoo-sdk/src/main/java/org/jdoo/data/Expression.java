@@ -11,24 +11,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jdoo.Criteria;
 import org.jdoo.Records;
+import org.jdoo.Search;
+import org.jdoo.core.BaseModel;
 import org.jdoo.core.Constants;
 import org.jdoo.core.MetaField;
 import org.jdoo.data.Query.SelectClause;
+import org.jdoo.exceptions.TypeException;
 import org.jdoo.exceptions.ValueException;
 import org.jdoo.fields.BinaryBaseField;
 import org.jdoo.fields.BooleanField;
 import org.jdoo.fields.Many2manyField;
 import org.jdoo.fields.Many2oneField;
 import org.jdoo.fields.One2manyField;
+import org.jdoo.fields.RelationalField;
+import org.jdoo.fields.RelationalMultiField;
 import org.jdoo.utils.StringUtils;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 这个类的主要职责是将过滤条件表达式编译为SQL查询。
@@ -51,7 +57,7 @@ import org.apache.logging.log4j.Logger;
  * 
  */
 public class Expression {
-    protected static Logger logger = LogManager.getLogger(Expression.class);
+    protected static Logger logger = LoggerFactory.getLogger(Expression.class);
 
     static final String ID = "id";
     static final String OP_IN = "in";
@@ -356,85 +362,6 @@ public class Expression {
 
     }
 
-    void parseLeaf(MetaField field, LeafModel lm, String left, String op, Object right,
-            Stack<LeafModel> stack, Stack<SqlFormat> resultStack) {
-        int datelength = 10;
-        if (Constants.DATETIME.equals(field.getType()) && right != null) {
-            if (right instanceof String && ((String) right).length() == datelength) {
-                String str = (String) right;
-                if (OP_GT.equals(op) || OP_LTE.equals(op)) {
-                    str += " 23:59:59";
-                } else {
-                    str += " 00:00:00";
-                }
-                stack.push(new LeafModel(new BinaryOp(left, op, str), lm.model, lm.alias));
-            } else if (right instanceof Date) {
-                Date d = (Date) right;
-                if (OP_GT.equals(op) || OP_LTE.equals(op)) {
-                    right = new Timestamp(d.getYear(), d.getMonth(), d.getDay(), 23, 59, 59, 0);
-                } else {
-                    right = new Timestamp(d.getYear(), d.getMonth(), d.getDay(), 0, 0, 0, 0);
-                }
-                stack.push(new LeafModel(new BinaryOp(left, op, right), lm.model, lm.alias));
-            } else {
-                resultStack.add(leafToSql((BinaryOp) lm.leaf, lm.model, lm.alias));
-            }
-        }
-        // else if (field.Translate && right.IsTrue())
-        // {
-        // //todo
-        // throw new NotImplementedException();
-        // }
-        else {
-            resultStack.add(leafToSql((BinaryOp) lm.leaf, lm.model, lm.alias));
-        }
-    }
-
-    boolean parseMany2one(MetaField field, LeafModel lm, String left, String op, Object right, Stack<LeafModel> stack,
-            Stack<SqlFormat> resultStack) {
-        if (field instanceof Many2oneField) {
-            Many2oneField m2o = (Many2oneField) field;
-            Records comodel = lm.model.getEnv().get(m2o.getComodel());
-            if ((OP_CHILD_OF.equals(op) || OP_PARENT_OF.equals(op))) {
-                List<Object> ids2 = toIds(right, comodel, lm.leaf);
-                List<Object> dom;
-                if (m2o.getComodel() != lm.model.getMeta().getName()) {
-                    dom = hierarchyFunc(op, left, ids2, comodel, null, m2o.getComodel());
-                } else {
-                    dom = hierarchyFunc(op, ID, ids2, lm.model, left, "");
-                }
-                for (Object domLeaf : dom) {
-                    stack.push(new LeafModel((BinaryOp) domLeaf, lm.model, lm.alias));
-                }
-            } else {
-                // TODO 判断是id，还是name， name 通过name_search读取ids
-                resultStack.push(leafToSql((BinaryOp) lm.leaf, lm.model, lm.alias));
-            }
-            return true;
-        }
-        return false;
-    }
-
-    boolean parseMany2many(MetaField field, LeafModel lm, String left, String op, Object right, Stack<LeafModel> stack,
-            Stack<SqlFormat> resultStack) {
-        if (field instanceof Many2manyField) {
-            Many2manyField m2m = (Many2manyField) field;
-            //
-            return true;
-        }
-        return false;
-    }
-
-    boolean parseOne2many(MetaField field, LeafModel lm, String left, String op, Object right, Stack<LeafModel> stack,
-            Stack<SqlFormat> resultStack) {
-        if (field instanceof One2manyField) {
-            One2manyField o2m = (One2manyField) field;
-            // TODO
-            return true;
-        }
-        return false;
-    }
-
     boolean parseOfId(LeafModel lm, String left, String op, Object right, Stack<LeafModel> stack,
             Stack<SqlFormat> resultStack) {
         boolean isOfId = ID.equals(left) && (OP_CHILD_OF.equals(op) || OP_PARENT_OF.equals(op));
@@ -442,7 +369,7 @@ public class Expression {
             List<Object> ids2 = toIds(right, lm.model, lm.leaf);
             List<Object> dom = hierarchyFunc(op, left, ids2, lm.model, null, "");
             for (Object domLeaf : dom) {
-                stack.push(new LeafModel((BinaryOp) domLeaf, lm.model, lm.alias));
+                pushStack(stack, domLeaf, lm.model, lm.alias, false);
             }
             return true;
         }
@@ -456,11 +383,11 @@ public class Expression {
             Records comodel = lm.model.getEnv().get(m2o.getComodel());
             if (m2o.getAutoJoin()) {
                 String aliasRel = query.leftJoin(lm.alias, path[0], comodel.getMeta().getTable(), ID, path[0]);
-                stack.push(new LeafModel(new BinaryOp(path[1], op, right), comodel, aliasRel));
+                pushStack(stack, new BinaryOp(path[1], op, right), comodel, aliasRel, false);
             } else {
                 List<String> rightIds = Arrays.asList(comodel
                         .find(Criteria.binary(path[1], op, right), null, null, ID).getIds());
-                stack.push(new LeafModel(new BinaryOp(path[0], OP_IN, rightIds), lm.model, lm.alias));
+                pushStack(stack, new BinaryOp(path[0], OP_IN, rightIds), lm.model, lm.alias, false);
             }
             return true;
         }
@@ -469,21 +396,30 @@ public class Expression {
 
     boolean parseOne2manyPathJoin(String[] path, MetaField field, LeafModel lm, String op, Object right,
             Stack<LeafModel> stack, Stack<SqlFormat> resultStack) {
-        if (path.length > 1 && field.isStore() && field instanceof One2manyField
-                && ((One2manyField) field).getAutoJoin()) {
-            // TODO
-            throw new UnsupportedOperationException();
+        if (path.length > 1 && field.isStore() && field instanceof One2manyField) {
+            One2manyField o2m = (One2manyField) field;
+            if (o2m.getAutoJoin()) {
+                Criteria criteria = Criteria.binary(path[1], op, right).and(o2m.getCriteria(lm.model));
+                Records comodel = lm.model.getEnv().get(o2m.getComodel());
+                Query query = BaseModel.whereCalc(comodel.withContext(o2m.getContext()), criteria, true);
+                Cursor cr = lm.model.getEnv().getCursor();
+                SelectClause selectClause = query.select(
+                        String.format("%s.%s", cr.quote(comodel.getMeta().getTable()), cr.quote(o2m.getInverseName())));
+                pushStack(stack, new BinaryOp(Constants.ID, OP_IN_SELECT, selectClause), lm.model, lm.alias, true);
+            }
         }
         return false;
     }
 
     boolean parse2manyPath(String[] path, MetaField field, LeafModel lm, String op, Object right,
             Stack<LeafModel> stack, Stack<SqlFormat> resultStack) {
-        boolean result = path.length > 1 && field.isStore()
-                && (field instanceof Many2manyField || field instanceof One2manyField);
+        boolean result = path.length > 1 && field.isStore() && (field instanceof RelationalMultiField);
         if (result) {
-            // TODO
-            throw new UnsupportedOperationException();
+            RelationalMultiField<?> rf = (RelationalMultiField<?>) field;
+            Records comodel = lm.model.getEnv().get(rf.getComodel());
+            List<String> right_ids = Arrays.asList(comodel.withContext(rf.getContext())
+                    .find(Criteria.binary(path[1], op, right), null, null, Constants.ID).getIds());
+            pushStack(stack, new BinaryOp(path[0], OP_IN, right_ids), lm.model, lm.alias, false);
         }
         return result;
     }
@@ -493,18 +429,171 @@ public class Expression {
         boolean result = field instanceof One2manyField && (OP_CHILD_OF.equals(op) || OP_PARENT_OF.equals(op));
         if (result) {
             One2manyField o2m = (One2manyField) field;
-            // TODO
+            Records comodel = lm.model.getEnv().get(o2m.getComodel());
+            List<Object> ids = toIds(right, rootModel, lm.leaf);
+            List<Object> dom = null;
+            if (!lm.model.getMeta().getName().equals(o2m.getComodel())) {
+                dom = hierarchyFunc(op, left, ids, comodel, null, o2m.getComodel());
+            } else {
+                dom = hierarchyFunc(op, Constants.ID, ids, lm.model, left, "");
+            }
+            for (Object domLeaf : dom) {
+                pushStack(stack, domLeaf, lm.model, lm.alias, false);
+            }
         }
         return result;
     }
 
+    @SuppressWarnings("unchecked")
+    boolean parseOne2many(MetaField field, LeafModel lm, String left, String op, Object right, Stack<LeafModel> stack,
+            Stack<SqlFormat> resultStack) {
+        if (field instanceof One2manyField) {
+            One2manyField o2m = (One2manyField) field;
+            // Criteria criteria = o2m.getCriteria(lm.model);
+            Records comodel = lm.model.getEnv().get(o2m.getComodel());
+            MetaField inverseField = comodel.getMeta().getField(o2m.getInverseName());
+            Cursor cr = lm.model.getEnv().getCursor();
+            if (right != null) {
+                String inOp = NEGATIVE_TEAM_OPS.contains(op) ? "NOT IN" : "IN";
+                List<Object> ids = new ArrayList<>();
+                if (right instanceof Records) {
+                    ids.addAll(Arrays.asList(((Records) right).getIds()));
+                } else if (right instanceof Collection) {
+                    ids.addAll((Collection<String>) right);
+                } else if (right instanceof String[]) {
+                    ids.addAll(Arrays.asList((String[]) right));
+                } else {
+                    ids.add(right);
+                }
+                if (inverseField.isStore()) {
+                    if (right instanceof Query) {
+                        Query query = (Query) right;
+                        SelectClause selectClause = query.subSelect(String.format("%s.%s",
+                                cr.quote(comodel.getMeta().getTable()), cr.quote(inverseField.getName())));
+                        String sql = String.format("(%s.id %s (%s))", cr.quote(lm.alias), inOp,
+                                selectClause.getQuery());
+                        resultStack.push(new SqlFormat(sql, selectClause.getParams()));
+                    } else {
+                        String subquery = String.format("SELECT %s FROM %s WHERE id IN %%s",
+                                cr.quote(inverseField.getName()),
+                                cr.quote(comodel.getMeta().getTable()));
+                        if (!inverseField.isRequired()) {
+                            subquery += String.format(" AND %s IS NOT NULL", cr.quote(inverseField.getName()));
+                        }
+                        String sql = String.format("(%s.id %s (%s))", cr.quote(lm.alias), inOp, subquery);
+                        if (ids.isEmpty()) {
+                            ids.add(null);
+                        }
+                        resultStack.push(new SqlFormat(sql, Arrays.asList(ids)));
+                    }
+                } else {
+                    List<String> ids1 = comodel.browse(ids.toArray(new String[0]))
+                            .withContext(Constants.PREFETCH_FIELDS, false)
+                            .stream().map(r -> (String) r.get(o2m.getInverseName())).collect(Collectors.toList());
+                    pushStack(stack, new BinaryOp(Constants.ID, inOp, ids1), lm.model, lm.alias, false);
+                }
+            } else {
+                if (inverseField.isStore()) {
+                    String op1 = NEGATIVE_TEAM_OPS.contains(op) ? OP_IN_SELECT : OP_NOT_IN_SELECT;
+                    String subquery = String.format("SELECT %s FROM %s WHERE %s IS NOT NULL",
+                            cr.quote(inverseField.getName()), cr.quote(comodel.getMeta().getTable()),
+                            cr.quote(inverseField.getName()));
+                    pushStack(stack, new BinaryOp(Constants.ID, op1, Arrays.asList(subquery, Collections.emptyList())),
+                            lm.model, lm.alias, true);
+                } else {
+                    Criteria comodelCriteria = Criteria.notEqual(inverseField.getName(), null);
+                    List<String> ids1 = comodel.find(comodelCriteria, null, null, Constants.ID)
+                            .withContext(Constants.PREFETCH_FIELDS, false)
+                            .stream().filter(r -> StringUtils.isNotEmpty((String) r.get(o2m.getInverseName())))
+                            .map(r -> r.getId())
+                            .collect(Collectors.toList());
+                    String op1 = NEGATIVE_TEAM_OPS.contains(op) ? OP_IN : OP_NOT_IN;
+                    pushStack(stack, new BinaryOp(Constants.ID, op1, ids1), lm.model, lm.alias, false);
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    boolean parseMany2many(MetaField field, LeafModel lm, String left, String op, Object right, Stack<LeafModel> stack,
+            Stack<SqlFormat> resultStack) {
+        if (field instanceof Many2manyField) {
+            // Many2manyField m2m = (Many2manyField) field;
+            //
+            return true;
+        }
+        return false;
+    }
+
+    boolean parseMany2one(MetaField field, LeafModel lm, String left, String op, Object right, Stack<LeafModel> stack,
+            Stack<SqlFormat> resultStack) {
+        if (field instanceof Many2oneField) {
+            Many2oneField m2o = (Many2oneField) field;
+            Records comodel = lm.model.getEnv().get(m2o.getComodel());
+            if ((OP_CHILD_OF.equals(op) || OP_PARENT_OF.equals(op))) {
+                List<Object> ids2 = toIds(right, comodel, lm.leaf);
+                List<Object> dom;
+                if (!m2o.getComodel().equals(lm.model.getMeta().getName())) {
+                    dom = hierarchyFunc(op, left, ids2, comodel, null, m2o.getComodel());
+                } else {
+                    dom = hierarchyFunc(op, ID, ids2, lm.model, left, "");
+                }
+                for (Object domLeaf : dom) {
+                    pushStack(stack, domLeaf, lm.model, lm.alias, false);
+                }
+            } else {
+                // 因为id和name都是String类型，无法根据类型识别，
+                // 所以要使用name查询时，要使用[xxx_id.name, op, name]查询，不能直接使用[xxx_id, op, name]
+                resultStack.push(leafToSql((BinaryOp) lm.leaf, lm.model, lm.alias));
+            }
+            return true;
+        }
+        return false;
+    }
+
     boolean parseAttachment(MetaField field, LeafModel lm, String left, String op, Object right, Stack<LeafModel> stack,
             Stack<SqlFormat> resultStack) {
-        if (field instanceof BinaryBaseField && ((BinaryBaseField<?>) field).getAttachment()) {
+        if (field instanceof BinaryBaseField && ((BinaryBaseField<?>) field).isAttachment()) {
             // TODO
             throw new UnsupportedOperationException();
         }
         return false;
+    }
+
+    @SuppressWarnings("deprecation")
+    void parseLeaf(MetaField field, LeafModel lm, String left, String op, Object right,
+            Stack<LeafModel> stack, Stack<SqlFormat> resultStack) {
+        int datelength = 10;
+        if (Constants.DATETIME.equals(field.getType()) && right != null) {
+            if (right instanceof String && ((String) right).length() == datelength) {
+                String str = (String) right;
+                if (OP_GT.equals(op) || OP_LTE.equals(op)) {
+                    str += " 23:59:59";
+                } else {
+                    str += " 00:00:00";
+                }
+                pushStack(stack, new BinaryOp(left, op, str), lm.model, lm.alias, false);
+            } else if (right instanceof Date) {
+                Date d = (Date) right;
+                if (OP_GT.equals(op) || OP_LTE.equals(op)) {
+                    right = new Timestamp(d.getYear(), d.getMonth(), d.getDay(), 23, 59, 59, 0);
+                } else {
+                    right = new Timestamp(d.getYear(), d.getMonth(), d.getDay(), 0, 0, 0, 0);
+                }
+                pushStack(stack, new BinaryOp(left, op, right), lm.model, lm.alias, false);
+            } else {
+                resultStack.add(leafToSql((BinaryOp) lm.leaf, lm.model, lm.alias));
+            }
+        }
+        // TODO Translate
+        // else if (field.Translate && right.IsTrue())
+        // {
+        // throw new NotImplementedException();
+        // }
+        else {
+            resultStack.add(leafToSql((BinaryOp) lm.leaf, lm.model, lm.alias));
+        }
     }
 
     void parse() {
@@ -512,9 +601,7 @@ public class Expression {
         Stack<SqlFormat> resultStack = new Stack<>();
 
         for (Object leaf : expression) {
-            leaf = normalizeLeaf(leaf);
-            checkLeaf(leaf, false);
-            stack.push(new LeafModel(leaf, rootModel, rootAlias));
+            pushStack(stack, leaf, rootModel, rootAlias, false);
         }
 
         while (stack.size() > 0) {
@@ -541,8 +628,14 @@ public class Expression {
                 throw new ValueException(
                         String.format("无效的字段[%s.%s]在条件节点[%s]", lm.model.getMeta().getName(), path[0], lm.leaf));
             }
-
-            if (parseOfId(lm, left, op, right, stack, resultStack)) {
+            if (field.isInherited()) {
+                String parentModelName = field.getRelatedField().getModelName();
+                String parentFieldName = lm.model.getMeta().getDelegates().get(parentModelName);
+                Records parentModel = lm.model.getEnv().get(parentModelName);
+                String parentTable = parentModel.getMeta().getTable();
+                String parentAlias = this.query.leftJoin(lm.alias, parentFieldName, parentTable, "id", parentFieldName);
+                pushStack(stack, lm.leaf, parentModel, parentAlias, false);
+            } else if (parseOfId(lm, left, op, right, stack, resultStack)) {
                 continue;
             } else if (parseMany2onePath(path, field, lm, op, right, stack, resultStack)) {
                 continue;
@@ -551,8 +644,24 @@ public class Expression {
             } else if (parse2manyPath(path, field, lm, op, right, stack, resultStack)) {
                 continue;
             } else if (!field.isStore()) {
-                // TODO
-                throw new UnsupportedOperationException();
+                Search search = field.getSearch();
+                List<Object> criteria = new ArrayList<>();
+                if (search == null) {
+                    logger.error("非存储字段 {} 不能查询", field);
+                } else {
+                    if (path.length > 1) {
+                        RelationalField<?> rf = (RelationalField<?>) field;
+                        right = Arrays.asList(lm.model.getEnv().get(rf.getComodel())
+                                .find(Criteria.binary(path[1], op, right), null, null, Constants.ID)
+                                .getIds());
+                        op = OP_IN;
+                    }
+                    criteria = search.call(lm.model, op, right);
+                    lm.model.call("flushSearch", criteria, Collections.emptyList(), Constants.ID);
+                }
+                for (Object elem : normalizeCriteria(criteria)) {
+                    pushStack(stack, elem, lm.model, lm.alias, true);
+                }
             } else if (parseOfOne2many(field, lm, left, op, right, stack, resultStack)) {
                 continue;
             } else if (parseOne2many(field, lm, left, op, right, stack, resultStack)) {
@@ -577,6 +686,9 @@ public class Expression {
             SelectClause sub = ((Query) right).select();
             return new SqlFormat(String.format("(%s.%s %s (%s))", tableAlias, cr.quote(left), op, sub.getQuery()),
                     sub.getParams());
+        }
+        if (right instanceof Object[]) {
+            right = Arrays.asList((Object[]) right);
         }
         if (right instanceof Collection<?>) {
             List<Object> params = new ArrayList<>((Collection<?>) right);
@@ -630,10 +742,10 @@ public class Expression {
     @SuppressWarnings("unchecked")
     public SqlFormat leafToSql(BinaryOp leaf, Records model, String alias) {
         if (leaf.equals(TRUE_LEAF)) {
-            return new SqlFormat("TRUE", Collections.emptyList());
+            return new SqlFormat("1=1", Collections.emptyList());
         }
         if (leaf.equals(FALSE_LEAF)) {
-            return new SqlFormat("FALSE", Collections.emptyList());
+            return new SqlFormat("0=1", Collections.emptyList());
         }
         String left = (String) leaf.getField();
         String op = leaf.getOp();
@@ -641,9 +753,17 @@ public class Expression {
         Cursor cr = model.getEnv().getCursor();
         String tableAlias = cr.quote(alias);
         if (OP_IN_SELECT.equals(op) || OP_NOT_IN_SELECT.equals(op)) {
-            List<Object> r = (List<Object>) right;
-            return new SqlFormat(String.format("(%s.%s %s (%s))", tableAlias, cr.quote(left),
-                    OP_IN_SELECT.equals(op) ? "in" : "not in", r.get(0)), (List<Object>) r.get(1));
+            if (right instanceof SelectClause) {
+                SelectClause selectClause = (SelectClause) right;
+                return new SqlFormat(String.format("(%s.%s %s (%s))", tableAlias, cr.quote(left),
+                        OP_IN_SELECT.equals(op) ? "in" : "not in", selectClause.getQuery()), selectClause.getParams());
+            }
+            if (right instanceof List) {
+                List<Object> r = (List<Object>) right;
+                return new SqlFormat(String.format("(%s.%s %s (%s))", tableAlias, cr.quote(left),
+                        OP_IN_SELECT.equals(op) ? "in" : "not in", r.get(0)), (List<Object>) r.get(1));
+            }
+            throw new TypeException("inselect 参数类型不匹配，应该是SelectClause或List，实际是" + right.getClass());
         }
         if (OP_IN.equals(op) || OP_NOT_IN.equals(op)) {
             return leafToInSql(leaf, model, left, op, right, tableAlias, cr);
@@ -655,8 +775,8 @@ public class Expression {
         if (boolNullOrFalse) {
             String col = cr.quote(left);
             return new SqlFormat(
-                    String.format("(%s.%s IS NULL or %s.%s = false)", tableAlias, col, tableAlias, col),
-                    Collections.emptyList());
+                    String.format("(%s.%s IS NULL or %s.%s = %%s)", tableAlias, col, tableAlias, col),
+                    Arrays.asList(false));
         }
 
         boolean isNull = (Objects.equals(right, false) || right == null) && OP_EQ.equals(op);
@@ -672,8 +792,8 @@ public class Expression {
         if (boolNotNullAndNotFalse) {
             String col = cr.quote(left);
             return new SqlFormat(
-                    String.format("(%s.%s IS NOT NULL and %s.%s != false)", tableAlias, col, tableAlias, col),
-                    Collections.emptyList());
+                    String.format("(%s.%s IS NOT NULL and %s.%s = %%s)", tableAlias, col, tableAlias, col),
+                    Arrays.asList(true));
         }
 
         boolean isNotNull = (Objects.equals(right, false) || right == null) && OP_NOT_EQ.equals(op);
@@ -740,5 +860,11 @@ public class Expression {
             String prefix) {
         return OP_CHILD_OF.equals(op) ? childOfCriteria(left, ids, leftModel, parent, prefix)
                 : parentOfCriteria(left, ids, leftModel, parent, prefix);
+    }
+
+    void pushStack(Stack<LeafModel> stack, Object leaf, Records model, String alias, boolean internal) {
+        leaf = normalizeLeaf(leaf);
+        checkLeaf(leaf, internal);
+        stack.push(new LeafModel(leaf, model, alias));
     }
 }

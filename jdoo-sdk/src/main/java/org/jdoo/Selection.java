@@ -3,14 +3,6 @@ package org.jdoo;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.SimpleBindings;
-
-import org.jdoo.exceptions.CallException;
-
-import groovy.lang.Closure;
-
 /**
  * 生成SelectionField的选项值
  * 

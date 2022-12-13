@@ -5,5 +5,16 @@
 }
 
 .per-menu {
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1rem 0.25rem;
+}
+
+.check-menu {
+    margin-left: 0;
+    margin-right: 0.3rem;
+    position: relative;
+}
+
+.per-field, .per-related {
+    margin-left: 2rem;
+    margin-top: -0.8rem;
 }

@@ -1,25 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data>
-    <menu id="menu_model" name="模型管理" seq="5" parent="menu_system"/>
-    <menu id="menu_ir_model" name="模型" model="ir.model" view="grid,form" seq="5" parent="menu_model"/>
-    <!-- <menu id="menu_ir_model_field" name="字段" model="ir.model.field" view="grid,form" seq="10" parent="menu_model"/> -->
-
     <view id='model_search' name='模型-查询' model='ir.model'>
         <search>
             <field name="name"/>
             <field name="model"/>
-            <field name="state"/>
+            <field name="origin"/>
         </search>
     </view>
     <view id='model_grid' name='模型-表格' model='ir.model'>
         <grid>
             <toolbar buttons="default">
+                <button type="object" auth="update" label="生成默认视图" t-enable="id" service="initDefaultViews"/>
             </toolbar>
             <field name="name"/>
             <field name="model"/>
             <field name="inherit"/>
             <field name="table"/>
-            <field name="state"/>
+            <field name="origin"/>
         </grid>
     </view>
     <view id='model_form' name='模型-表单' model='ir.model'>
@@ -33,10 +30,11 @@
             <field name="order"/>
             <field name="present"/>
             <field name="is_transient"/>
-            <field name="state"/>
+            <field name="origin"/>
+            <field name="description" editor="text" colspan="4"/>
             <tabs>
                 <tab label = "字段">
-                    <field name="field_ids" colspan="3" nolabel="1">
+                    <field name="field_ids" colspan="4" nolabel="1">
                         <grid label="Views">
                             <field name="name"/>
                             <field name="field_type"/>
@@ -45,7 +43,7 @@
                             <field name="readonly"/>
                             <field name="index"/>
                             <field name="store"/>
-                            <field name="state"/>
+                            <field name="origin"/>
                             <edit>
                                 <field name="name"/>
                                 <field name="field_type"/>
@@ -53,11 +51,21 @@
                                 <field name="help"/>
                                 <field name="required"/>
                                 <field name="readonly"/>
+                                <field name="related"/>
                                 <field name="index"/>
                                 <field name="store"/>
                                 <field name="copy"/>
                                 <field name="depends"/>
-                                <field name="state"/>
+                                <field name="default_value"/>
+                                <field name="compute"/>
+                                <field name="origin"/>
+                                <field name="translate" t-visible="this.field_type==='char'"/>
+                                <field name="length" t-visible="this.field_type==='char'"/>
+                                <field name="relation" t-visible="this.field_type==='many2one' || this.field_type==='one2many' || this.field_type==='many2many'"/>
+                                <field name="relation_field" t-visible="this.field_type==='one2many'"/>
+                                <field name="relation_table" t-visible="this.field_type==='many2many'"/>
+                                <field name="column1" t-visible="this.field_type==='many2many'"/>
+                                <field name="column2" t-visible="this.field_type==='many2many'"/>
                             </edit>
                         </grid>
                     </field>
@@ -70,7 +78,7 @@
         <search>
             <field name="name"/>
             <field name="label"/>
-            <field name="state"/>
+            <field name="origin"/>
         </search>
     </view>
     <view id='model_field_grid' name='字段-表格' model='ir.model.field'>
@@ -85,7 +93,7 @@
             <field name="readonly"/>
             <field name="index"/>
             <field name="store"/>
-            <field name="state"/>
+            <field name="origin"/>
         </grid>
     </view>
     <view id='model_field_form' name='字段-表单' model='ir.model.field'>
@@ -103,7 +111,7 @@
             <field name="store"/>
             <field name="copy"/>
             <field name="depends"/>
-            <field name="state"/>
+            <field name="origin"/>
         </form>
     </view>
 </data>

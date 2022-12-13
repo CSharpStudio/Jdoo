@@ -1,6 +1,8 @@
 package org.jdoo.data;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * sql 格式化
@@ -29,9 +31,13 @@ public class SqlFormat {
         String result = sql;
         for (Object p : params) {
             if (p instanceof String) {
-                result = result.replaceFirst("\\?", String.format("'%s'", p));
+                result = Pattern.compile("?", Pattern.LITERAL).matcher(result)
+                        .replaceFirst(Matcher.quoteReplacement(String.format("'%s'", p)));
+                // result = result.replaceFirst("\\?", String.format("'%s'", p));
             } else {// TODO date and datetime
-                result = result.replaceFirst("\\?", String.format("%s", p));
+                result = Pattern.compile("?", Pattern.LITERAL).matcher(result)
+                        .replaceFirst(Matcher.quoteReplacement(String.format("%s", p)));
+                //result = result.replaceFirst("\\?", String.format("%s", p));
             }
         }
         return result;

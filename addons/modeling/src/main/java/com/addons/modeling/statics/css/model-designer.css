@@ -1,0 +1,349 @@
+.model-designer {
+  height: 100%
+}
+
+.model-designer .tab-panel {
+  height: 100%;
+}
+
+.model-designer .left-box {
+  float: left;
+  width: 240px;
+  height: inherit;
+  overflow: auto;
+}
+
+.model-designer .module-head {
+    height: 42px;
+    padding: 8px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.model-designer .module-extender{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.model-designer .module-panel {
+    height: calc(100% - 81px);
+    overflow: auto;
+}
+
+.model-designer .model-diagram {
+  height: calc(100% - 33px);
+}
+
+.model-designer .model-diagram:focus {
+  outline: 0;
+}
+
+.model-designer .tool-panel {
+  position: absolute;
+  z-index: 1000;
+  margin: 10px;
+}
+
+.model-designer .tool-item {
+  font-size: 14px;
+  cursor: pointer;
+  color: #fff;
+  background-color: #32c5d2;
+  border-radius: 4px;
+  height: 30px;
+  line-height: 30px;
+  min-width: 65px;
+  margin: 5px;
+  padding-left: 10px;
+}
+
+.model-designer .main-box {
+  overflow: auto;
+  height: 100%;
+  border-left: 1px solid #dee2e6;
+}
+
+.model-designer .main-box .tab-content {
+  height: calc(100% - 48px);
+}
+
+.model-designer .main-box .tab-pane {
+  height: 100%;
+}
+
+.model-canvas {
+  height: 1000px;
+  width: 1500px;
+  position: relative;
+  background-color: white;
+  margin: 0;
+  cursor: move;
+  cursor: -webkit-grab;
+}
+
+.model-canvas .item-model {
+  border: gray solid 1px;
+  min-width: 200px;
+  min-height: 50px;
+  position: absolute;
+  z-index: 100;
+  background-color: white;
+  font-size: 13px;
+  cursor: move;
+  user-select: none;
+}
+
+.model-canvas .item-model.selected {
+  border: #dc3545 solid 2px;
+}
+
+.model-canvas .selected .model-meta {
+  padding: 4px 4px 5px 4px;
+}
+
+.model-canvas .selected .model-members {
+  padding: 5px 4px 4px 4px;
+}
+
+.model-canvas .model-connector,
+.model-canvas .connector-note,
+.model-canvas .connector-endpoint {
+  z-index: 99;
+  position: absolute;
+}
+
+.model-canvas .connector-note {
+  color: white;
+  font-size: 12px;
+  width: 16px;
+  text-align: center;
+}
+
+.model-canvas .model-connector path {
+  stroke-width: 2;
+  stroke: #f76258;
+}
+
+.model-canvas .model-members {
+  border-top: gray solid 1px;
+  padding: 5px;
+}
+
+.model-canvas .model-name {
+  text-align: center;
+  font-size: 16px;
+}
+
+.model-canvas .model-tools,
+.model-canvas .field-tools {
+  float: right;
+}
+
+.model-canvas .model-tools {
+  width: 12px;
+  margin-top: 5px;
+}
+
+.model-canvas .item-model span,
+.model-canvas .item-field {
+  user-select: none;
+}
+
+.model-canvas .item-field {
+  cursor: pointer;
+}
+
+.model-canvas .item-field:hover {
+  background-color: #cbeae1;
+}
+
+.model-canvas .model-meta {
+  padding: 5px;
+}
+
+.model-canvas .model-meta:hover {
+  background-color: #cbeae1;
+}
+
+.model-canvas .other-module {
+  background-color: lightgray;
+}
+
+.main-box .nav-link {
+  border: 0px;
+}
+
+.main-box .nav-link.active {
+  border-bottom: solid 3.6px #dc3545;
+  padding-bottom: 0.4rem;
+}
+
+.ztree li span.button.add-diagram_ico_docu {
+  background: url('/res/com/addons/modeling/statics/img/add_diagram.png') 0 0 no-repeat;
+  margin: 3px 0 0 3px;
+}
+
+.ztree li span.button.diagram_ico_docu {
+  background: url('/res/com/addons/modeling/statics/img/diagram.png') 0 0 no-repeat;
+  margin: 3px 0 0 3px;
+}
+
+.ztree li span.button.model_ico_docu {
+  background: url('/res/com/addons/modeling/statics/img/model.png') 0 0 no-repeat;
+  margin: 3px 0 0 3px;
+}
+
+.ztree li span.button.app_ico_open,
+.ztree li span.button.app_ico_close {
+  background: url('/res/com/addons/modeling/statics/img/app.png') 0 0 no-repeat;
+  margin: 3px 0 0 3px;
+}
+
+
+.ztree li span.button.folder_ico_open {
+  background: url('/res/com/addons/modeling/statics/img/folder_open.png') 0 0 no-repeat;
+  margin: 3px 0 0 3px;
+}
+
+.ztree li span.button.folder_ico_close {
+  background: url('/res/com/addons/modeling/statics/img/folder.png') 0 0 no-repeat;
+  margin: 3px 0 0 3px;
+}
+
+.ztree li span.btn-refresh {
+  vertical-align: text-top;
+}
+
+.ztree li span.btn-refresh:hover {
+  color: #169EF4;
+}
+
+.tabcontextmenu {
+  display: none;
+  position: absolute;
+  width: 140px;
+  background: #FFFFFF;
+  border-radius: 5px;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.tabcontextmenu ul {
+  list-style: none;
+}
+
+.tabcontextmenu li {
+  border-left: 3px solid transparent;
+  transition: ease 0.3s;
+  list-style: none;
+}
+
+.tabcontextmenu li:hover {
+  background: #17a2b8;
+}
+
+.tabcontextmenu li a {
+  display: block;
+  padding: 10px;
+  color: #000000;
+  text-decoration: none;
+  transition: ease 0.3s;
+}
+
+.tabcontextmenu li:hover a {
+  color: #fff;
+}
+
+.modal-code {
+  height: calc(100% - 80px);
+}
+
+.modal-code .modal-body {
+  height: calc(100% - 140px);
+}
+
+.modal-code .modal-content,
+.modal-code .tab-panel,
+.modal-code .tab-content,
+.modal-code .tab-pane {
+  height: 100%;
+}
+
+.modal-code pre{
+  padding: unset;
+}
+
+.modal-code pre{
+  overflow: unset;
+}
+
+.code-preview {
+  width: 100%;
+  height: calc(100% - 80px) !important;
+}
+
+.model-designer .tool-bar {
+  margin: 4px;
+}
+
+.model-designer .diagram-panel {
+  overflow: auto;
+  height: 100%;
+}
+
+.model-designer .drag-container {
+  height: 100%;
+}
+
+.zoom-slider {
+  display: inline-block;
+  width: 120px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.zoom-slider .slider.slider-horizontal {
+  width: 100%;
+}
+
+.zoom-slider .slider .slider-selection {
+  background: #e1e4e9;
+  box-shadow: inset 0 -1px 0 rgb(0 0 0 / 15%);
+}
+
+.zoom-slider .slider .slider-track-high {
+  background: #e1e4e9;
+  box-shadow: inset 0 -1px 0 rgb(0 0 0 / 15%);
+}
+
+.aerial-view {
+  border: #32c5d2 1px solid;
+  z-index: 500;
+  right: 30px;
+  top: 90px;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  background-color: #e0e0e0;
+}
+
+.aerial-view .viewport {
+  border: #067df5 1px solid;
+  width: 100px;
+  height: 80px;
+  position: relative;
+  z-index: 10;
+  background-color: #067df517;
+}
+
+.aerial-view .model-thumbnail {
+  background-color: #32c5d2;
+  position: absolute;
+}
+
+.aerial-view .minimize {
+  top: 2px;
+  right: 5px;
+  z-index: 20;
+  position: absolute;
+}

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data>
-    <menu id="menu_aps" name="高级计划" model="aps.plan_task" view="grid,form" icon="/org/jdoo/base/statics/img/modules.png"/>
+    <menu id="menu_aps" name="高级计划" model="aps.plan_task" view="grid,form" icon="/res/org/jdoo/base/statics/img/modules.png"/>
 
     <view id='view_aps_plan_task_search' name='APS计划任务查询' model='aps.plan_task'>
         <search>

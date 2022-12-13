@@ -55,13 +55,11 @@ public class Controller {
         if (ctx == null) {
             ctx = new HashMap<>();
         }
+        initContextFromCookie(ctx);
         Registry reg = tenant.getRegistry();
         Cursor cr = tenant.getDatabase().openCursor();
         String token = (String) ctx.get("token");
-        if (StringUtils.isEmpty(token)) {
-            token = getToken();
-        }
-        String uid = (String) new Environment(reg, cr, Constants.SUPERUSER_ID, ctx)
+        String uid = (String) new Environment(reg, cr, Constants.SYSTEM_USER, ctx)
                 .get("rbac.token").call("getUserId", token);
         if (StringUtils.isEmpty(uid)) {
             ctx.remove("token");
@@ -69,16 +67,24 @@ public class Controller {
         return new Environment(reg, cr, uid, ctx);
     }
 
-    String getToken() {
+    String getCookieValue(Cookie cookie) {
+        try {
+            return java.net.URLDecoder.decode(cookie.getValue(), "UTF-8");
+        } catch (Exception e) {
+            return cookie.getValue();
+        }
+    }
+
+    void initContextFromCookie(Map<String, Object> ctx) {
         Cookie[] cookies = httpServletRequest.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if ("jtoken".equals(cookie.getName())) {
-                    return cookie.getValue();
+                String name = cookie.getName();
+                if (name.startsWith("ctx_")) {
+                    ctx.putIfAbsent(name.substring(4), getCookieValue(cookie));
                 }
             }
         }
-        return null;
     }
 
     protected void redirectToLogin() {
@@ -89,7 +95,7 @@ public class Controller {
             if (StringUtils.isNotEmpty(query)) {
                 url += "?" + query;
             }
-            httpServletResponse.sendRedirect(path + "/login?url=" + url);
+            httpServletResponse.sendRedirect("/" + path + "/login?url=" + url);
         } catch (Exception e) {
 
         }

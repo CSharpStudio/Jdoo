@@ -1,4 +1,4 @@
-@org.jdoo.Manifest(name = "wms", category = "Manufacture", summary = "仓库管理", models = {
+@org.jdoo.Manifest(name = "wms", category = "Manufacture", label = "仓库管理", models = {
         Item.class,
         ReceiveSendControl.class,
         Rohs.class,

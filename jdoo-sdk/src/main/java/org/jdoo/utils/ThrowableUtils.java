@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jdoo.exceptions.UserException;
+
 /**
  * @author lrz
  */
@@ -16,8 +18,12 @@ public class ThrowableUtils {
      */
     public static Throwable getCause(Throwable throwable) {
         Throwable t = throwable;
-        while (t.getCause() != null) {
-            t = t.getCause();
+        if (t instanceof UserException) {
+            return t;
+        }
+        Throwable cause = t.getCause();
+        if (cause != null) {
+            return getCause(cause);
         }
         return t;
     }

@@ -8,8 +8,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.jdoo.Criteria;
+import org.jdoo.DeleteMode;
 import org.jdoo.Records;
 import org.jdoo.core.Constants;
 import org.jdoo.core.MetaField;
@@ -24,7 +28,8 @@ import org.jdoo.util.Tuple;
  */
 public class One2manyField extends RelationalMultiField<One2manyField> {
     String inverseName;
-    Integer limit;
+    @JsonIgnore
+    Integer limit = 1000;
 
     public One2manyField() {
         type = Constants.ONE2MANY;
@@ -97,7 +102,7 @@ public class One2manyField extends RelationalMultiField<One2manyField> {
             boolean allowFullDelete = !create;
             List<Map<String, Object>> toCreate = new ArrayList<>();
             List<String> toDelete = new ArrayList<>();
-            List<Object> toInverse = new ArrayList<>();
+            Map<Records, Set<String>> toInverse = new HashMap<>();
             String inverse = getInverseName();
             for (Tuple<Records, Object> t : records_commands_list) {
                 Records rs = t.getItem1();
@@ -118,7 +123,13 @@ public class One2manyField extends RelationalMultiField<One2manyField> {
                     } else if (cmd == Command.REMOVE) {
                         unlink(comodel.browse((String) command.get(1)), toDelete, inverse);
                     } else if (cmd == Command.PUT) {
-                        // TODO toInverse
+                        Records r = rs.browse(rs.getIds()[0]);
+                        Set<String> lines = toInverse.get(r);
+                        if (lines == null) {
+                            lines = new HashSet<>();
+                            toInverse.put(r, lines);
+                        }
+                        lines.add((String) command.get(1));
                         allowFullDelete = false;
                     } else if (cmd == Command.CLEAR || cmd == Command.REPLACE) {
                         List<String> lineIds = cmd == Command.REPLACE ? (List<String>) command.get(2)
@@ -126,7 +137,7 @@ public class One2manyField extends RelationalMultiField<One2manyField> {
                         if (!allowFullDelete && lineIds.size() == 0) {
                             continue;
                         }
-                        flush(rs, toCreate, toDelete, toInverse);
+                        flush(rs, toCreate, toDelete, toInverse, inverse);
                         Records lines = comodel.browse(lineIds);
                         Criteria criteria = Criteria.in(inverse, Arrays.asList(rs.getIds()))
                                 .and(Criteria.notIn("id", Arrays.asList(lines.getIds())));
@@ -136,27 +147,39 @@ public class One2manyField extends RelationalMultiField<One2manyField> {
                     }
                 }
             }
-            flush(comodel, toCreate, toDelete, toInverse);
+            flush(comodel, toCreate, toDelete, toInverse, inverse);
         } else {
             // TODO
         }
         return records;
     }
 
-    void unlink(Records rec, List<String> toDelete, String property) {
-        // TODO 级联删除 需要增加删除模式 ondelete
-        // toDelete.addAll(Arrays.asList(rs.getIds()));
-        rec.set(property, null);
+    void unlink(Records lines, List<String> toDelete, String inverse) {
+        Many2oneField m2o = (Many2oneField) lines.getMeta().getField(inverse);
+        if (m2o.getOnDelete() == DeleteMode.Cascade) {
+            toDelete.addAll(Arrays.asList(lines.getIds()));
+        } else {
+            lines.set(inverse, null);
+        }
     }
 
-    void flush(Records rec, List<Map<String, Object>> toCreate, List<String> toDelete, List<Object> toInverse) {
+    void flush(Records comodel, List<Map<String, Object>> toCreate, List<String> toDelete,
+            Map<Records, Set<String>> toInverse, String inverse) {
         if (toDelete.size() > 0) {
-            rec.browse(toDelete).delete();
+            comodel.browse(toDelete).delete();
             toDelete.clear();
         }
         if (toCreate.size() > 0) {
-            rec.createBatch(toCreate);
+            comodel.createBatch(toCreate);
             toCreate.clear();
+        }
+        if (toInverse.size() > 0) {
+            for (Entry<Records, Set<String>> e : toInverse.entrySet()) {
+                Records r = e.getKey();
+                Records lines = comodel.browse(e.getValue());
+                lines = lines.filter(line -> !r.getId().equals(line.get(inverse)));
+                lines.set(inverse, r);
+            }
         }
     }
 }

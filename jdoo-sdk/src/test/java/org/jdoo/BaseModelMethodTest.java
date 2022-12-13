@@ -26,7 +26,7 @@ public class BaseModelMethodTest {
         builder.buildModel(reg, TestResUser.class, "");
         builder.buildModel(reg, TestModel.class, "");
         reg.setupModels(cr);
-        reg.initModels(cr, reg.getModels().keySet());
+        //reg.initModels(cr, reg.getModels().keySet(), true);
     }
 
     @Test
@@ -131,7 +131,7 @@ public class BaseModelMethodTest {
         builder.buildModel(reg, M2o_M.class, "");
         builder.buildModel(reg, M2o_O.class, "");
         reg.setupModels(cr);
-        reg.initModels(cr, reg.getModels().keySet());
+        //reg.initModels(cr, reg.getModels().keySet(), true);
 
         Environment env = new Environment(reg, cr, "", new HashMap<>());
         List<String> new_ids = new ArrayList<>();

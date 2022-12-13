@@ -65,6 +65,10 @@ class MethodDefault implements Default {
         return rec.call(method);
     }
 
+    @Override
+    public String toString() {
+        return "@method:" + method;
+    }
 }
 
 class ScriptDefault implements Default {
@@ -91,6 +95,11 @@ class ScriptDefault implements Default {
     public Object call(Records rec) {
         return getClosure().call(rec);
     }
+
+    @Override
+    public String toString() {
+        return "@script:" + script;
+    }
 }
 
 class ValueDefault implements Default {
@@ -103,5 +112,13 @@ class ValueDefault implements Default {
     @Override
     public Object call(Records rec) {
         return value;
+    }
+
+    @Override
+    public String toString() {
+        if (value == null) {
+            return null;
+        }
+        return value.toString();
     }
 }

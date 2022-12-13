@@ -34,7 +34,7 @@ public class ModelFieldTest {
         builder.buildModel(reg, TestResUser.class, "");
         builder.buildModel(reg, TestFieldTypeModel.class, "");
         reg.setupModels(cr);
-        reg.initModels(cr, reg.getModels().keySet());
+        //reg.initModels(cr, reg.getModels().keySet(), true);
 
         Environment env = new Environment(reg, cr, "",new HashMap<>());
         Map<String, Object> values = new HashMap<>();
@@ -88,7 +88,7 @@ public class ModelFieldTest {
         builder.buildModel(reg, M2o_M.class, "");
         builder.buildModel(reg, M2o_O.class, "");
         reg.setupModels(cr);
-        reg.initModels(cr, reg.getModels().keySet());
+        //reg.initModels(cr, reg.getModels().keySet(), true);
 
         Environment env = new Environment(reg, cr, "", new HashMap<>());
         List<String> new_ids = new ArrayList<>();

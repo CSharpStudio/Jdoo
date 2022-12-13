@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <view id='view_config_form' name='配置-表单' model='res.config'>
+        <form>
+            <toolbar buttons="default"></toolbar>
+            <tabs>
+                <tab label="基础设置">
+                    <group label="语言">
+                        <button class="btn btn-default m-2" type="button">添加语言</button>
+                    </group>
+                    <group label="开发者工具">
+                        <button class="btn btn-default m-2" type="button" onclick="top.jdoo.web.cookie('ctx_debug', true);top.window.location.reload();">激活开发者模式</button>
+                    </group>
+                    <group label="关于">
+
+                    </group>
+                </tab>
+                <tab label = "安全设置">
+                    <group label="密码规则">
+                        <field name="pwd_complexity"/>
+                        <field name="pwd_min_length" min="0"/>
+                        <field name="pwd_validity"/>
+                    </group>
+                    <group label="登录">
+                        <field name="login_try_times" min="0"/>
+                        <field name="login_lock_time" min="0"/>
+                    </group>
+                </tab>
+            </tabs>
+        </form>
+    </view>
+</data>

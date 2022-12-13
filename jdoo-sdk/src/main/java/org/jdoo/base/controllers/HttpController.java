@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.jdoo.core.Environment;
 import org.jdoo.https.Controller;
 import org.jdoo.https.TenantResolver;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+@CrossOrigin
 @org.springframework.stereotype.Controller
 public class HttpController extends Controller {
     @Autowired

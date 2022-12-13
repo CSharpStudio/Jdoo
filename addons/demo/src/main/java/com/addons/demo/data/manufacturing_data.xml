@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <record id="demo.factory1" model="demo.factory">
+        <field name="name">一厂</field>
+        <field name="workshop_ids" eval='[[0,0,{"name":"1车间"}],[0,0,{"name":"2车间"}]]'/>
+    </record>
+    <record id="demo.factory2" model="demo.factory">
+        <field name="name">二厂</field>
+    </record>
+    <record id="demo.factory3" model="demo.factory">
+        <field name="name">三厂</field>
+    </record>
+
+    <record id="demo.workshop-a" model="demo.workshop">
+        <field name="name">A车间</field>
+        <field name="factory_id" ref="demo.factory2"/>
+    </record>
+    <record id="demo.workshop-b" model="demo.workshop">
+        <field name="name">B车间</field>
+        <field name="factory_id" eval="ref(demo.factory2)"/>
+    </record>
+    
+    <record id="demo.equipment1" model="demo.equipment">
+        <field name="name">设备1</field>
+        <field name="factory_id" eval="ref(demo.factory2)"/>
+        <field name="workshop_id" eval="ref(demo.workshop-a)"/>
+    </record>
+    <record id="demo.equipment2" model="demo.equipment">
+        <field name="name">设备2</field>
+        <field name="factory_id" eval="ref(demo.factory2)"/>
+        <field name="workshop_id" eval="ref(demo.workshop-b)"/>
+    </record>
+</data>

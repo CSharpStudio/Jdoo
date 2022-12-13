@@ -1,5 +1,10 @@
 package org.jdoo.core;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,20 +21,21 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.jdoo.Callable;
 import org.jdoo.Default;
-import org.jdoo.ICriteria;
 import org.jdoo.Records;
+import org.jdoo.Search;
 import org.jdoo.data.ColumnType;
 import org.jdoo.data.Cursor;
 import org.jdoo.data.DbColumn;
 import org.jdoo.data.SqlDialect;
 import org.jdoo.exceptions.MissingException;
+import org.jdoo.exceptions.ModelException;
 import org.jdoo.exceptions.TypeException;
 import org.jdoo.fields.RelationalField;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.jdoo.util.Cache;
 import org.jdoo.util.Tuple;
@@ -43,62 +49,109 @@ import org.jdoo.util.ToUpdate.IdValues;
  */
 public class MetaField {
 
-    protected Logger logger = LogManager.getLogger(MetaField.class);
-
-    /** 设置状态 */
-    enum SetupState {
-        /** 未设置 */
-        None,
-        /** 基础设置 */
-        Base,
-        /** 全部设置 */
-        Full,
-    }
+    protected Logger logger = LoggerFactory.getLogger(MetaField.class);
 
     static int globalSeq = 0;
+    boolean setupDone;
+
+    String name;
+    protected String type;
+    @Related
+    protected String label;
+    @Related
+    String help;
+    protected boolean readonly;
+    boolean store = true;
+    boolean required;
+
+    @JsonIgnore
     int sequence;
+    @JsonIgnore
     protected HashMap<String, Object> args = new HashMap<>();
     @JsonIgnore
     protected ColumnType columnType = ColumnType.None;
-    protected String type;
+    @JsonIgnore
     protected boolean prefetch = true;
-    protected boolean store = true;
-    protected String label;
-    protected boolean readonly;
-
-    String[] related;
+    @JsonIgnore
     MetaField relatedField;
-    String name;
+    @JsonIgnore
     boolean automatic;
+    @JsonIgnore
     boolean index;
-    boolean copy;
+    @JsonIgnore
+    boolean copy = true;
+    @JsonIgnore
     boolean manual;
+    @JsonIgnore
     String modelName;
-    String help;
-    boolean required;
     @JsonIgnore
     Callable compute;
+    @JsonIgnore
+    Search search;
+    @JsonIgnore
     Default defaultValue;
-    ICriteria criteria;
+    @JsonIgnore
     Collection<String> depends;
-    Boolean auth;
+    @JsonIgnore
+    String[] related;
+    @JsonIgnore
+    boolean auth;
+    @JsonIgnore
+    String module;
+    @JsonIgnore
+    boolean inherited;
+    @JsonIgnore
+    MetaField inheritedField;
 
-    SetupState setupState = SetupState.None;
+    /**
+     * 获取定义字段的模块
+     * 
+     * @return
+     */
+    public String getModule() {
+        return module;
+    }
 
+    /**
+     * 设置字段的模块
+     * 
+     * @param module
+     * @return
+     */
+    public MetaField setModule(String module) {
+        this.module = module;
+        return this;
+    }
+
+    /**
+     * 构造实例
+     */
     public MetaField() {
         sequence = globalSeq++;
     }
 
+    /**
+     * 根据当前类型创建新实例
+     * 
+     * @return
+     */
     public MetaField newInstance() {
         try {
             MetaField field = getClass().getConstructor().newInstance();
             field.args = new HashMap<>(args);
+            field.module = module;
             return field;
         } catch (Exception e) {
             throw new TypeException("创建MetaField失败:" + getClass().getName());
         }
     }
 
+    /**
+     * 获取默认值
+     * 
+     * @param rec
+     * @return
+     */
     public Object getDefault(Records rec) {
         if (defaultValue != null) {
             return defaultValue.call(rec);
@@ -106,23 +159,54 @@ public class MetaField {
         return null;
     }
 
+    /**
+     * 是否可以排序
+     * 
+     * @return
+     */
+    public boolean isSortable() {
+        return (columnType != ColumnType.None && store) || (inherited && relatedField.isSortable());
+    }
+
+    /**
+     * 是否需要授权
+     */
+    public boolean isAuth() {
+        return auth;
+    }
+
+    /**
+     * 是否自动注入的字段（如create_uid,create_date,update_uid,update_date）
+     * 
+     * @return
+     */
+    @JsonIgnore
     public boolean isAuto() {
         return automatic;
     }
 
+    /**
+     * 设置参数
+     * 
+     * @param attrs
+     */
     public void setArgs(Map<String, Object> attrs) {
         args.putAll(attrs);
     }
 
+    public Map<String, Object> getArgs() {
+        return args;
+    }
+
     /**
-     * set name of the field
+     * 设置字段名
      */
     public void setName(String name) {
         this.name = name;
     }
 
     /**
-     * return name of the field
+     * 获取字段名
      * 
      * @return
      */
@@ -130,10 +214,20 @@ public class MetaField {
         return name;
     }
 
-    public boolean getManual() {
+    /**
+     * 是否自定义的字段
+     * 
+     * @return
+     */
+    public boolean isManual() {
         return manual;
     }
 
+    /**
+     * 获取关联字段，如 user_id.company_id.name 返回 ["user_id", "company_id", "name"]
+     * 
+     * @return
+     */
     public String[] getRelated() {
         if (related == null) {
             return ArrayUtils.EMPTY_STRING_ARRAY;
@@ -142,18 +236,47 @@ public class MetaField {
     }
 
     /**
-     * return the label of the field seen by users; if not
-     * set, the ORM takes the field name in the class (capitalized).
+     * 相应的关联字段，如 user_id.company_id.name 返回 res.company 的 name 字段
+     * 
+     * @return
+     */
+    public MetaField getRelatedField() {
+        return relatedField;
+    }
+
+    /**
+     * 如果是委托继承的字段，返回被继承的字段，否则返回当前字段
+     * 
+     * @return
+     */
+    @JsonIgnore
+    public MetaField getBaseField() {
+        return inherited ? inheritedField.getBaseField() : this;
+    }
+
+    /**
+     * 获取模型名称
+     * 
+     * @return
+     */
+    public String getModelName() {
+        return modelName;
+    }
+
+    /**
+     * 获取用户可见的字段标题，如果没设置，返回字段的名称
      * 
      * @return
      */
     public String getLabel() {
+        if (StringUtils.isEmpty(label)) {
+            return name;
+        }
         return label;
     }
 
     /**
-     * return whether the field is stored in database
-     * (default:true, false for computed fields)
+     * 是否保存到数据库，默认是 true，计算字段是 false
      * 
      * @return
      */
@@ -162,7 +285,16 @@ public class MetaField {
     }
 
     /**
-     * return the tooltip of the field seen by users
+     * 是否继承
+     * 
+     * @return
+     */
+    public boolean isInherited() {
+        return inherited;
+    }
+
+    /**
+     * 用户可见的帮助信息
      * 
      * @return
      */
@@ -171,14 +303,14 @@ public class MetaField {
     }
 
     /**
-     * whether the field is readonly
+     * 是否只读
      */
     public boolean isReadonly() {
         return readonly;
     }
 
     /**
-     * return whether the value of the field is required (default: false)
+     * 字段的值是否必填 (默认: false)
      * 
      * @return
      */
@@ -187,10 +319,19 @@ public class MetaField {
     }
 
     /**
-     * compute(recs) computes field on recs
+     * 获取字段的计算方法 compute(recs)
      */
     public Callable getCompute() {
         return compute;
+    }
+
+    /**
+     * search(recs, operator, value) searches on self
+     * 
+     * @return
+     */
+    public Search getSearch() {
+        return search;
     }
 
     /**
@@ -241,50 +382,52 @@ public class MetaField {
         return sqlDialect.getColumnType(getColumnType());
     }
 
-    protected void setupBase(MetaModel model, String name) {
-        if (setupState == SetupState.None) {
-            setupAttrs(model, name);
-            if (getRelated().length == 0) {
-                setupRegularBase(model);
-            }
-            setupState = SetupState.Base;
-        }
+    protected void setName(MetaModel model, String name) {
+        setupAttrs(model, name);
     }
 
-    protected void setupFull(MetaModel model, Environment env) {
-        if (setupState != SetupState.Full) {
-            if (getRelated().length == 0) {
-                setupRegularFull(model, env);
+    protected void setup(MetaModel model) {
+        if (!setupDone) {
+            if (getRelated().length > 0) {
+                setupRelated(model);
             } else {
-                setupRelatedFull(model, env);
+                setupNonRelated(model);
             }
-            setupState = SetupState.Full;
+            setupDone = true;
         }
     }
 
-    protected void setupRegularFull(MetaModel model, Environment env) {
+    protected void setupNonRelated(MetaModel model) {
 
     }
 
-    protected List<String> relatedAttributes = new ArrayList<>(Arrays.asList("label", "help", "auth"));
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Related {
+    }
 
-    protected void setupRelatedFull(MetaModel model, Environment env) {
-        String modelName = this.modelName;
+    protected void setupRelated(MetaModel model) {
+        String relModel = this.modelName;
         MetaField field = null;
-        for (String name : getRelated()) {
-            field = model.getRegistry().get(modelName).getField(name);
-            if (field.setupState != SetupState.Full) {
-                field.setupFull(model.getRegistry().get(modelName), env);
+        for (String fname : getRelated()) {
+            field = model.getRegistry().get(relModel).findField(fname);
+            if (field == null) {
+                throw new ModelException(String.format("关联引用字段%s的字段%s不存在", this, fname));
+            }
+            if (!field.setupDone) {
+                field.setup(model.getRegistry().get(relModel));
             }
             if (field instanceof RelationalField) {
-                modelName = ((RelationalField<?>) field).getComodel();
+                relModel = ((RelationalField<?>) field).getComodel();
             }
         }
         relatedField = field;
-
-        if (!getType().equals(field.getType())) {
+        // check type consistency
+        if (field == null || !getType().equals(field.getType())) {
             throw new TypeException(String.format("关联字段[%s]的类型与[%s]不一致", this, field));
         }
+
+        // TODO searchable
 
         if (depends == null) {
             depends = new ArrayList<>();
@@ -292,15 +435,14 @@ public class MetaField {
         }
 
         Class<?> clazz = getClass();
-        Map<String, Field> fields = getFields(clazz);
-        for (String attr : relatedAttributes) {
-            try {
-                Field f = fields.get(attr);
-                if (f.get(this) == null) {
+        for (Field f : getFields(clazz).values()) {
+            if (f.isAnnotationPresent(Related.class)) {
+                f.setAccessible(true);
+                try {
                     f.set(this, f.get(field));
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
     }
@@ -319,17 +461,13 @@ public class MetaField {
         }
     }
 
-    protected void setupRegularBase(MetaModel model) {
-
-    }
-
     Map<String, Field> getFields(Class<?> clazz) {
         Map<String, Field> result = new HashMap<>(16);
         Class<?> current = clazz;
         while (current != null) {
             for (Field f : current.getDeclaredFields()) {
                 String name = f.getName();
-                result.put(name, f);
+                result.putIfAbsent(name, f);
             }
             current = current.getSuperclass();
         }
@@ -346,6 +484,7 @@ public class MetaField {
             }
         }
         attrs.putAll(this.args);
+        // this.args.put("_args", attrs);
         attrs.put(Constants.ARGS, this.args);
         attrs.put(Constants.MODEL_NAME, model.getName());
         attrs.put(Constants.NAME, name);
@@ -423,8 +562,7 @@ public class MetaField {
     }
 
     /**
-     * Convert ``value`` from the record format to the format returned by
-     * method {@link BaseModel#read(Records, List)}.
+     * 调用方法{@link BaseModel#read(Records, List)}时，从数据集格式转为读的格式
      * 
      * @param value
      * @param rec
@@ -465,7 +603,7 @@ public class MetaField {
      * @param rec
      * @return
      */
-    public Object convertToDisplayName(Object value, Records rec) {
+    public Object convertToPresent(Object value, Records rec) {
         return value == null ? "" : value.toString();
     }
 
@@ -484,22 +622,22 @@ public class MetaField {
         DbColumn column = columns.get(name);
         updateDbColumn(model, column);
         updateDbNotNull(model, column);
-
     }
 
     protected void updateDbNotNull(Records model, DbColumn column) {
-        boolean hasNotNull = column != null && !column.getNullable();
-        boolean needInitColumn = column == null || isRequired() && !hasNotNull;
-        if (needInitColumn) {
-            // TODO init if table has rows
-        }
-
-        Cursor cr = model.getEnv().getCursor();
-        SqlDialect sd = cr.getSqlDialect();
-        if (isRequired() && !hasNotNull) {
-            sd.setNotNull(cr, model.getMeta().getTable(), getName(), getDbColumnType(sd));
-        } else if (!isRequired() && hasNotNull) {
-            sd.dropNotNull(cr, model.getMeta().getTable(), getName(), getDbColumnType(sd));
+        if (column != null) {
+            boolean hasNotNull = !column.getNullable();
+            boolean needInitColumn = isRequired() && !hasNotNull;
+            if (needInitColumn) {
+                // TODO init if table has rows
+            }
+            Cursor cr = model.getEnv().getCursor();
+            SqlDialect sd = cr.getSqlDialect();
+            if (isRequired() && !hasNotNull) {
+                sd.setNotNull(cr, model.getMeta().getTable(), getName(), getDbColumnType(sd));
+            } else if (!isRequired() && hasNotNull) {
+                sd.dropNotNull(cr, model.getMeta().getTable(), getName(), getDbColumnType(sd));
+            }
         }
     }
 
@@ -557,18 +695,29 @@ public class MetaField {
         if (!records.any()) {
             return records;
         }
-        Object[] values = new Object[records.size()];
-        Arrays.fill(values, cacheValue);
-        cache.update(records, this, Arrays.asList(values));
+        if (isInherited()) {
+            String[] paths = getRelated();
+            for (Records r : records) {
+                Records rel = r;
+                for (int i = 0; i < paths.length - 1; i++) {
+                    rel = rel.getRel(paths[i]);
+                }
+                rel.set(relatedField.getName(), value);
+            }
+        } else {
+            Object[] values = new Object[records.size()];
+            Arrays.fill(values, cacheValue);
+            cache.update(records, this, Arrays.asList(values));
 
-        // update toupdate
-        if (isStore()) {
-            IdValues toupdate = records.getEnv().getToUpdate().get(records.getMeta().getName());
-            Records record = records.browse(records.getIds()[0]);
-            Object writeValue = convertToWrite(cacheValue, record);
-            Object columnValue = convertToColumn(writeValue, record, true);
-            for (String id : records.getIds()) {
-                toupdate.get(id).put(getName(), columnValue);
+            // update toupdate
+            if (isStore()) {
+                IdValues toupdate = records.getEnv().getToUpdate().get(records.getMeta().getName());
+                Records record = records.browse(records.getIds()[0]);
+                Object writeValue = convertToWrite(cacheValue, record);
+                Object columnValue = convertToColumn(writeValue, record, true);
+                for (String id : records.getIds()) {
+                    toupdate.get(id).put(getName(), columnValue);
+                }
             }
         }
 
@@ -599,11 +748,12 @@ public class MetaField {
                 Records rec = inCacheWithout(record, this, 0);
                 rec.call("fetchField", this);
                 if (!cache.contains(record, this) && !record.exists().any()) {
-                    throw new MissingException("记录不存在或者已被删除");
+                    throw new MissingException(String.format("记录 %s 不存在或者已被删除", record));
                 }
                 value = cache.get(record, this);
+            } else {
+                value = null;
             }
-            // many2one
         }
         return convertToRecord(value, record);
     }

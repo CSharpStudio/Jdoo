@@ -55,6 +55,10 @@ class MethodCallable implements Callable {
         return rec.call(method);
     }
 
+    @Override
+    public String toString() {
+        return method;
+    }
 }
 
 class ScriptCallable implements Callable {
@@ -80,5 +84,10 @@ class ScriptCallable implements Callable {
     @Override
     public Object call(Records rec) {
         return getClosure().call(rec);
+    }
+
+    @Override
+    public String toString() {
+        return "@script:" + script;
     }
 }

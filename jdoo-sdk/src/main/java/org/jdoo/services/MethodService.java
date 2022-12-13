@@ -19,8 +19,8 @@ import org.jdoo.utils.ThrowableUtils;
 import org.jdoo.utils.Utils;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * 方法服务
@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
  * @author lrz
  */
 public class MethodService extends Service {
-    private Logger logger = LogManager.getLogger(MethodService.class);
+    private Logger logger = LoggerFactory.getLogger(MethodService.class);
     Method method;
 
     public MethodService(String name, ServiceMethod svc, Method method) {

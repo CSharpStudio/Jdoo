@@ -6,20 +6,22 @@ package org.jdoo.exceptions;
  * @author lrz
  */
 public class ValidationException extends UserException {
-
-    public ValidationException() {
-    }
+    final static int ERROR_CODE = 1000;
 
     public ValidationException(Throwable cause) {
-        super(cause);
+        super(cause, ERROR_CODE);
     }
 
     public ValidationException(String message) {
-        super(message);
+        super(message, ERROR_CODE);
     }
 
     public ValidationException(String message, Throwable cause) {
-        super(message, cause);
+        super(message, cause, ERROR_CODE);
+    }
+
+    public ValidationException(int errorCode) {
+        super(errorCode);
     }
 
     public ValidationException(Throwable cause, int errorCode) {

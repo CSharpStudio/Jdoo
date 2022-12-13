@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data>
-    <menu id="menu_ir_ui_view" name="视图" model="ir.ui.view" view="grid,form" seq="6" parent="menu_model"/>
-    
+    <view id='view_resource' name='视图-资源' model='ir.ui.view'>
+        <resource>
+            <script src="/res/org/jdoo/base/statics/js/base/model-lookup.js"></script>
+        </resource>
+    </view>
     <view id='view_search' name='视图-查询' model='ir.ui.view'>
         <search>
             <field name="name"/>
@@ -27,7 +30,7 @@
             <toolbar buttons="default">
             </toolbar>
             <field name="name"/>
-            <field name="model"/>
+            <field name="model" editor="model_lookup"/>
             <field name="key"/>
             <field name="priority"/>
             <field name="type"/>

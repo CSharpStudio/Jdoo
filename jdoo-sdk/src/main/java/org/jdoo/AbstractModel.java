@@ -8,7 +8,6 @@ import org.jdoo.core.BaseModel;
  * @author lrz
  */
 public class AbstractModel extends BaseModel {
-
     public AbstractModel() {
         isAbstract = true;
     }

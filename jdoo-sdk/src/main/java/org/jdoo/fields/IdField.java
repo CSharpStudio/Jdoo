@@ -14,11 +14,10 @@ import org.jdoo.exceptions.ValueException;
  * 
  * @author lrz
  */
-public class IdField extends BaseField<DateField> {
+public class IdField extends BaseField<IdField> {
     public IdField() {
         type = Constants.CHAR;
         label = "ID";
-        store = true;
         readonly = true;
         prefetch = false;
         columnType = ColumnType.VarChar;

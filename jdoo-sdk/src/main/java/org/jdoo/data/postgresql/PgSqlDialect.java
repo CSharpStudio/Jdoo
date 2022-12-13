@@ -1,20 +1,26 @@
 package org.jdoo.data.postgresql;
 
+import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 import org.jdoo.data.ColumnType;
 import org.jdoo.data.Cursor;
 import org.jdoo.data.DbColumn;
 import org.jdoo.data.SqlDialect;
+import org.jdoo.data.SqlFormat;
+import org.jdoo.exceptions.DataException;
+import org.jdoo.utils.DateUtils;
 
 import org.apache.commons.lang3.StringUtils;
-import org.postgresql.util.PSQLException;
 
 /**
  * postgre sql 方言
@@ -27,13 +33,30 @@ public class PgSqlDialect implements SqlDialect {
         return "(now() at time zone 'UTC')";
     }
 
+    /**
+     * 获取数据库值
+     */
+    public Object getObject(Object obj) {
+        if(obj instanceof Timestamp){
+            Timestamp ts = (Timestamp)obj;
+            return DateUtils.atZone(ts, TimeZone.getTimeZone("UTC"));
+        }        
+        if(obj instanceof Date){
+            Date date = (Date)obj;
+            return DateUtils.atZone(date, TimeZone.getTimeZone("UTC"));
+        }
+        return obj;
+    }
+
     @Override
     public void createColumn(Cursor cr, String table, String name, String columnType, String comment, boolean notNull) {
         String colDefault = columnType.toUpperCase() == "BOOLEAN" ? "DEFAULT false" : "";
-        cr.execute(String.format("ALTER TABLE \"%s\" ADD COLUMN \"%s\" %s %s", table, name, columnType, colDefault));
+        cr.execute(
+                String.format("ALTER TABLE %s ADD COLUMN %s %s %s", quote(table), quote(name), columnType, colDefault));
         if (StringUtils.isNotEmpty(comment)) {
             cr.execute(
-                    String.format("COMMENT ON COLUMN \"%s\".\"%s\" IS '%s'", table, name, comment.replace("'", "''")));
+                    String.format("COMMENT ON COLUMN %s.%s IS '%s'", quote(table), quote(name),
+                            comment.replace("'", "''")));
         }
         schema.debug("Table {} added column {} of type {}", table, name, columnType);
     }
@@ -92,9 +115,9 @@ public class PgSqlDialect implements SqlDialect {
 
     @Override
     public void createModelTable(Cursor cr, String table, String comment) {
-        cr.execute(String.format("CREATE TABLE \"%s\" (id VARCHAR(13), PRIMARY KEY(id))", table));
+        cr.execute(String.format("CREATE TABLE %s (\"id\" VARCHAR(13), PRIMARY KEY(\"id\"))", quote(table)));
         if (StringUtils.isNotEmpty(comment)) {
-            cr.execute(String.format("COMMENT ON TABLE \"%s\" IS '%s'", table, comment.replace("'", "''")));
+            cr.execute(String.format("COMMENT ON TABLE %s IS '%s'", quote(table), comment.replace("'", "''")));
         }
         schema.debug("Table {}: created", table);
     }
@@ -139,44 +162,33 @@ public class PgSqlDialect implements SqlDialect {
     }
 
     @Override
-    public void addUniqueConstraint(Cursor cr, String table, String constraint, String[] fields) {
-        String definition = String.format("unique(%s)", StringUtils.join(fields, ','));
-        String oldDefinition = getConstraintDefinition(cr, table, constraint);
-        if (oldDefinition != null) {
-            if (!definition.equals(oldDefinition)) {
-                dropConstaint(cr, table, constraint);
-            } else {
-                return;
-            }
-        }
-        String sql1 = String.format("ALTER TABLE %s ADD CONSTRAINT %s %s", quote(table), quote(constraint),
-                definition.replace("'", "''"));
-        String sql2 = String.format("COMMENT ON CONSTRAINT %s ON %s IS '%s'", quote(constraint), quote(table),
-                definition.replace("'", "''"));
-        // TODO cr.savepoint();
-        cr.execute(sql1);
-        cr.execute(sql2, Collections.emptyList(), false);
-        schema.debug("Table {} add unique constaint {} as {}", table, constraint, definition);
-    }
-
-    void dropConstaint(Cursor cr, String table, String constraint) {
+    public String addUniqueConstraint(Cursor cr, String table, String constraint, String[] fields) {
         try {
-            // TODO savepoint
-            cr.execute("ALTER TABLE %s DROP CONSTRAINT %s", Arrays.asList(quote(table), quote(constraint)));
-            schema.debug("Table {}: dropped constraint {}", table, constraint);
-
-        } catch (Exception e) {
-            schema.warn("Table {}: unable to drop constraint {}", table, constraint);
+            String definition = String.format("unique(%s)",
+                    Arrays.stream(fields).map(f -> quote(f)).collect(Collectors.joining(",")));
+            String oldDefinition = getConstraintDefinition(cr, constraint);
+            if (oldDefinition != null) {
+                if (!definition.equals(oldDefinition)) {
+                    dropConstraint(cr, table, constraint);
+                } else {
+                    return null;
+                }
+            }
+            String sql = String.format("ALTER TABLE %s ADD CONSTRAINT %s %s", quote(table), quote(constraint),
+                    definition.replace("'", "''"));
+            // TODO cr.savepoint();
+            cr.execute(sql);
+            schema.debug("Table {} add unique constaint {} as {}", table, constraint, definition);
+            return definition;
+        } catch (Exception exc) {
+            schema.warn("表{}添加唯一约束{}失败:{}", table, constraint, exc.getMessage());
+            return null;
         }
     }
 
-    String getConstraintDefinition(Cursor cr, String table, String constraint) {
-        String sql = "SELECT COALESCE(d.description, pg_get_constraintdef(c.oid)) "
-                + "FROM pg_constraint c "
-                + "JOIN pg_class t ON t.oid = c.conrelid "
-                + "LEFT JOIN pg_description d ON c.oid = d.objoid "
-                + "WHERE t.relname = %s AND conname = %s;";
-        cr.execute(sql, Arrays.asList(table, constraint));
+    String getConstraintDefinition(Cursor cr, String constraint) {
+        String sql = "SELECT definition FROM ir_model_constraint where name=%s";
+        cr.execute(sql, Arrays.asList(constraint));
         Object[] row = cr.fetchOne();
         return row.length > 0 ? (String) row[0] : null;
     }
@@ -185,21 +197,29 @@ public class PgSqlDialect implements SqlDialect {
     final static String NOT_NULL_ERROR_STATE = "23502";
 
     @Override
-    public String getConstraint(SQLException cause) {
-        if (CONSTRAINT_ERROR_STATE.equals(cause.getSQLState()) && cause instanceof PSQLException) {
-            PSQLException p = (PSQLException) cause;
-            return p.getServerErrorMessage().getConstraint();
-        }
-        return null;
+    public RuntimeException getError(SQLException err, SqlFormat sql) {
+
+        return new DataException(String.format("执行SQL[%s]失败", sql.getSql()), err);
     }
 
-    public String getNullConstraint(SQLException cause) {
-        if (NOT_NULL_ERROR_STATE.equals(cause.getSQLState()) && cause instanceof PSQLException) {
-            PSQLException p = (PSQLException) cause;
-            return p.getServerErrorMessage().getColumn();
-        }
-        return null;
-    }
+    // @Override
+    // public String getConstraint(SQLException cause) {
+    // if (CONSTRAINT_ERROR_STATE.equals(cause.getSQLState()) && cause instanceof
+    // PSQLException) {
+    // PSQLException p = (PSQLException) cause;
+    // return p.getServerErrorMessage().getConstraint();
+    // }
+    // return null;
+    // }
+
+    // public String getNullConstraint(SQLException cause) {
+    // if (NOT_NULL_ERROR_STATE.equals(cause.getSQLState()) && cause instanceof
+    // PSQLException) {
+    // PSQLException p = (PSQLException) cause;
+    // return p.getServerErrorMessage().getColumn();
+    // }
+    // return null;
+    // }
 
     @Override
     public void setNotNull(Cursor cr, String table, String column, String columnType) {
@@ -221,11 +241,56 @@ public class PgSqlDialect implements SqlDialect {
         table = quote(table);
         column1 = quote(column1);
         column2 = quote(column2);
+        if (comment == null) {
+            comment = "";
+        }
         String sql = "CREATE TABLE " + table + " (" + column1 + " VARCHAR(13) NOT NULL, " + column2
-                + " VARCHAR(13) NOT NULL PRIMARY KEY(" + column1 + "," + column2 + "))"
-                + " COMMENT ON TABLE " + table + " IS %s"
-                + " CREATE INDEX ON " + table + "(" + column1 + "," + column2 + ")";
-        cr.execute(sql, Arrays.asList(comment));
+                + " VARCHAR(13) NOT NULL, PRIMARY KEY(" + column1 + "," + column2 + "))";
+        cr.execute(sql);
+        if (StringUtils.isNotEmpty(comment)) {
+            cr.execute(String.format("COMMENT ON TABLE %s IS '%s'", table, comment.replace("'", "''")));
+        }
+        // + " COMMENT ON TABLE " + table + " IS '" + comment.replace("'", "''") + "'"
+        // + " CREATE INDEX ON " + table + "(" + column1 + "," + column2 + ")";
+        // cr.execute(sql);
         schema.debug("Create table %s: %s", table, comment);
+    }
+
+    @Override
+    public List<Object[]> getForeignKeys(Cursor cr, Collection<String> tables) {
+        String sql = "SELECT fk.conname, c1.relname, a1.attname, c2.relname, a2.attname, fk.confdeltype"
+                + " FROM pg_constraint AS fk"
+                + " JOIN pg_class AS c1 ON fk.conrelid = c1.oid"
+                + " JOIN pg_class AS c2 ON fk.confrelid = c2.oid"
+                + " JOIN pg_attribute AS a1 ON a1.attrelid = c1.oid AND fk.conkey[1] = a1.attnum"
+                + " JOIN pg_attribute AS a2 ON a2.attrelid = c2.oid AND fk.confkey[1] = a2.attnum"
+                + " WHERE fk.contype = 'f' AND c1.relname IN %s";
+        cr.execute(sql, Arrays.asList(tables));
+        return cr.fetchAll();
+    }
+
+    @Override
+    public String addForeignKey(Cursor cr, String table1, String column1, String table2, String column2,
+            String ondelete) {
+        String fk = limitIdentity(String.format("fk_%s_%s", table1, column1));
+        String sql = String.format("ALTER TABLE %s"
+                + " ADD CONSTRAINT %s"
+                + " FOREIGN KEY (%s)"
+                + " REFERENCES %s (%s)"
+                + " ON DELETE %s",
+                cr.quote(table1), cr.quote(fk), cr.quote(column1), cr.quote(table2), cr.quote(column2), ondelete);
+        cr.execute(sql);
+        return fk;
+    }
+
+    @Override
+    public void dropConstraint(Cursor cr, String table, String constraint) {
+        try {
+            // TODO savepoint
+            cr.execute(String.format("ALTER TABLE %s DROP CONSTRAINT %s", quote(table), quote(constraint)));
+            schema.debug("Table {}: dropped constraint {}", table, constraint);
+        } catch (Exception e) {
+            schema.warn("Table {}: unable to drop constraint {}", table, constraint);
+        }
     }
 }

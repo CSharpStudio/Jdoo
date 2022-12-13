@@ -77,7 +77,7 @@ public class Criteria extends ArrayList<Object> {
     }
 
     public static Criteria notIn(String field, Object value) {
-        return new Criteria(new BinaryOp(field, "!in", value));
+        return new Criteria(new BinaryOp(field, "not in", value));
     }
 
     public static Criteria childOf(String field, Object value) {

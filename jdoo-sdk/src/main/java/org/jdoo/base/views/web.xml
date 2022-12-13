@@ -6,9 +6,10 @@
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
                 <title>{{TITLE}}</title>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/fontawesome-free/css/all.min.css"/>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/icheck-bootstrap/icheck-bootstrap.min.css"/>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/dist/css/adminlte.min.css"/>
+                <link rel="icon" href="/res/org/jdoo/base/statics/favicon.ico" type="image/x-icon"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/fontawesome-free/css/all.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/icheck-bootstrap/icheck-bootstrap.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/adminlte/css/adminlte.min.css"/>
             </head>
             <body class="hold-transition login-page">
                 <noscript>抱歉，你的浏览器不支持 JavaScript</noscript>
@@ -38,7 +39,7 @@
                                         <input name="password" type="password" class="form-control" placeholder="密码"/>
                                         <div class="input-group-append">
                                             <div class="input-group-text">
-                                                <span class="fas fa-lock"></span>
+                                                <span class="fas fa-lock" style="width:16px"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -85,13 +86,14 @@
                     </div>
                 </div>
 
-                <script src="/org/jdoo/base/statics/plugins/jquery/jquery.min.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/jquery-validation/jquery.validate.min.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/jquery-validation/additional-methods.min.js"></script>
-                <script src="/org/jdoo/base/statics/dist/js/adminlte.min.js"></script>
-                <script src="/org/jdoo/base/statics/js/src/util.js"></script>
-                <script src="/org/jdoo/base/statics/js/login.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/jquery/jquery.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/jquery-validation/jquery.validate.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/jquery-validation/additional-methods.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/adminlte/js/adminlte.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/js/jdoo.js"></script>
+                <script src="/res/org/jdoo/base/statics/js/base/login.js"></script>
+                <script src="/res/org/jdoo/base/statics/js/base/animation.js"></script>
             </body>
         </html>
     </web>
@@ -101,28 +103,41 @@
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
                 <title></title>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/fontawesome-free/css/all.min.css"/>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/datatables-bs4/css/dataTables.bootstrap4.css"/>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/datatables-responsive/css/responsive.bootstrap4.css"/>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css"/>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/select2/css/select2.min.css"/>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/dist/css/adminlte.css"/>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/css/view.css"/>
+                <link rel="icon" href="/res/org/jdoo/base/statics/favicon.ico" type="image/x-icon"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/fontawesome-free/css/all.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/overlayScrollbars/css/OverlayScrollbars.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/datatables-responsive/css/responsive.bootstrap4.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/datatables-colreorder/css/colReorder.bootstrap4.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/select2/css/select2.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/bootstrap-treeview/dist/bootstrap-treeview.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/ztree/metroStyle.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/daterangepicker/daterangepicker.css"/>  
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/adminlte/css/adminlte.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/css/view.css"/>
 
-                <script src="/org/jdoo/base/statics/plugins/jquery/jquery.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/bootstrap/js/bootstrap.bundle.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/select2/js/select2.full.min.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/datatables/jquery.dataTables.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/datatables-bs4/js/dataTables.bootstrap4.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/datatables-responsive/js/dataTables.responsive.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/datatables-responsive/js/responsive.bootstrap4.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/daterangepicker/daterangepicker.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/moment/moment.min.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/bootstrap-input-spinner/js/bootstrap-input-spinner.js"></script>
-                <script src="/org/jdoo/base/statics/dist/js/adminlte.js"></script>
-                <script src="/org/jdoo/base/statics/js/src/util.js"></script>
-                <script src="/org/jdoo/base/statics/js/src/view.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/jquery/jquery.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/bootstrap/js/bootstrap.bundle.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/ztree/jquery.ztree.all.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/select2/js/select2.full.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/datatables/jquery.dataTables.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/datatables-bs4/js/dataTables.bootstrap4.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/datatables-colreorder/js/dataTables.colReorder.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/moment/moment.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/daterangepicker/daterangepicker.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/bootstrap-input-spinner/js/bootstrap-input-spinner.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/bootstrap-treeview/dist/bootstrap-treeview.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/juicer/juicer.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/adminlte/js/adminlte.min.js"></script>
+                <script debug="false" src="/res/org/jdoo/base/statics/js/jdoo.js"></script>
+                <script debug="false" src="/res/org/jdoo/base/statics/js/view.js"></script>
+                <script debug="true" src="/res/org/jdoo/base/statics/src/jdoo.js"></script>
+                <script debug="true" type="module" src="/res/org/jdoo/base/statics/src/view.js"></script>
             </head>
             <body class="page-body">
             </body>
@@ -134,15 +149,16 @@
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
                 <title>{{TITLE}}</title>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/fontawesome-free/css/all.min.css"/>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/overlayScrollbars/css/OverlayScrollbars.min.css"/>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/plugins/bootstrap-submenu/css/bootstrap-submenu.css"/>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/dist/css/adminlte.css"/>
-                <link rel="stylesheet" href="/org/jdoo/base/statics/css/web.css" />
+                <link rel="icon" href="/res/org/jdoo/base/statics/favicon.ico" type="image/x-icon"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/fontawesome-free/css/all.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/overlayScrollbars/css/OverlayScrollbars.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/bootstrap-submenu/css/bootstrap-submenu.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/adminlte/css/adminlte.min.css"/>
+                <link rel="stylesheet" href="/res/org/jdoo/base/statics/css/web.css" />
             </head>
             <body class="hold-transition sidebar-mini layout-fixed" data-panel-auto-height-mode="height">
                 <div class="wrapper">
-                    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+                    <nav class="main-header navbar navbar-expand navbar-dark">
                         <ul class="navbar-nav">
                             <li class="nav-item">
                                 <a class="nav-link" data-widget="pushmenu" href="#" role="button">
@@ -152,7 +168,17 @@
                         </ul>
                         <ul class="navbar-nav" role="appmenu"></ul>
                         <ul class="navbar-nav ml-auto">
-                            <li class="nav-item dropdown">
+                            <li debug="true" class="nav-item dropdown">
+                                <a class="nav-link" data-toggle="dropdown" href="#">
+                                    <i class="fa fa-bug"></i>
+                                </a>
+                                <div class="dropdown-menu">
+                                    <a href="#" data-widget="debug-exit" class="dropdown-item"><t>退出调试</t></a>
+                                    <div role="separator" class="dropdown-divider"></div>                                    
+                                    <a href="#" data-widget="performance-analysis" class="dropdown-item"><t>启用性能分析</t></a>
+                                </div>
+                            </li>
+                            <!-- <li class="nav-item dropdown">
                                 <a class="nav-link" data-toggle="dropdown" href="#">
                                     <i class="far fa-comments"></i>
                                     <span class="badge badge-danger navbar-badge">3</span>
@@ -167,36 +193,35 @@
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
                                 </div>
+                            </li> -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link" style="display:none" data-widget="company" data-toggle="dropdown" href="#" role="button"></a>
+                                <div class="dropdown-menu"></div>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" data-widget="fullscreen" href="#" role="button">
-                                    <i class="fas fa-expand-arrows-alt"></i>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link" href="#" data-toggle="dropdown" role="button">
+                                    <div class="img-circle user-icon">{{USERNAME}}</div>
+                                    <span>{{USERNAME}}</span>
                                 </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
-                                    <i class="fas fa-th-large"></i>
-                                </a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <a href="#" data-widget="full-screen" class="lnk-icon dropdown-item"><t>全屏</t></a>
+                                    <a href="#" data-widget="icon-lib" class="lnk-icon dropdown-item"><t>图标库</t></a>
+                                    <div role="separator" class="dropdown-divider"></div>
+                                    <a href="#" data-widget="user-account" class="lnk-account dropdown-item"><t>我的账号</t></a>
+                                    <a href="#" data-widget="user-logout" class="lnk-logout dropdown-item"><t>退出登录</t></a>
+                                </div>
                             </li>
                         </ul>
                     </nav>
-                    <aside class="main-sidebar sidebar-dark-primary elevation-4">
-                        <a href="#" class="brand-link">
-                            <img src="org/jdoo/base/statics/dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8"/>
-                            <span class="brand-text font-weight-light">{{TITLE}}</span>
+                    <aside class="main-sidebar main-sidebar-custom sidebar-dark-primary elevation-4">
+                        <a href="#" class="brand-link" style="padding:18.5px 0.5rem">
+                            <img src="/res/org/jdoo/base/statics/img/logo_icon.png" alt="JDOO Logo"/>
+                            <img src="/res/org/jdoo/base/statics/img/logo.png" alt="JDOO Logo" class="brand-text" style="margin-left:0.8rem"/>
                         </a>
-                        <div class="sidebar">
-                            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-                                <div class="image">
-                                    <img src="org/jdoo/base/statics/dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image"/>
-                                </div>
-                                <div class="info">
-                                    <a href="#" class="d-block">{{USERNAME}}</a>
-                                </div>
-                            </div>
-                            <div class="form-inline">
-                                <div class="input-group" data-widget="sidebar-search">
-                                    <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search"/>
+                        <div class="sidebar" style="height: calc(100% - ((5.6em + 4rem) + 1px));">
+                            <div class="form-inline mt-3">
+                                <div class="input-group" data-widget="menu-search">
+                                    <input class="form-control form-control-sidebar" type="search" aria-label="Search"/>
                                     <div class="input-group-append">
                                         <button class="btn btn-sidebar">
                                             <i class="fas fa-search fa-fw"></i>
@@ -239,7 +264,7 @@
                         <div class="tab-content">
                             <div class="tab-empty">
                                 <h2 class="display-4">
-                                    <t>未有打开功能</t>
+                                    <img src="/res/org/jdoo/base/statics/img/watermark.png" title="未有打开的功能"/>
                                 </h2>
                             </div>
                             <div class="tab-loading">
@@ -260,13 +285,17 @@
                         </div>
                     </footer>
                 </div>
-                <script src="/org/jdoo/base/statics/plugins/jquery/jquery.min.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/bootstrap-submenu/bootstrap-submenu.js"></script>
-                <script src="/org/jdoo/base/statics/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
-                <script src="/org/jdoo/base/statics/dist/js/adminlte.js"></script>
-                <script src="/org/jdoo/base/statics/js/src/util.js"></script>
-                <script src="/org/jdoo/base/statics/js/src/web.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/jquery/jquery.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/bootstrap-submenu/bootstrap-submenu.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/ChinesePY.js"></script>
+                <script src="/res/org/jdoo/base/statics/plugins/adminlte/js/adminlte.min.js"></script>
+                
+                <script debug="false" src="/res/org/jdoo/base/statics/js/jdoo.js"></script>
+                <script debug="false" src="/res/org/jdoo/base/statics/js/home.js"></script>
+                <script debug="true" src="/res/org/jdoo/base/statics/src/jdoo.js"></script>
+                <script debug="true" type="module" src="/res/org/jdoo/base/statics/src/home.js"></script>
             </body>
         </html>
     </web>

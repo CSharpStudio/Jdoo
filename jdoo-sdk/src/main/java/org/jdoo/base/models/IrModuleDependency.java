@@ -6,7 +6,7 @@ import org.jdoo.*;
  *
  * @author
 */
-@Model.Meta(name="ir.module.dependency", description="模块依赖")
+@Model.Meta(name="ir.module.dependency", label="模块依赖")
 public class IrModuleDependency extends Model{
 	static Field name = Field.Char().label("名称").help("模块的名称");
 	static Field module_id = Field.Many2one("ir.module");

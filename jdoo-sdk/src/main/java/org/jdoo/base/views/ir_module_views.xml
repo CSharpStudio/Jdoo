@@ -1,22 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data>
+    <view id='module_resource' name='模块-资源' model='ir.module'>
+        <resource>
+            <script src="/res/org/jdoo/base/statics/js/base/module.js"></script>
+        </resource>
+    </view>
     <view id='module_search' name='模块-查询' model='ir.module'>
         <search>
             <field name="name"/>
+            <field name="label"/>
             <field name="state"/>
             <field name="license"/>
+            <searchpanel>
+                <field name="category_id"/>
+            </searchpanel>
         </search>
     </view>
     <view id='module_grid' name='模块-表格' model='ir.module'>
         <grid>
             <toolbar buttons="create|copy|edit|delete|export">
-                <button type="object" active="id" label="安装" service="install"/>
-                <button type="object" active="id" label="更新应用数据" service="updateData"/>
+                <button type="object" t-enable="this.state=='installable'" label="安装" role="install"/>
+                <button type="object" t-enable="this.state=='installed'" label="卸载" role="uninstall"/>
+                <button type="object" t-enable="id" label="更新应用数据" service="updateData"/>
                 <button type="object" label="更新应用清单" service="updateModules"/>
                 <button type="object" label="重启租户" service="resetTenant"/>
             </toolbar>
             <field name="name"/>
-            <field name="summary"/>
+            <field name="label"/>
             <field name="category_id"/>
             <field name="author"/>
             <field name="license"/>
@@ -25,22 +35,47 @@
     </view>
     <view id='module_card' name='模块-卡片' model='ir.module'>
         <card>
-            <toolbar buttons="default">
-                <button type="object" label="测试" service="test"/>
+            <toolbar buttons="create|copy|edit|delete|export">
+                <button type="object" label="更新应用清单" service="updateModules"/>
+                <button type="object" label="重启租户" service="resetTenant"/>
             </toolbar>
             <field name="name"/>
-            <field name="summary"/>
+            <field name="label"/>
             <field name="author"/>
             <field name="license"/>
+            <field name="state"/>
+            <field name="image"/>
             <template>
-                <div class="card-header">
-                    <h3 class="card-title">基本信息</h3>
-                </div>
                 <div class="card-body">
-                    <h5 class="card-title">#{name}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">#{author}</h6>
-                    <p class="card-text">#{summary}</p>
-                    #{license}
+                    <div class="post row">
+                        <i style="width: 60px;padding: 5px 10px 5px 5px;">
+                            {@if image}
+                            <img src="data:image/png;base64,${image}" alt="" style="width:100%"/>
+                            {@else}
+                            <img src="/res/org/jdoo/base/statics/img/placeholder.png" alt="" style="width:100%"/>
+                            {@/if}
+                        </i>
+                        <div>
+                            <div>${label}</div>
+                            <h6 class="card-subtitle mb-2 text-muted">${author}</h6>
+                            <small>
+                                ${name}
+                            </small>
+                        </div>
+                    </div>
+                    ${license}
+                    <div>
+                        <div class="float-right">
+                        {@if state[0]==='installable'}
+                            <button type="button" class="btn btn-info" role="install">安装</button>
+                        {@else if name!='base'}
+                            <button type="button" class="btn btn-danger" role="uninstall">卸载</button>
+                        {@/if}
+                        </div>
+                        {@if state[0]==='installed'}                        
+                        <button type="button" class="btn btn-default" onclick="view.postSvc('updateData',['${id}'])">更新数据</button>
+                        {@/if}
+                    </div>
                 </div>
             </template>
         </card>
@@ -50,11 +85,44 @@
             <toolbar buttons="default">
             </toolbar>
             <field name="name"/>
-            <field name="summary"/>
+            <field name="label"/>
             <field name="category_id"/>
+            <field name="image" rowspan="3"/>
+            <field name="package_info"/>
             <field name="author"/>
             <field name="license"/>
+            <field name="description" colspan="3"/>
             <field name="state" readonly="1"/>
+            <tabs>
+                <tab label="依赖">
+                    <field name="dependency_ids" nolabel="1" colspan="4">
+                        <grid>
+                            <field name="name"/>
+                        </grid>
+                    </field>
+                </tab>
+            </tabs>
+        </form>
+    </view>
+
+    <view id='module_category_form' name='模块分类-表单' model='ir.module.category'>
+        <form>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <tabs>
+                <tab label="应用">
+                    <field colspan="4" name="module_ids" nolabel="1" readonly="1">
+                        <grid label="Views">
+                            <field name="name"/>
+                            <field name="label"/>
+                            <field name="author"/>
+                            <field name="license"/>
+                            <field name="state"/>
+                        </grid>
+                    </field>
+                </tab>
+            </tabs>
         </form>
     </view>
 </data>

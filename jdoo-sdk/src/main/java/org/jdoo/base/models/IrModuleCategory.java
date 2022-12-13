@@ -7,7 +7,8 @@ import org.jdoo.*;
  *
  * @author
  */
-@Model.Meta(name = "ir.module.category", description = "模块分类")
+@Model.Meta(name = "ir.module.category", label = "模块分类")
+@Model.UniqueConstraint(name = "unique_name", fields = "name")
 public class IrModuleCategory extends Model {
 	static Field name = Field.Char().label("名称").help("模块的名称");
 	static Field module_ids = Field.One2many("ir.module", "category_id");

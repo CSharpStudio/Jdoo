@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <record id="base.lang_zh_cn" model="res.lang">
+        <field name="name">Chinese (Simplified) / 简体中文</field>
+        <field name="code">zh_CN</field>
+        <field name="iso_code">zh_CN</field>
+        <field name="active" eval="true"/>
+    </record>
+    <record id="base.lang_en" model="res.lang">
+        <field name="name">English (US)</field>
+        <field name="code">en</field>
+        <field name="iso_code">en</field>
+    </record>
+    <record id="base.lang_zh_tw" model="res.lang">
+        <field name="name">Chinese (Traditional) / 繁體中文</field>
+        <field name="code">zh_TW</field>
+        <field name="iso_code">zh_TW</field>
+    </record>
+    <record id="base.lang_zh_hk" model="res.lang">
+        <field name="name">Chinese (HK)</field>
+        <field name="code">zh_HK</field>
+        <field name="iso_code">zh_HK</field>
+    </record>
+    <record id="base.lang_ko_kr" model="res.lang">
+        <field name="name">Korean (KR) / 한국어 (KR)</field>
+        <field name="code">ko_KR</field>
+        <field name="iso_code">ko_KR</field>
+    </record>
+</data>

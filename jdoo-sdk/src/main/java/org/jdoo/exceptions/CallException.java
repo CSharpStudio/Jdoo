@@ -5,10 +5,7 @@ package org.jdoo.exceptions;
  * 
  * @author lrz
  */
-public class CallException extends RuntimeException {
-
-    public CallException() {
-    }
+public class CallException extends PlatformException {
 
     public CallException(Throwable cause) {
         super(cause);
@@ -20,5 +17,21 @@ public class CallException extends RuntimeException {
 
     public CallException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public CallException(int errorCode) {
+        super(errorCode);
+    }
+
+    public CallException(Throwable cause, int errorCode) {
+        super(cause, errorCode);
+    }
+
+    public CallException(String message, int errorCode) {
+        super(message, errorCode);
+    }
+
+    public CallException(String message, Throwable cause, int errorCode) {
+        super(message, cause, errorCode);
     }
 }

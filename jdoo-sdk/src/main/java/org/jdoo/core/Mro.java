@@ -62,7 +62,8 @@ public class Mro {
                 if (!removed) {
                     MetaModel other = null;
                     String error = String.format(
-                            "Cannot create a consistent method resolution\norder (MRO) for bases %s", lastHead.name);
+                            "Cannot create a consistent method resolution\norder (MRO) for bases %s",
+                            lastHead != null ? lastHead.name : "");
                     for (int i = 0; i < mroList.size(); i++) {
                         List<MetaModel> list = mroList.get(i);
                         if (list.size() != 0 && !list.get(0).equals(lastHead)) {

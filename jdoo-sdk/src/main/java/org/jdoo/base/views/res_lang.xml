@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <view id='view_res_lang_search' name='语言-查询' model='res.lang'>
+        <search>
+            <field name="name"/>
+            <field name="code"/>
+            <field name="iso_code"/>
+        </search>
+    </view>
+    <view id='view_res_lang_grid' name='语言-表格' model='res.lang'>
+        <grid>
+            <toolbar buttons="default">
+                <button type="object" label="翻译" t-enable="id" service="translate"/>
+            </toolbar>
+            <field name="name"/>
+            <field name="code"/>
+            <field name="iso_code"/>
+            <field name="date_format"/>
+            <field name="time_format"/>
+            <field name="week_start"/>
+            <field name="active"/>
+        </grid>
+    </view>
+    <view id='view_res_lang_form' name='语言-表单' model='res.lang'>
+        <form>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="code"/>
+            <field name="iso_code"/>
+            <field name="date_format"/>
+            <field name="time_format"/>
+            <field name="week_start"/>
+            <field name="active"/>
+        </form>
+    </view>
+</data>

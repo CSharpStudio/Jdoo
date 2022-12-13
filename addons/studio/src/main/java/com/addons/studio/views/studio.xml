@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <menu id="menu_studio_designer" name="在线开发工具" model="studio.designer" view="custom" seq="200" parent="base.menu_model"/>
+
+    <view id='studio_designer_resource' name='在线开发-资源' model='studio.designer'>
+        <resource>
+            <link rel="stylesheet" href="/res/com/addons/studio/statics/css/studio.css"></link>
+            <script src="/res/org/jdoo/base/statics/plugins/jquery-ui/jquery-ui.js"></script>
+            <script debug="false" src="/res/com/addons/studio/statics/js/studio.js"></script>
+            <script debug="true" type="module" src="/res/com/addons/studio/statics/src/studio.js"></script>
+        </resource>
+    </view>
+
+    <view id='view_studio_designer' name='在线开发-设计器' model='studio.designer'>
+        <custom class="studio-designer">
+        </custom>
+    </view>
+</data>

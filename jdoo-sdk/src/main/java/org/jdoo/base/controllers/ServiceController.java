@@ -3,9 +3,10 @@ package org.jdoo.base.controllers;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.jdoo.ParamIn;
 import org.jdoo.ParamOut;
-import org.jdoo.base.models.Security;
+import org.jdoo.base.models.RbacSecurity;
 import org.jdoo.core.BaseService;
 import org.jdoo.core.Constants;
 import org.jdoo.core.Environment;
@@ -27,9 +28,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
  * 服务控制器
- * 
+ *
  * @author lrz
  */
+@CrossOrigin
 @org.springframework.stereotype.Controller
 public class ServiceController extends Controller {
 
@@ -50,10 +52,10 @@ public class ServiceController extends Controller {
             throw new IllegalArgumentException(String.format("模型[%s]未定义服务[%s]", in.getModel(), in.getService()));
         }
         // 权限
-        Security security = env.get("rbac.security").as(Security.class);
+        RbacSecurity security = env.get("rbac.security").as(RbacSecurity.class);
         if (!Constants.ANONYMOUS.equals(svc.getAuth()) && !env.isAdmin()
                 && !security.hasPermission(security.getRecords(), env.getUserId(), in.getModel(), svc.getAuth())) {
-            throw new AccessException("没有权限", SecurityCode.NO_PERMISSION);
+            throw new AccessException("没有权限,请重新登录或联系管理员分配权限", SecurityCode.NO_PERMISSION);
         }
         // TODO 幂等校验
         ParamOut out = new ParamOut();

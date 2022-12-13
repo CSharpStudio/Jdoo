@@ -4,13 +4,8 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 
 import net.sf.cglib.proxy.Enhancer;
-import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
-
-import org.jdoo.Records;
 import org.jdoo.exceptions.ModelException;
 
-import org.springframework.core.NamedThreadLocal;
 
 /**
  * 方法元数据
@@ -47,17 +42,6 @@ public class MetaMethod {
         try {
             return method.invoke(obj, args);
         } catch (Exception exc) {
-            // Throwable cause = ThrowableUtils.getCause(exc);
-            // if (cause instanceof SQLException && args.length > 1 && args[0] instanceof
-            // Records) {
-            // cause.printStackTrace();
-            // Records rec = (Records) args[0];
-            // SqlDialect sd = rec.getEnv().getCursor().getSqlDialect();
-            // String constraint = sd.getConstraint((SQLException) cause);
-            // if (rec.getMeta().uniques.containsKey(constraint)) {
-            // throw new UserException(rec.getMeta().uniques.get(constraint).getMessage());
-            // }
-            // }
             throw new ModelException(
                     String.format("方法[%s.%s]执行失败", method.getDeclaringClass().getName(), method.getName()), exc);
         }

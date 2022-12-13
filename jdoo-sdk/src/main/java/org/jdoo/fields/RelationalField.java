@@ -3,9 +3,12 @@ package org.jdoo.fields;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.jdoo.Criteria;
 import org.jdoo.ICriteria;
 import org.jdoo.Records;
+import org.jdoo.core.Constants;
 import org.jdoo.core.MetaModel;
 
 /**
@@ -14,18 +17,16 @@ import org.jdoo.core.MetaModel;
  * @author lrz
  */
 public class RelationalField<T extends BaseField<T>> extends BaseField<T> {
-    /** 删除模式 */
-    public enum DeleteMode {
-        /** 设置为空 */
-        SetNull,
-        /** 级联删除 */
-        Cascade,
-        /** 限制删除 */
-        Restrict,
-    }
 
+    @JsonIgnore
     ICriteria criteria;
+    @JsonIgnore
+    Boolean autoJoin = false;
+    @Related
     Map<String, Object> context;
+    /** corresponding model name */
+    @Related
+    String comodelName;
 
     public Map<String, Object> getContext() {
         if (context == null) {
@@ -38,14 +39,6 @@ public class RelationalField<T extends BaseField<T>> extends BaseField<T> {
     public T context(Map<String, Object> ctx) {
         args.put("context", ctx);
         return (T) this;
-    }
-
-    /** correlation model name */
-    String comodelName;
-    Boolean autoJoin = false;
-
-    public RelationalField() {
-        relatedAttributes.add("comodelName");
     }
 
     public Boolean getAutoJoin() {
@@ -68,9 +61,39 @@ public class RelationalField<T extends BaseField<T>> extends BaseField<T> {
         return (T) this;
     }
 
+    /**
+     * 指定查询条件
+     * 
+     * @param criteria
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public T criteria(ICriteria criteria) {
-        args.put("criteria", criteria);
+        args.put(Constants.CRITERIA, criteria);
+        return (T) this;
+    }
+
+    /**
+     * 指定查询条件
+     * 
+     * @param method
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public T criteria(String method) {
+        args.put(Constants.CRITERIA, ICriteria.method(method));
+        return (T) this;
+    }
+
+    /**
+     * 指定查询条件
+     * 
+     * @param criteria
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public T criteria(Criteria criteria) {
+        args.put(Constants.CRITERIA, ICriteria.criteria(criteria));
         return (T) this;
     }
 
@@ -82,8 +105,8 @@ public class RelationalField<T extends BaseField<T>> extends BaseField<T> {
     }
 
     @Override
-    protected void setupBase(MetaModel model, String name) {
-        super.setupBase(model, name);
+    protected void setName(MetaModel model, String name) {
+        super.setName(model, name);
         if (!model.getRegistry().contains(comodelName)) {
             logger.warn("字段[{}]使用了未知引用模型{}", this, comodelName);
             comodelName = "_unknown";

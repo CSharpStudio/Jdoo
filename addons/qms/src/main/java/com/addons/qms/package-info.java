@@ -1,4 +1,4 @@
-@org.jdoo.Manifest(name = "qms", category = "Manufacture", summary = "质量管理", models = { 
+@org.jdoo.Manifest(name = "qms", category = "Manufacture", label = "质量管理", models = { 
         
 }, data = {
 })

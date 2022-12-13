@@ -11,8 +11,17 @@
 	<name>jdoo-server</name>
 	<description>WEB SERVER</description>
 	<properties>
-		<maven.compiler.source>8</maven.compiler.source>
-		<maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <mysql-connector-java.version>8.0.28</mysql-connector-java.version>
+        <jackson-core.version>2.13.0</jackson-core.version>
+        <jackson-databind.version>2.13.2.1</jackson-databind.version>
+        <jackson.annotations.version>2.13.0</jackson.annotations.version>
+        <org.apache.poi.version>5.1.0</org.apache.poi.version>
+        <redis.clients.version>4.0.1</redis.clients.version>
+        <org.springframework.boot.version>2.6.2</org.springframework.boot.version>
+        <org.codehaus.groovy.version>3.0.9</org.codehaus.groovy.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -93,6 +102,16 @@
             <artifactId>addons-wms</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>addons-modeling</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>addons-studio</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 	</dependencies>
 
 	<build>
@@ -126,6 +145,13 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId> 
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <parameters>true</parameters>
+                </configuration>
+            </plugin>
 		</plugins>
 	</build>
 

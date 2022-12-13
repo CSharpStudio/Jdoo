@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <menu id="menu_equipment" name="设备" model="demo.equipment" view="grid,form" parent="menu_demo"/>
+
+    <view id='view_equipment_search' name='demo.equipment.search' model='demo.equipment'>
+        <search>
+            <field name="name"/>
+        </search>
+    </view>
+    <view id='view_equipment_grid' name='demo.equipment.grid' model='demo.equipment'>
+        <grid>
+            <toolbar buttons="default|copy"/>
+            <field name="name"/>
+            <field name="factory_id"/>
+            <field name="workshop_id"/>
+        </grid>
+    </view>
+    <view id='view_equipment_form' name='demo.equipment.form' model='demo.equipment'>
+        <form>
+            <toolbar buttons="default|copy"/>
+            <field name="name"/>
+            <field name="factory_id"/>
+            <field name="workshop_id" t-reset="factory_id" search='[["factory_id","=",this.factory_id]]'/>
+        </form>
+    </view>
+</data>

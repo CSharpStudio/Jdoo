@@ -15,8 +15,11 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.tomcat.util.digester.ArrayStack;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.jdoo.Criteria;
+import org.jdoo.DeleteMode;
 import org.jdoo.Records;
 import org.jdoo.core.BaseModel;
 import org.jdoo.core.Constants;
@@ -35,12 +38,17 @@ import org.jdoo.data.Query;
  * @author lrz
  */
 public class Many2manyField extends RelationalMultiField<Many2manyField> {
+    @JsonIgnore
     String relation;
+    @JsonIgnore
     String column1;
+    @JsonIgnore
     String column2;
+    @JsonIgnore
     Boolean autoJoin;
+    @JsonIgnore
     Integer limit;
-
+    @JsonIgnore
     DeleteMode ondelete;
 
     public Many2manyField() {
@@ -53,6 +61,18 @@ public class Many2manyField extends RelationalMultiField<Many2manyField> {
         args.put("relation", relation);
         args.put("column1", column1);
         args.put("column2", column2);
+    }
+
+    public String getRelation() {
+        return relation;
+    }
+
+    public String getColumn1() {
+        return column1;
+    }
+
+    public String getColumn2() {
+        return column2;
     }
 
     @Override

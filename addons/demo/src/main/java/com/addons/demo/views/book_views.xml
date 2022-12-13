@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <view id='view_category_form' name='分类-表单' model='demo.category'>
+        <form>
+            <toolbar buttons="default"></toolbar>
+            <field name="name" colspan="4"/>
+            <field name="sumary" editor="text" colspan="4" rows="5"/>
+        </form>
+    </view>
+</data>

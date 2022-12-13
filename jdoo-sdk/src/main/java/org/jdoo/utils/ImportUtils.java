@@ -112,7 +112,7 @@ class XmlImport {
         if (rec == null) {
             rec = env.get("ir.ui.view");
         } else if (!rec.getMeta().getName().equals("ir.ui.view")) {
-            throw new ValueException();
+            throw new ValueException("模型必需是ir.ui.view");
         }
         KvMap values = new KvMap()
                 .set("key", key)
@@ -143,6 +143,7 @@ class XmlImport {
             id = module + "." + id;
         }
         String inherit_id = getAttributeOr(el, "inherit_id", null);
+        String key = getAttributeOr(el, "key", null);
         String mode = "primary";
         if (StringUtils.isNotEmpty(inherit_id)) {
             if (!inherit_id.contains(".")) {
@@ -150,6 +151,7 @@ class XmlImport {
             }
             Records inherit = env.getRef(inherit_id);
             inherit_id = inherit.getId();
+            key = (String) inherit.get("key");
             mode = "extension";
         }
         String priority = getAttributeOr(el, "priority", "16");
@@ -166,13 +168,14 @@ class XmlImport {
         if (rec == null) {
             rec = env.get("ir.ui.view");
         } else if (!rec.getMeta().getName().equals("ir.ui.view")) {
-            throw new ValueException();
+            throw new ValueException("模型必需是ir.ui.view");
         }
         KvMap values = new KvMap()
                 .set("model", model)
                 .set("name", name)
                 .set("arch", arch)
                 .set("mode", mode)
+                .set("key", key)
                 .set("inherit_id", inherit_id)
                 .set("priority", Integer.valueOf(priority))
                 .set("type", type);
@@ -215,7 +218,7 @@ class XmlImport {
         if (rec == null) {
             rec = env.get("ir.ui.menu");
         } else if (!rec.getMeta().getName().equals("ir.ui.menu")) {
-            throw new ValueException();
+            throw new ValueException("模型必需是ir.ui.menu");
         }
         KvMap values = new KvMap()
                 .set("name", name)
@@ -266,7 +269,7 @@ class XmlImport {
         if (rec == null) {
             rec = env.get(model);
         } else if (!rec.getMeta().getName().equals(model)) {
-            throw new ValueException();
+            throw new ValueException("模型必需是" + model);
         }
         KvMap values = new KvMap();
         for (Element field : el.elements("field")) {
@@ -290,7 +293,7 @@ class XmlImport {
         }
     }
 
-    Pattern refPattern = Pattern.compile("ref\\((?<ref>\\S+)\\)");
+    Pattern refPattern = Pattern.compile("ref\\((?<ref>\\S+?)\\)");
 
     Object evalValue(String eval) {
         ObjectMapper map = new ObjectMapper();

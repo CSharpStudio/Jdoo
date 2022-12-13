@@ -28,8 +28,8 @@ import org.jdoo.utils.ThrowableUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * json 处理
@@ -39,7 +39,7 @@ import org.apache.logging.log4j.Logger;
 @Component
 public class JsonHandler {
     final static String CONTEXT = "context";
-    private static Logger logger = LogManager.getLogger(JsonHandler.class);
+    private static Logger logger = LoggerFactory.getLogger(JsonHandler.class);
 
     @SuppressWarnings("unchecked")
     public void process(HttpServletRequest request, HttpServletResponse response, Controller ctl, Tenant tenant,

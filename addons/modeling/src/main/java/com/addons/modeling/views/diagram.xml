@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <menu id="menu_modeling_designer" name="建模设计器" model="modeling.diagram" view="custom" seq="100" parent="base.menu_model"/>
+
+    <view id='modeling_designer_resource' name='建模-资源' model='modeling.diagram'>
+        <resource>
+            <link rel="stylesheet" href="/res/com/addons/modeling/statics/css/contextMenu.css"></link>
+            <link rel="stylesheet" href="/res/com/addons/modeling/statics/css/model-designer.css"></link>
+            <link rel="stylesheet" href="/res/org/jdoo/base/statics/plugins/bootstrap-slider/css/bootstrap-slider.min.css"></link>
+            <link rel="stylesheet" href="/res/com/addons/modeling/statics/libs/highlight/styles/androidstudio.min.css"></link>
+            <script src="/res/org/jdoo/base/statics/plugins/jquery-ui/jquery-ui.js"></script>
+            <script src="/res/com/addons/modeling/statics/libs/contextMenu.min.js"></script>
+            <script src="/res/org/jdoo/base/statics/plugins/bootstrap-slider/bootstrap-slider.min.js"></script>
+            <script src="/res/com/addons/modeling/statics/libs/highlight/highlight.min.js"></script>
+            <script debug="false" src="/res/com/addons/modeling/statics/js/model-designer.js"></script>
+            <script debug="true" type="module" src="/res/com/addons/modeling/statics/src/model-designer.js"></script>
+        </resource>
+    </view>
+
+    <view id='view_modeling' name='建模-设计器' model='modeling.diagram'>
+        <custom class="model-designer">
+            <aside class="left-box">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="aside-apps-tab" data-toggle="pill" href="#aside-apps-tabcontent" role="tab" aria-controls="aside-apps-tabcontent" aria-selected="true">应用</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active aside-tab-pane" id="aside-apps-tabcontent" role="tabpanel" aria-labelledby="aside-apps-tab">
+                        <div class="m-1">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <button class="btn btn-default btn-sm" data-toggle="dropdown">
+                                        <span class="fas fa-bars"></span>
+                                    </button>
+                                    <button class="btn btn-default btn-sm btn-app-add">
+                                        <span class="fas fa-plus"></span>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <span class="menu-app-collapse dropdown-item" role="button">收起所有</span>
+                                        <div role="separator" class="dropdown-divider">&amp;nbsp;</div>
+                                        <span class="menu-app-publish dropdown-item" role="button">发布</span>
+                                    </div>
+                                </div>
+                                <input type="text" class="form-control app-keyword"></input>
+                                <div class="input-group-append">
+                                    <div data-btn="view" class="btn btn-default btn-app-lookup">
+                                        <span class="fa fa-search"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-panel">
+                            <div id="applist" class="app-list ztree"></div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            <div class="main-box">
+            </div>
+        </custom>
+    </view>
+    <view id='diagram_form' name='模型图-表单' model='modeling.diagram'>
+        <form>
+            <field name="name"/>
+            <field name="width" min="300"/>
+            <field name="height" min="200"/>
+        </form>
+    </view>
+    <view id='design_model_form' name='设计模型-表单' model='modeling.model'>
+        <form>
+            <field name="name"/>
+            <field name="model"/>
+            <field name="model_class"/>
+            <field name="package_name"/>
+            <field name="inherit"/>
+            <field name="table"/>
+            <field name="order"/>
+            <field name="present_fields"/>
+            <field name="present_format"/>
+            <field name="description"/>
+            <field name="is_transient"/>
+            <field name="is_abstract"/>
+            <field name="module_id" readonly="1"/>
+        </form>
+    </view>
+    <view id='design_model_field_form' name='设计模型字段-表单' model='modeling.model.field'>
+        <form>
+            <field name="label"/>
+            <field name="name"/>
+            <field name="field_type"/>
+            <field name="help"/>
+            <field name="required"/>
+            <field name="readonly"/>
+            <field name="related"/>
+            <field name="index"/>
+            <field name="store"/>
+            <field name="copy"/>
+            <field name="depends"/>
+            <field name="default_value"/>
+            <field name="compute" colspan="2"/>
+            <field name="translate" t-visible="this.field_type==='char'"/>
+            <field name="length" t-visible="this.field_type==='char'"/>
+            <tabs t-visible="this.field_type.indexOf('many')!=-1">
+                <tab label="关联">
+                    <field name="relation" t-visible="this.field_type.indexOf('many')!=-1"/>
+                    <field name="relation_field" t-visible="this.field_type==='one2many'"/>
+                    <field name="relation_table" t-visible="this.field_type==='many2many'"/>
+                    <field name="column1" t-visible="this.field_type==='many2many'"/>
+                    <field name="column2" t-visible="this.field_type==='many2many'"/>
+                    <field name="on_delete" t-visible="this.field_type==='many2one' || this.field_type==='many2many'"/>
+                </tab>
+            </tabs>
+        </form>
+    </view>
+</data>

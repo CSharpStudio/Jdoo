@@ -2,12 +2,13 @@ package org.jdoo.data;
 
 import java.nio.charset.Charset;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.CRC32;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 数据库方言
@@ -15,11 +16,14 @@ import org.apache.logging.log4j.Logger;
  * @author lrz
  */
 public interface SqlDialect {
+    public static Logger schema = LoggerFactory.getLogger("sql.schema");
+    
     /**
      * 数据库标识符最大长度
      */
-    public static final int IDENTITY_MAX_LENGTH = 63;
-    public static Logger schema = LogManager.getLogger("sql.schema");
+    default int getIdentityMaxLength() {
+        return 63;
+    }
 
     /**
      * 获取数据库时间
@@ -36,13 +40,53 @@ public interface SqlDialect {
      * @return
      */
     default String generateTableAlias(String srcTableAlias, String link) {
-        String alias = srcTableAlias + "__" + link;
-        if (alias.length() > IDENTITY_MAX_LENGTH) {
-            CRC32 crc = new CRC32();
-            crc.update(alias.getBytes(Charset.forName("UTF-8")));
-            alias = alias.substring(0, IDENTITY_MAX_LENGTH - 10) + "_" + Long.toString(crc.getValue(), 32);
-        }
+        String alias = limitIdentity(srcTableAlias + "__" + link);
         return alias;
+    }
+
+    /**
+     * 处理列名
+     * 
+     * @param column
+     * @return
+     */
+    default String getColumnLabel(String column) {
+        return column;
+    }
+
+    /**
+     * 处理数据值
+     * 
+     * @param obj
+     * @return
+     */
+    default Object getObject(Object obj) {
+        return obj;
+    }
+
+    /**
+     * 准备参数值
+     * 
+     * @param obj
+     * @return
+     */
+    default Object prepareObject(Object obj) {
+        return obj;
+    }
+
+    /**
+     * 标识符长度限制
+     * 
+     * @param identity
+     * @return
+     */
+    default String limitIdentity(String identity) {
+        if (identity.length() > getIdentityMaxLength()) {
+            CRC32 crc = new CRC32();
+            crc.update(identity.getBytes(Charset.forName("UTF-8")));
+            identity = identity.substring(0, getIdentityMaxLength() - 10) + "_" + Long.toString(crc.getValue(), 32);
+        }
+        return identity;
     }
 
     /**
@@ -102,6 +146,15 @@ public interface SqlDialect {
      */
     void createModelTable(Cursor cr, String table, String comment);
 
+    /**
+     * 创建多对多中间表
+     * 
+     * @param cr
+     * @param table
+     * @param column1
+     * @param column2
+     * @param comment
+     */
     void createM2MTable(Cursor cr, String table, String column1, String column2, String comment);
 
     /**
@@ -148,15 +201,7 @@ public interface SqlDialect {
      * @param constraint
      * @param fields
      */
-    void addUniqueConstraint(Cursor cr, String table, String constraint, String[] fields);
-
-    /**
-     * 获取约束名
-     * 
-     * @param cause
-     * @return
-     */
-    String getConstraint(SQLException cause);
+    String addUniqueConstraint(Cursor cr, String table, String constraint, String[] fields);
 
     /**
      * 设置非空
@@ -177,4 +222,44 @@ public interface SqlDialect {
      * @param columnType
      */
     void dropNotNull(Cursor cr, String table, String column, String columnType);
+
+    /**
+     * 获取指定表的外键信息
+     * 
+     * @param cr
+     * @param tables
+     * @return
+     */
+    List<Object[]> getForeignKeys(Cursor cr, Collection<String> tables);
+
+    /**
+     * 添加外键
+     * 
+     * @param cr
+     * @param table1
+     * @param column1
+     * @param table2
+     * @param column2
+     * @param ondelete
+     * @return
+     */
+    String addForeignKey(Cursor cr, String table1, String column1, String table2, String column2, String ondelete);
+
+    /**
+     * 删除约束
+     * 
+     * @param cr
+     * @param table
+     * @param name
+     */
+    void dropConstraint(Cursor cr, String table, String name);
+
+    /**
+     * 处理异常
+     * 
+     * @param err
+     * @param sql
+     * @return
+     */
+    RuntimeException getError(SQLException err, SqlFormat sql);
 }

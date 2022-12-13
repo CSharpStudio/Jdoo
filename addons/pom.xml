@@ -21,5 +21,7 @@
         <module>qms</module>
         <module>wms</module>
         <module>mom</module>
+        <module>modeling</module>
+        <module>studio</module>
     </modules>
 </project>

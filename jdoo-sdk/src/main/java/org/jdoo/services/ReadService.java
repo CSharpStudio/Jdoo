@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.jdoo.ParamIn;
 import org.jdoo.ParamOut;
+import org.jdoo.Records;
 import org.jdoo.Service;
 import org.jdoo.core.MetaModel;
 import org.jdoo.utils.Utils;
@@ -21,7 +22,9 @@ public class ReadService extends Service {
     @Override
     protected void execute(ParamIn in, ParamOut out) {
         ReadParam param = in.getArgs(ReadParam.class);
-        List<Map<String, Object>> values = in.getEnv().get(in.getModel(), param.ids).read(param.fields);
+        Records rec = in.getEnv().get(in.getModel(), param.ids);
+        rec.call("checkFieldAccessRights", "read", param.fields);
+        List<Map<String, Object>> values = rec.read(param.fields);
         out.putData(values);
     }
 

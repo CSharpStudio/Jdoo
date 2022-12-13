@@ -3,8 +3,9 @@ package org.jdoo.fields;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.jdoo.core.Constants;
-import org.jdoo.core.Environment;
 import org.jdoo.core.MetaField;
 import org.jdoo.core.MetaModel;
 import org.jdoo.data.ColumnType;
@@ -18,8 +19,10 @@ import org.jdoo.Selection;
  * @author lrz
  */
 public class SelectionField extends BaseField<SelectionField> {
+    
+    @JsonIgnore
     Selection selection;
-
+    @JsonIgnore
     Map<String, String> options;
 
     public SelectionField() {
@@ -32,12 +35,20 @@ public class SelectionField extends BaseField<SelectionField> {
         return sqlDialect.getColumnType(columnType, 240, null);
     }
 
-    public Map<String, String> getOptions() {
+    public Map<String, String> getOptions(Records rec) {
+        if (options == null) {
+            options = selection.get(rec);
+        }
         return options;
     }
 
     public SelectionField selection(Selection selection) {
         args.put("selection", selection);
+        return this;
+    }
+
+    public SelectionField selection(Map<String, String> selection) {
+        args.put("selection", Selection.value(selection));
         return this;
     }
 
@@ -72,12 +83,5 @@ public class SelectionField extends BaseField<SelectionField> {
         } else {
             selection.add(toAdd);
         }
-    }
-
-    @Override
-    protected void setupFull(MetaModel model, Environment env) {
-        super.setupFull(model, env);
-        Records rec = env.get(model.getName());
-        options = selection.get(rec);
     }
 }

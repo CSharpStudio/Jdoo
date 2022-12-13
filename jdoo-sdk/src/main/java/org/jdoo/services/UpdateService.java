@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.jdoo.ParamIn;
 import org.jdoo.ParamOut;
+import org.jdoo.Records;
 import org.jdoo.Service;
 import org.jdoo.core.MetaModel;
 import org.jdoo.utils.Utils;
@@ -20,7 +21,9 @@ public class UpdateService extends Service {
     @Override
     protected void execute(ParamIn in, ParamOut out) {
         UpdateParam param = in.getArgs(UpdateParam.class);
-        in.getEnv().get(in.getModel(), param.ids).update(param.values);
+        Records rec = in.getEnv().get(in.getModel(), param.ids);
+        rec.call("checkFieldAccessRights", "write", param.values.keySet());
+        rec.update(param.values);
         out.putData(true);
     }
     

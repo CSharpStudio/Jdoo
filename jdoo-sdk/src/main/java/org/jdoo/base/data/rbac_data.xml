@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data>
-    <!-- user 1 is the technical admin user -->
-    <record id="base.user_root" model="rbac.user">
-        <field name="id">superuser</field>
-        <field name="name">超级管理员</field>
-        <field name="login">supperuser</field>
-        <field name="email">root@example.com</field>
-    </record>
-
     <!-- user 2 is the human admin user -->
     <record id="user_admin" model="rbac.user">
         <field name="login">admin</field>
@@ -34,4 +26,91 @@
         <field name="is_admin">true</field>
         <field name="user_ids" eval="[[4, ref(base.user_admin)]]"></field>
     </record>
+
+    <!-- 密码策略 -->
+    <record id="rbac_password_policy" model="rbac.policy">
+        <field name="neet_letter" eval="false"/>
+        <field name="neet_symbol" eval="false"/>
+        <field name="neet_number" eval="false"/>
+        <field name="case_sensitivity" eval="false"/>
+        <field name="length" eval="0"/>
+        <field name="failed_pwd_times" eval="0"/>
+        <field name="lock_time" eval="0"/>
+        <field name="pwd_validity" eval="0"/>
+    </record>
+
+    <!--测试人员用户-->
+    
+    <!-- <record id="lingweifeng" model="rbac.user">
+        <field name="login">lingweifeng</field>
+        <field name="name">凌韦峰</field>
+        <field name="password">123456</field>
+        <field name="role_ids" eval="[[4, ref(base.role_admin)]]"></field>
+    </record>    
+    <record id="yezhiyong" model="rbac.user">
+        <field name="login">yezhiyong</field>
+        <field name="name">叶智拥</field>
+        <field name="password">123456</field>
+        <field name="role_ids" eval="[[4, ref(base.role_admin)]]"></field>
+    </record>
+    <record id="sunxiaodong" model="rbac.user">
+        <field name="login">sunxiaodong</field>
+        <field name="name">孙晓东</field>
+        <field name="password">123456</field>
+        <field name="role_ids" eval="[[4, ref(base.role_admin)]]"></field>
+    </record>
+    <record id="zhangxiangming" model="rbac.user">
+        <field name="login">zhangxiangming</field>
+        <field name="name">张向明</field>
+        <field name="password">123456</field>
+        <field name="role_ids" eval="[[4, ref(base.role_admin)]]"></field>
+    </record>
+    <record id="yangxiaolin" model="rbac.user">
+        <field name="login">yangxiaolin</field>
+        <field name="name">杨晓麟</field>
+        <field name="password">123456</field>
+        <field name="role_ids" eval="[[4, ref(base.role_admin)]]"></field>
+    </record>
+    <record id="liangrongzhen" model="rbac.user">
+        <field name="login">liangrongzhen</field>
+        <field name="name">梁荣振</field>
+        <field name="password">123456</field>
+        <field name="role_ids" eval="[[4, ref(base.role_admin)]]"></field>
+    </record>
+    <record id="wangqushu" model="rbac.user">
+        <field name="login">wangqushu</field>
+        <field name="name">王曲舒</field>
+        <field name="password">123456</field>
+        <field name="role_ids" eval="[[4, ref(base.role_admin)]]"></field>
+    </record>
+    <record id="luoyibin" model="rbac.user">
+        <field name="login">luoyibin</field>
+        <field name="name">罗艺宾</field>
+        <field name="password">123456</field>
+        <field name="role_ids" eval="[[4, ref(base.role_admin)]]"></field>
+    </record>
+    <record id="moxueqiong" model="rbac.user">
+        <field name="login">moxueqiong</field>
+        <field name="name">莫雪琼</field>
+        <field name="password">123456</field>
+        <field name="role_ids" eval="[[4, ref(base.role_admin)]]"></field>
+    </record>
+    <record id="chenzebin" model="rbac.user">
+        <field name="login">chenzebin</field>
+        <field name="name">陈泽斌</field>
+        <field name="password">123456</field>
+        <field name="role_ids" eval="[[4, ref(base.role_admin)]]"></field>
+    </record>
+    <record id="huangmanlu" model="rbac.user">
+        <field name="login">huangmanlu</field>
+        <field name="name">黄曼露</field>
+        <field name="password">123456</field>
+        <field name="role_ids" eval="[[4, ref(base.role_admin)]]"></field>
+    </record>
+    <record id="zhanzelong" model="rbac.user">
+        <field name="login">zhanzelong</field>
+        <field name="name">詹泽龙</field>
+        <field name="password">123456</field>
+        <field name="role_ids" eval="[[4, ref(base.role_admin)]]"></field>
+    </record> -->
 </data>

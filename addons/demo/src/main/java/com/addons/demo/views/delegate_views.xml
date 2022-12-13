@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+
+    <menu id="menu_supplier" name="供应商" model="demo.supplier" view="grid,form" parent="menu_demo"/>
+    <menu id="menu_customer" name="客户" model="demo.customer" view="grid,form" parent="menu_demo"/>
+
+    <view id='view_supplier_search' name='供应商-查询' model='demo.supplier'>
+        <search>
+            <field name="name"/>
+        </search>
+    </view>
+    <view id='view_supplier_grid' name='供应商-表格' model='demo.supplier'>
+        <grid>
+            <toolbar buttons="default"></toolbar>
+            <field name="name"/>
+            <field name="contact_user_id"/>
+            <field name="responsible_id"/>
+            <field name="zip"/>
+            <field name="send_by"/>
+            <field name="address"/>
+        </grid>
+    </view>
+    <view id='view_supplier_form' name='供应商-表单' model='demo.supplier'>
+        <form>
+            <toolbar buttons="default"></toolbar>
+            <field name="name" colspan="4"/>
+            <field name="contact_user_id"/>
+            <field name="responsible_id"/>
+            <field name="zip"/>
+            <field name="send_by"/>
+            <field name="address" editor="text" colspan="4" rows="5"/>
+        </form>
+    </view>
+
+    
+    <view id='view_customer_search' name='客户-查询' model='demo.customer'>
+        <search>
+            <field name="name"/>
+        </search>
+    </view>
+    <view id='view_customer_grid' name='客户-表格' model='demo.customer'>
+        <grid>
+            <toolbar buttons="default"></toolbar>
+            <field name="name"/>
+            <field name="contact_user_id"/>
+            <field name="priority" editor="priority"/>
+            <field name="zip"/>
+            <field name="address"/>
+        </grid>
+    </view>
+    <view id='view_customer_form' name='客户-表单' model='demo.customer'>
+        <form>
+            <toolbar buttons="default"></toolbar>
+            <field name="name" colspan="4"/>
+            <field name="contact_user_id"/>
+            <field name="priority" editor="priority"/>
+            <field name="zip"/>
+            <field name="address" editor="text" colspan="4" rows="5"/>
+        </form>
+    </view>
+</data>

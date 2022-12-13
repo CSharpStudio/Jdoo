@@ -6,10 +6,7 @@ package org.jdoo.exceptions;
  * @author lrz
  */
 public class AccessException extends UserException {
-
-    public AccessException() {
-    }
-
+    
     public AccessException(Throwable cause) {
         super(cause);
     }
@@ -20,6 +17,10 @@ public class AccessException extends UserException {
 
     public AccessException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public AccessException(int errorCode) {
+        super(errorCode);
     }
 
     public AccessException(Throwable cause, int errorCode) {

@@ -168,8 +168,10 @@ public class RelationalMultiField<T extends BaseField<T>> extends RelationalFiel
         Records records = rec.browse(p);
         Set<String> ids = new HashSet<>();
         for (Object v : rec.getEnv().getCache().getValues(records, field)) {
-            for (String id : (List<String>) v) {
-                ids.add(id);
+            if (v != null) {
+                for (String id : (List<String>) v) {
+                    ids.add(id);
+                }
             }
         }
         return ids.toArray(ArrayUtils.EMPTY_STRING_ARRAY);
@@ -217,7 +219,7 @@ public class RelationalMultiField<T extends BaseField<T>> extends RelationalFiel
     }
 
     @Override
-    public Object convertToDisplayName(Object value, Records rec) {
+    public Object convertToPresent(Object value, Records rec) {
         throw new UnsupportedOperationException();
     }
 

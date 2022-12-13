@@ -1,0 +1,60 @@
+/*jframe*/
+.content-wrapper {
+    height: 100%;
+}
+.content-wrapper.jframe-mode .btn-jframe-close {
+    color: #dc3545;
+    position: absolute;
+    line-height: 1;
+    right: .125rem;
+    top: .125rem;
+    z-index: 10;
+    visibility: hidden;
+}
+.nav-link {
+    white-space: nowrap;
+}
+.content-wrapper.jframe-mode .navbar-nav .nav-item {
+    position: relative;
+}
+.content-wrapper.jframe-mode .navbar-nav .nav-item:hover .btn-jframe-close, .content-wrapper.jframe-mode .navbar-nav .nav-item:focus .btn-jframe-close {
+    -webkit-animation-name: fadeIn;
+    animation-name: fadeIn;
+    -webkit-animation-duration: 0.3s;
+    animation-duration: 0.3s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+    visibility: visible;
+}
+.content-wrapper.jframe-mode .tab-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: none;
+    background-color: #f4f6f9;
+}
+.content-wrapper.jframe-mode .tab-loading>div {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -ms-flex-align: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+/*jframe end*/
+
+.navbar-light .navbar-nav .nav-link.active {
+    border-top: solid 3px transparent;
+    border-bottom: solid 3px #dc3545;
+}
+
+.nav-link {
+    border-top: solid 3px transparent;
+    border-bottom: solid 3px transparent;
+    padding: 0.3rem 1rem;
+}
+
+

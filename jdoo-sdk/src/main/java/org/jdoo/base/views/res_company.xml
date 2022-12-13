@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <view id='view_res_company_form' name='公司-表单' model='res.company'>
+        <form>
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="address"/>
+            <field name="parent_id"/>
+            <field name="child_ids" editor="many2many_tags"/>
+        </form>
+    </view>
+    <view id='view_res_company_form' key="edit" name='公司-表单' model='res.company'>
+        <form tree="1">
+            <toolbar buttons="default">
+            </toolbar>
+            <field name="name"/>
+            <field name="address"/>
+            <field name="parent_id" readonly="1" link="0"/>
+        </form>
+    </view>
+</data>

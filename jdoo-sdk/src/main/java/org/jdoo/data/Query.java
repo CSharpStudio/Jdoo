@@ -152,6 +152,16 @@ public class Query {
                 : cr.quote(tables.keySet().stream().findFirst().get()) + ".id");
     }
 
+    public SelectClause subSelect(String... selects) {
+        return doSubSelect(selects.length > 0 ? StringUtils.join(selects, ",")
+                : cr.quote(tables.keySet().stream().findFirst().get()) + ".id");
+    }
+
+    public SelectClause subSelect(Collection<String> selects) {
+        return doSubSelect(selects != null && selects.size() > 0 ? StringUtils.join(selects, ",")
+                : cr.quote(tables.keySet().stream().findFirst().get()) + ".id");
+    }
+
     SelectClause doSelect(String selects) {
         SqlClause sql = getSql();
         String queryStr = String.format("SELECT %s FROM %s", selects, sql.getFrom());
@@ -160,6 +170,21 @@ public class Query {
         }
         if (StringUtils.isNotEmpty(order)) {
             queryStr += " ORDER BY " + order;
+        }
+        queryStr = cr.getSqlDialect().getPaging(queryStr, limit, offset);
+        return new SelectClause(queryStr, sql.getParams());
+    }
+
+    SelectClause doSubSelect(String selects) {
+        // 有分页时需要排序
+        if ((limit != null && limit > 0) || (offset != null && offset > 0)) {
+            return doSelect(selects);
+        }
+        // 不需要排序
+        SqlClause sql = getSql();
+        String queryStr = String.format("SELECT %s FROM %s", selects, sql.getFrom());
+        if (StringUtils.isNotEmpty(sql.getWhere())) {
+            queryStr += " WHERE " + sql.getWhere();
         }
         queryStr = cr.getSqlDialect().getPaging(queryStr, limit, offset);
         return new SelectClause(queryStr, sql.getParams());

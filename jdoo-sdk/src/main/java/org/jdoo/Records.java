@@ -63,7 +63,7 @@ public class Records implements Iterable<Records> {
     /** 获取id, 当前记录集必需有且只有一条记录 */
     public String getId() {
         if (!any()) {
-            return "";
+            return null;
         }
         ensureOne();
         return ids[0];
@@ -110,13 +110,13 @@ public class Records implements Iterable<Records> {
         return withEnv(new Environment(env.getRegistry(), env.getCursor(), env.getUserId(), context));
     }
 
-    public Records withContext(Map<String, ? extends Object> ctx) {
+    public Records withContext(Map<String, Object> ctx) {
         Map<String, Object> context = new HashMap<>(env.getContext());
         context.putAll(ctx);
         return withEnv(new Environment(env.getRegistry(), env.getCursor(), env.getUserId(), context));
     }
 
-    public Records withNewContext(Map<String, ? extends Object> ctx) {
+    public Records withNewContext(Map<String, Object> ctx) {
         Map<String, Object> context = new HashMap<>(ctx);
         return withEnv(new Environment(env.getRegistry(), env.getCursor(), env.getUserId(), context));
     }
@@ -138,6 +138,16 @@ public class Records implements Iterable<Records> {
     public Object get(String field) {
         MetaField f = getMeta().getField(field);
         return f.get(this);
+    }
+
+    /**
+     * 获取关系字段（RelationalField）的数据集
+     * 
+     * @param field Many2many/Many2one/One2many类型的字段名
+     * @return
+     */
+    public Records getRel(String field) {
+        return (Records) get(field);
     }
 
     /**
@@ -177,7 +187,6 @@ public class Records implements Iterable<Records> {
         try {
             return meta.invoke(method, getArgs(args));
         } catch (Exception e) {
-            e.printStackTrace();
             throw new ModelException(String.format("模型[%s]调用方法[%s]失败", meta.getName(), method), e);
         }
     }
@@ -186,7 +195,6 @@ public class Records implements Iterable<Records> {
         try {
             return meta.invokeSupper(current, method, getArgs(args));
         } catch (Exception e) {
-            e.printStackTrace();
             throw new ModelException(String.format("模型[%s]调用方法[%s]失败", meta.getName(), method), e);
         }
     }
@@ -213,27 +221,27 @@ public class Records implements Iterable<Records> {
         return result;
     }
 
-    public Records create(Map<String, ? extends Object> values) {
+    public Records create(Map<String, Object> values) {
         return (Records) call("create", this, values);
     }
 
-    public Records createBatch(List<? extends Map<String, ? extends Object>> valuesList) {
+    public Records createBatch(List<Map<String, Object>> valuesList) {
         return (Records) call("createBatch", this, valuesList);
     }
 
     @SuppressWarnings("unchecked")
-    public List<Map<String, Object>> read(List<String> fields) {
+    public List<Map<String, Object>> read(Collection<String> fields) {
         return (List<Map<String, Object>>) call("read", this, fields);
     }
 
     @SuppressWarnings("unchecked")
-    public List<Map<String, Object>> search(List<String> fields, Criteria criteria, Integer offset,
+    public List<Map<String, Object>> search(Collection<String> fields, Criteria criteria, Integer offset,
             Integer limit, String order) {
         return (List<Map<String, Object>>) call("search", this, fields, criteria, offset, limit, order);
     }
 
     @SuppressWarnings("unchecked")
-    public List<Map<String, Object>> search(List<String> fields, Criteria criteria) {
+    public List<Map<String, Object>> search(Collection<String> fields, Criteria criteria) {
         return (List<Map<String, Object>>) call("search", this, fields, criteria, 0, 0, null);
     }
 
@@ -249,11 +257,11 @@ public class Records implements Iterable<Records> {
         return (Long) call("count", this, criteria);
     }
 
-    public void load(Map<String, ? extends Object> values) {
+    public void load(Map<String, Object> values) {
         call("load", this, values);
     }
 
-    public void update(Map<String, ? extends Object> values) {
+    public void update(Map<String, Object> values) {
         call("update", this, values);
     }
 

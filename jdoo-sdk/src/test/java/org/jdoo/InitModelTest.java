@@ -20,7 +20,7 @@ public class InitModelTest {
         builder.buildModel(reg, A.class, "");
         Cursor cr = TestCursor.open();
         reg.setupModels(cr);
-        reg.initModels(cr, reg.getModels().keySet());
+        //reg.initModels(cr, reg.getModels().keySet(), true);
         //cr.commit();
     }
 }

@@ -7,15 +7,47 @@ import java.lang.annotation.Target;
 
 import org.jdoo.annotation.ModelServices;
 import org.jdoo.annotation.ModelUniqueConstraints;
+import org.jdoo.core.BaseModel;
 
 import java.lang.annotation.Repeatable;
 
 /**
- * 模型
+ * 模型基类
+ * <blockquote>
+ * 
+ * <pre>
+ * 最简单的情况下，构建后的模型'继承'自平面层次结构中定义的模型
+ *
+ *   {@code @}Sdk.Model(name="a")                             Model
+ *   {@code }class A1 extends Model{ }                        / | \
+ *   {@code }                                                A3 A2 A1
+ *   {@code @}Sdk.Model(name="a", inherit="a")                \ | /
+ *   {@code }class A2 extends Model{ }                       MetaModel
+ *   {@code }                                                 /   \
+ *   {@code @}Sdk.Model(name="a", inherit="a")            model   RecordSet
+ *   {@code }class A3 extends Model{ }
+ *
+ * 当一个模型被'inherit'扩展时，它的基类被修改包含当前类和其他继承的模型类。
+ * 注意，模型实际是继承自其它构建好的模型，所以被继承的模型有扩展时，都会解析到到子模型
+ *
+ *   {@code @}Sdk.Model(name="a")
+ *   {@code }class A1 extends Model{ }                         Model
+ *   {@code }                                                 / / \ \
+ *   {@code @}Sdk.Model(name="b")                            / A2 A1 \
+ *   {@code }class B1 extends Model{ }                      /   \ /   \
+ *   {@code }                                              B2  ModelA  B1
+ *   {@code @}Sdk.Model(name="b", inherit={"a","b"})        \    |    /
+ *   {@code }class B2 extends Model{ }                       \   |   /
+ *   {@code }                                                 \  |  /
+ *   {@code @}Sdk.Model(name="a", inherit="a")                 ModelB
+ *   {@code }class A2 extends Model{ }
+ * </pre>
+ * 
+ * </blockquote>
  * 
  * @author lrz
  */
-public class Model extends AbstractModel {
+public class Model extends BaseModel {
     public Model() {
         isAuto = true;
         isAbstract = false;
@@ -37,6 +69,13 @@ public class Model extends AbstractModel {
          * @return
          */
         String label() default "";
+
+        /**
+         * 授权模型的名称，权限码read按此模型判断权限，角色权限配置时与此模型一起显示
+         * 
+         * @return
+         */
+        String authModel() default "";
 
         /**
          * 模型的描述(可选)
@@ -67,12 +106,12 @@ public class Model extends AbstractModel {
         String order() default "";
 
         /**
-         * 记录呈现的字段名(可选)
+         * 记录展示的字段名(可选)
          */
         String[] present() default {};
 
         /**
-         * 记录呈现的格式化
+         * 记录展示的格式化，使用{}限定字段，如:{code}-{name}
          */
         String presentFormat() default "";
 
@@ -120,11 +159,11 @@ public class Model extends AbstractModel {
         Class<?> type() default Void.class;
 
         /**
-         * 移除的服务名称, 指定移除时，其它参数失效
+         * 移除的服务名称, 指定移除时，其它参数将失效，使用@all移除所有服务
          * 
          * @return
          */
-        String remove() default "";
+        String[] remove() default {};
     }
 
     @Target(ElementType.METHOD)
@@ -200,6 +239,6 @@ public class Model extends AbstractModel {
          * 
          * @return
          */
-        String[] value();
+        String[] value() default {};
     }
 }

@@ -1,0 +1,247 @@
+.studio-designer {
+    height: 100%
+}
+
+.studio-designer .tab-panel {
+    height: 100%;
+}
+
+.studio-designer .left-box {
+    float: left;
+    width: 240px;
+    height: inherit;
+    overflow: auto;
+}
+
+.studio-designer .menu-head {
+    height: 42px;
+    padding: 8px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.studio-designer .menu-extender {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.studio-designer .menu-panel {
+    height: calc(100% - 81px);
+    overflow: auto;
+}
+
+.studio-designer .main-box {
+    overflow: auto;
+    height: 100%;
+    border-left: 1px solid #dee2e6;
+}
+
+.studio-designer .main-box .tab-content {
+    height: calc(100% - 48px);
+}
+
+.studio-designer .main-box .tab-pane {
+    height: 100%;
+}
+
+.studio-designer .tab-header .nav-link.active {
+    border-bottom: solid 3.6px #dc3545;
+    padding-bottom: 0.4rem;
+}
+
+.studio-designer .tab-header .nav-link {
+    border: 0px;
+}
+
+.view-designer {
+    height: 100%;
+}
+
+.view-designer .tool-bar {
+    margin: 4px;
+}
+
+.view-designer .left-box,
+.view-designer .main-box {
+    height: calc(100% - 33px);
+    border-top: 1px solid #dee2e6;
+}
+
+.view-designer .left-box {
+    padding: 3px;
+}
+
+.view-designer .main-box {
+    overflow: auto;
+    border-left: 1px solid #dee2e6;
+}
+
+.field-tools .group-head {
+    grid-column: span 2;
+    margin: 2px;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.field-tools .items-layout,
+.field-tools .items-field {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.studio-component {
+    position: relative;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: top;
+    width: calc(100% - 10px);
+    height: 32px;
+    position: relative;
+    margin: 0 0 2px 5px;
+    max-width: 130px;
+    border-radius: 2px;
+    background-color: #eaeaea;
+    color: #262c34;
+    border: gray solid 1px;
+    cursor: move;
+    font: bold 11px/2.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+.studio-component:before {
+    width: 33px;
+    height: 150%;
+    display: block;
+    float: left;
+    margin: -3px 5px 0 0;
+    border-right: 1px solid #a0abb9;
+    background-color: #dddddd;
+    content: "";
+}
+
+.studio-component:after {
+    background-image: url(/res/com/addons/studio/statics/img/studio_icons.png);
+    background-repeat: no-repeat;
+    content: '';
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    top: 5px;
+    left: 6px;
+    bottom: auto;
+    right: auto;
+}
+
+.studio-component .description {
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: top;
+    padding: 2px;
+    background: white;
+    font-size: 10px;
+}
+
+.studio-component-dragging {
+    width: 110px;
+    transform: rotate(-5deg);
+    box-shadow: 0 5px 25px -10px black;
+    transition: transform 0.6s, box-shadow 0.3s;
+    z-index: 1050;
+    cursor: move;
+}
+
+.studio-field-tabs:after {
+    background-position: 0 -300px;
+}
+
+.studio-field-group:after {
+    background-position: 0 -60px;
+}
+
+.studio-field-char:after {
+    background-position: 0 -40px;
+}
+
+.studio-field-text:after {
+    background-position: 0 -340px;
+}
+
+.studio-field-integer:after {
+    background-position: 0 -180px;
+}
+
+.studio-field-float:after {
+    background-position: 0 -120px;
+}
+
+.studio-field-date:after {
+    background-position: 0 -80px;
+}
+
+.studio-field-datetime:after {
+    background-position: 0 -100px;
+}
+
+.studio-field-boolean:after {
+    background-position: 0 -20px;
+}
+
+.studio-field-selection:after {
+    background-position: 0 -280px;
+}
+
+.studio-field-binary:after {
+    background-position: 0 0;
+}
+
+.studio-field-many2one:after {
+    background-position: 0 -220px;
+}
+
+.studio-field-one2many:after {
+    background-position: 0 -260px;
+}
+
+.studio-field-many2many:after {
+    background-position: 0 -200px;
+}
+
+.studio-field-image:after {
+    background-position: 0 -160px;
+}
+
+.studio-field-tags:after {
+    background-position: 0 -320px;
+}
+
+.studio-field-priority:after {
+    background-position: 0 -380px;
+}
+
+.studio-field-related:after {
+    background-position: 0 -400px;
+}
+
+.draggable-over {
+    border: #017e84 solid 2px;
+}
+
+.form-hook div {
+    border: #017e84 dotted 2px;
+    height: 70px;
+    padding: 10px;
+}
+
+.form-field {
+    border: transparent solid 2px;
+}
+
+.form-field.selected {
+    border: #017e84 solid 2px;
+}
+
+.form-field .tools {
+    font-size: small;
+}

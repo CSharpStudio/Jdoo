@@ -24,6 +24,7 @@ public class KvMap implements Map<String, Object> {
         return empty;
     }
 
+    /** */
     public KvMap() {
         data = new HashMap<>();
     }

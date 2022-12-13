@@ -6,5 +6,6 @@
     },
     "java.help.shareDiagnostics": true,
     "maven.view": "hierarchical",
-    "java.inlayHints.parameterNames.enabled": "none"
+    "java.inlayHints.parameterNames.enabled": "none",
+    "java.compile.nullAnalysis.mode": "automatic"
 }

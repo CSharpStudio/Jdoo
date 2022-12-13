@@ -5,10 +5,7 @@ package org.jdoo.exceptions;
  * 
  * @author lrz
  */
-public class TypeException extends RuntimeException {
-
-    public TypeException() {
-    }
+public class TypeException extends PlatformException {
 
     public TypeException(Throwable cause) {
         super(cause);
@@ -20,5 +17,21 @@ public class TypeException extends RuntimeException {
 
     public TypeException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public TypeException(int errorCode) {
+        super(errorCode);
+    }
+
+    public TypeException(Throwable cause, int errorCode) {
+        super(cause, errorCode);
+    }
+
+    public TypeException(String message, int errorCode) {
+        super(message, errorCode);
+    }
+
+    public TypeException(String message, Throwable cause, int errorCode) {
+        super(message, cause, errorCode);
     }
 }

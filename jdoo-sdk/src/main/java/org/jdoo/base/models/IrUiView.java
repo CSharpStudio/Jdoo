@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -14,42 +15,51 @@ import org.jdoo.*;
 import org.jdoo.core.Constants;
 import org.jdoo.core.Environment;
 import org.jdoo.core.MetaField;
+import org.jdoo.core.MetaModel;
 import org.jdoo.exceptions.UserException;
+import org.jdoo.fields.SelectionField;
 import org.jdoo.util.KvMap;
 import org.jdoo.utils.ArrayUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@Model.Meta(name = "ir.ui.view", description = "视图", order = "priority, name, id")
+/**
+ * UI视图
+ * 
+ * @author lrz
+ */
+@Model.Meta(name = "ir.ui.view", label = "视图", order = "priority, name, id")
 public class IrUiView extends Model {
     static Field name = Field.Char().label("视图名称").required();
-    static Field model = Field.Char().index();
-    static Field key = Field.Char();
-    static Field priority = Field.Integer().label("顺序").defaultValue(Default.value(16)).required();
-    static Field type = Field.Selection().label("视图类型").selection(Selection.value(new HashMap<String, String>() {
+    static Field model = Field.Char().label("模型").help("没指定模型的视图直接通过识别码加载").index();
+    static Field key = Field.Char().label("识别码").help("用于区分视图组");
+    static Field priority = Field.Integer().label("顺序").defaultValue(16).required();
+    static Field type = Field.Selection().label("视图类型").selection(new HashMap<String, String>() {
         {
             put("grid", "表格");
             put("form", "表单");
             put("card", "卡片");
             put("search", "查询");
+            put("custom", "自定义");
             put("resource", "资源");
             put("web", "页面");
         }
-    }));
+    });
     static Field arch = Field.Text().label("视图结构");
     static Field inherit_id = Field.Many2one("ir.ui.view").label("继承视图");
-    static Field mode = Field.Selection().label("视图继承模式").selection(Selection.value(new HashMap<String, String>() {
+    static Field mode = Field.Selection().label("视图继承模式").selection(new HashMap<String, String>() {
         {
             put("primary", "基础视图");
             put("extension", "扩展视图");
         }
-    })).defaultValue(Default.value("primary")).required();
-    static Field active = Field.Boolean().defaultValue(Default.value(true));
+    }).defaultValue("primary").required();
+    static Field active = Field.Boolean().label("是否有效").defaultValue(true);
 
     public String loadWeb(Records rec, String key) {
         Records views = rec.find(Criteria.equal("key", key), 0, 0, "");
@@ -66,12 +76,17 @@ public class IrUiView extends Model {
         if (primary == null) {
             throw new UserException(rec.l10n("找不到视图:%s", key));
         }
-        Document doc = Jsoup.parse((String) primary.get("arch"));
+        Document doc = Jsoup.parse((String) primary.get("arch"), Parser.xmlParser());
         Elements base = doc.children();
         for (Records ext : extension) {
-            Document arch = Jsoup.parse((String) ext.get("arch"));
+            Document arch = Jsoup.parse((String) ext.get("arch"), Parser.xmlParser());
             Elements data = getData(arch);
             combined(base, data);
+        }
+        if (rec.getEnv().isDebug()) {
+            doc.select("[debug=false]").remove();
+        } else {
+            doc.select("[debug=true]").remove();
         }
         // dom4j无法解析<!DOCTYPE>
         return "<!DOCTYPE html>\r\n" + doc.toString();
@@ -89,11 +104,18 @@ public class IrUiView extends Model {
         Map<String, Map<String, Object>> result = new HashMap<>();
         Records rec = env.get(model);
         ObjectMapper m = new ObjectMapper();
+        Set<String> deny = (Set<String>) env.get("rbac.permission").call("loadModelDenyFields", model);
         for (Entry<String, MetaField> e : rec.getMeta().getFields().entrySet()) {
             try {
                 MetaField field = e.getValue();
                 Map<String, Object> data = (Map<String, Object>) m.treeToValue(m.valueToTree(field), Map.class);
                 data.put("defaultValue", field.getDefault(rec));
+                if (field instanceof SelectionField) {
+                    data.put("options", ((SelectionField) field).getOptions(rec));
+                }
+                if (deny.contains(field.getName())) {
+                    data.put("deny", true);
+                }
                 result.put(field.getName(), data);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -104,15 +126,19 @@ public class IrUiView extends Model {
 
     @Model.ServiceMethod(records = false, doc = "加载视图", auth = Constants.ANONYMOUS)
     @Doc(doc = "视图配置", value = "{\"model\":\"\",\"fields\":[],\"views\":[]}")
-    public Object loadView(Records rec, @Doc(doc = "模型名称") String model, @Doc(doc = "视图类型") String type) {
+    public Object loadView(Records rec, @Doc(doc = "模型名称") String model, @Doc(doc = "视图类型") String type,
+            @Doc(doc = "视图组") String key) {
         List<String> types = ArrayUtils.asList(type.split(","));
         types.add("resource");
         if (types.contains("grid") || types.contains("card")) {
             types.add("search");
         }
-        Records datas = rec.find(Criteria.equal("model", model).and("type", "in", types), 0, 0, "");
+        Records datas = rec.find(Criteria.equal("model", model).and("type", "in", types).and("key", "=", key));
+        MetaModel meta = rec.getEnv().getRegistry().get(model);
         KvMap result = new KvMap();
         result.put("model", model);
+        result.put("module", meta.getModule());
+        result.put("present", meta.getPresent());
         Object auths = rec.getEnv().isAdmin() ? "@all"
                 : rec.getEnv().get("rbac.permission").call("loadModelAuths", model);
         result.put("auths", auths);
@@ -131,14 +157,23 @@ public class IrUiView extends Model {
                         .filter(v -> t.equals(v.get("type")) && "extension".equals(v.get("mode")))
                         .collect(Collectors.toList());
 
-                Document doc = Jsoup.parse((String) primary.get().get("arch"));
-                Elements base = doc.body().children();
+                Document doc = Jsoup.parse((String) primary.get().get("arch"), Parser.xmlParser());
+                Elements base = doc.children();
                 for (Records ext : extension) {
-                    Document arch = Jsoup.parse((String) ext.get("arch"));
+                    Document arch = Jsoup.parse((String) ext.get("arch"), Parser.xmlParser());
                     Elements data = getData(arch);
                     combined(base, data);
                 }
-                result.put(t, base.get(0).children().toString());
+                if (rec.getEnv().isDebug()) {
+                    base.select("[debug=false]").remove();
+                } else {
+                    base.select("[debug=true]").remove();
+                }
+                if (base.size() == 1 && "resource".equals(base.get(0).tagName())) {
+                    result.put(t, base.html());
+                } else {
+                    result.put(t, base.toString());
+                }
             } else {
                 KvMap view = new KvMap();
                 Optional<Records> primary = datas.stream()
@@ -155,12 +190,17 @@ public class IrUiView extends Model {
                             .filter(v -> t.equals(v.get("type")) && "extension".equals(v.get("mode")))
                             .collect(Collectors.toList());
 
-                    Document doc = Jsoup.parse((String) primary.get().get("arch"));
-                    Elements base = doc.body().children();
+                    Document doc = Jsoup.parse((String) primary.get().get("arch"), Parser.xmlParser());
+                    Elements base = doc.children();
                     for (Records ext : extension) {
-                        Document arch = Jsoup.parse((String) ext.get("arch"));
+                        Document arch = Jsoup.parse((String) ext.get("arch"), Parser.xmlParser());
                         Elements data = getData(arch);
                         combined(base, data);
+                    }
+                    if (rec.getEnv().isDebug()) {
+                        base.select("[debug=false]").remove();
+                    } else {
+                        base.select("[debug=true]").remove();
                     }
                     view.put("arch", base.toString());
                     view.put("view_id", primary.get().getId());
@@ -232,11 +272,11 @@ public class IrUiView extends Model {
     }
 
     Elements getData(Document doc) {
-        for (Element el : doc.body().children()) {
+        for (Element el : doc.children()) {
             if ("data".equals(el.tagName())) {
                 return el.children();
             }
         }
-        return doc.body().children();
+        return doc.children();
     }
 }

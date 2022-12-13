@@ -13,7 +13,7 @@ import org.jdoo.tenants.TenantService;
  *
  * @author
  */
-@Model.Meta(name = "ir.tenant", description = "租户")
+@Model.Meta(name = "ir.tenant", label = "租户")
 public class IrTenant extends Model {
     static Field name = Field.Char().label("名称");
     static Field tenant = Field.Char().label("租户");

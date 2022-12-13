@@ -25,6 +25,7 @@ import org.jdoo.tenants.Tenant;
 import org.jdoo.tenants.TenantService;
 import org.jdoo.util.KvMap;
 import org.jdoo.utils.HttpUtils;
+import org.jdoo.utils.StringUtils;
 import org.jdoo.utils.ThrowableUtils;
 
 import org.springframework.web.bind.annotation.PathVariable;
@@ -66,6 +67,11 @@ public class ApiController {
         appendLine(sb, "        <a><span>");
         appendLine(sb, model.getDescription());
         appendLine(sb, "        </span></a>");
+        if (StringUtils.isNotEmpty(model.getAuthModel())) {
+            appendLine(sb, "        <a><span title='当前模型的read权限将使用授权模型的read权限'>(授权模型:");
+            appendLine(sb, model.getAuthModel());
+            appendLine(sb, "        )</span></a>");
+        }
         appendLine(sb, "        <small></small>");
         appendLine(sb, "        <button class='expand-operation'>");
         appendLine(sb, "            <span class='arrow'>\u25e5</span>");
@@ -185,9 +191,10 @@ public class ApiController {
         appendLine(sb, "        <button class='opblock-summary-control'>");
         appendLine(sb, "            <span class='opblock-summary-method'>");
         appendLine(sb, svc.getName());
+        appendLine(sb, "(权限码:" + svc.getAuth() + ")");
         appendLine(sb, "            </span>");
         appendLine(sb, "            <div class='opblock-summary-description'><span>");
-        appendLine(sb, svc.getDescription());
+        appendLine(sb, svc.getLabel());
         appendLine(sb, "            </span></div>");
         appendLine(sb, "            <span class='arrow'>\u25e2</span>");
         appendLine(sb, "        </button>");
@@ -195,15 +202,19 @@ public class ApiController {
         appendLine(sb, "    <div class='opblock-body' style='display:none'>");
         appendLine(sb, "        <div class='request-wrapper'>");
         appendLine(sb, "            <div class='opblock-section-header'>");
-        appendLine(sb, "                <h4>Args</h4>");
+        appendLine(sb, "                <h4 style='flex: unset;'>说明：</h4>");
+        appendLine(sb, svc.getDescription());
+        appendLine(sb, "            </div>");
+        appendLine(sb, "            <div class='opblock-section-header'>");
+        appendLine(sb, "                <h4>参数</h4>");
         appendLine(sb, "            </div>");
         addArgs(sb, args);
         appendLine(sb, "            <div class='opblock-section-header'>");
-        appendLine(sb, "                <h4>Result</h4>");
+        appendLine(sb, "                <h4>结果</h4>");
         appendLine(sb, "            </div>");
         addResult(sb, result);
         appendLine(sb, "            <div class='opblock-section-header'>");
-        appendLine(sb, "                <h4>Request</h4>");
+        appendLine(sb, "                <h4>请求</h4>");
         appendLine(sb, "                <div class='try-out'>");
         appendLine(sb, "                    <button id='" + tenant + "-" + model.getName().replace(".", "_") + "-"
                 + svc.getName() + "' class='try-btn try-out-btn'>试一试</button>");
@@ -225,7 +236,7 @@ public class ApiController {
         appendLine(sb, "        </div>");
         appendLine(sb, "        <div class='responses-wrapper'>");
         appendLine(sb, "            <div class='opblock-section-header'>");
-        appendLine(sb, "                <h4>Response</h4>");
+        appendLine(sb, "                <h4>响应</h4>");
         appendLine(sb, "            </div>");
         appendLine(sb, "            <div class='try-code' style='display:none'>");
         appendLine(sb,
@@ -265,7 +276,9 @@ public class ApiController {
                     } else {
                         Matcher m = p.matcher(value);
                         while (m.find()) {
-                            value = value.replace(m.group(), "<span class='strval'>" + m.group() + "</span>");
+                            if (value != null) {
+                                value = value.replace(m.group(), "<span class='strval'>" + m.group() + "</span>");
+                            }
                         }
                     }
                     sb.append(value);
@@ -295,7 +308,9 @@ public class ApiController {
                     } else {
                         Matcher m = p.matcher(value);
                         while (m.find()) {
-                            value = value.replace(m.group(), "<span class='strval'>" + m.group() + "</span>");
+                            if (value != null) {
+                                value = value.replace(m.group(), "<span class='strval'>" + m.group() + "</span>");
+                            }
                         }
                     }
                     sb.append(value);
@@ -404,10 +419,10 @@ public class ApiController {
         appendLine(sb, "    <head>");
         appendLine(sb, "        <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>");
         appendLine(sb, "        <title>API Document</title>");
-        appendLine(sb, "        <script src='/jdoo/addons/api/statics/js/jquery-1.4.4.min.js'></script>");
-        appendLine(sb, "        <script src='/jdoo/addons/api/statics/js/api-doc.js'></script>");
+        appendLine(sb, "        <script src='/res/jdoo/addons/api/statics/js/jquery-1.4.4.min.js'></script>");
+        appendLine(sb, "        <script src='/res/jdoo/addons/api/statics/js/api-doc.js'></script>");
         appendLine(sb,
-                "        <link rel='stylesheet' type='text/css' href='/jdoo/addons/api/statics/style/api-doc.css'>");
+                "        <link rel='stylesheet' type='text/css' href='/res/jdoo/addons/api/statics/style/api-doc.css'>");
         appendLine(sb, "    </head>");
         appendLine(sb, "    <body>");
         appendLine(sb, "        <script>var tenant='%s'</script>", tenant);
@@ -431,7 +446,8 @@ public class ApiController {
         appendLine(sb, "                </tr>");
         appendLine(sb, "            </table>");
         appendLine(sb, "        </div>");
-        appendLine(sb, "        <div style='display: flex;flex-direction: column;align-items: flex-end;'><button name='collapse_all' class='try-btn'>折叠所有</button></div>");
+        appendLine(sb,
+                "        <div style='display: flex;flex-direction: column;align-items: flex-end;'><button name='collapse_all' class='try-btn'>折叠所有</button></div>");
 
         registry.getModels().values().stream().filter(m -> !m.isAbstract())
                 .sorted((x, y) -> x.getName().compareTo(y.getName())).forEach(model -> addModel(sb, tenant, model));

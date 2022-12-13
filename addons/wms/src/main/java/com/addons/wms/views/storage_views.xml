@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data>
-    <menu id="menu_wms" name="仓库管理" model="wms.storage" view="grid,form" icon="/org/jdoo/base/statics/img/modules.png"/>
+    <menu id="menu_wms" name="仓库管理" model="wms.storage" view="grid,form" icon="/res/org/jdoo/base/statics/img/modules.png"/>
 
     <view id='view_wms_storage_search' name='仓库查询' model='wms.storage'>
         <search>

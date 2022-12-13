@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+    <record id="demo.category1" model="demo.category">
+        <field name="name">语文</field>
+        <field name="sumary">文学</field>
+    </record>
+    <record id="demo.category2" model="demo.category">
+        <field name="name">数学</field>
+        <field name="sumary">理学</field>
+    </record>
+    <record id="demo.category3" model="demo.category">
+        <field name="name">英文</field>
+        <field name="sumary">文学</field>
+    </record>
+
+    <record id="demo.book1" model="demo.book">
+        <field name="name">一年级语文</field>
+        <field name="category_id" eval="ref(demo.category1)"/>
+    </record>
+    <record id="demo.book2" model="demo.book">
+        <field name="name">一年级数学</field>
+        <field name="category_id" eval="ref(demo.category2)"/>
+    </record>
+    <record id="demo.book3" model="demo.book">
+        <field name="name">一年级英文</field>
+        <field name="category_id" eval="ref(demo.category3)"/>
+    </record>
+</data>

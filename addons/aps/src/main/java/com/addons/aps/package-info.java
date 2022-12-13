@@ -1,4 +1,4 @@
-@org.jdoo.Manifest(name = "aps", depends = "mom", category = "Manufacture", summary = "高级计划排程", models = {
+@org.jdoo.Manifest(name = "aps", depends = "mom", category = "Manufacture", label = "高级计划排程", models = {
         Item.class,
         PlanTask.class
 }, data = {

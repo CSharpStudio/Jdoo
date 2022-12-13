@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 import org.jdoo.*;
 import org.jdoo.core.CustomModel;
@@ -17,14 +16,14 @@ import org.jdoo.core.ModelBuilder;
 import org.jdoo.core.Registry;
 import org.jdoo.data.Cursor;
 import org.jdoo.util.KvMap;
-import org.jdoo.utils.IdWorker;
 
 /**
  * 模型元数据
  *
  * @author
  */
-@Model.Meta(name = "ir.model", description = "模型元数据")
+@Model.Meta(name = "ir.model", label = "模型元数据")
+@Model.UniqueConstraint(name = "unique_model", fields = "model")
 public class IrModel extends Model {
 	static Field name = Field.Char().label("名称").index(true).required(true);
 	static Field model = Field.Char().label("模型").index(true).required(true);
@@ -37,18 +36,18 @@ public class IrModel extends Model {
 	static Field model_class = Field.Char().label("类").help("对应代码的类");
 	static Field field_ids = Field.One2many("ir.model.field", "model_id").label("字段");
 	static Field module_id = Field.Many2one("ir.module");
-	static Field state = Field.Selection().label("状态").selection(Selection.value(new HashMap<String, String>() {
+	static Field origin = Field.Selection().label("来源").selection(new HashMap<String, String>() {
 		{
-			put("base", "Base");
-			put("manual", "Manual");
+			put("base", "内置");
+			put("manual", "自定义");
 		}
-	})).defaultValue(Default.value("manual"));
+	}).defaultValue("manual").readonly();
 
 	public void addManualModels(Records rec) {
 		Cursor cr = rec.getEnv().getCursor();
-		cr.execute("SELECT * FROM ir_model WHERE state=%s", Arrays.asList("manual"));
+		cr.execute("SELECT * FROM ir_model WHERE origin=%s", Arrays.asList("manual"));
 		ModelBuilder builder = ModelBuilder.getBuilder();
-		for (KvMap data : cr.fetchMapAll()) {
+		for (Map<String, Object> data : cr.fetchMapAll()) {
 			String name = (String) data.get("model");
 			String label = (String) data.get("name");
 			String desc = (String) data.get("description");
@@ -63,7 +62,7 @@ public class IrModel extends Model {
 		}
 	}
 
-	public void reflectModels(Records rec, Collection<String> modelNames) {
+	public void reflectModels(Records rec, Collection<String> modelNames, String module) {
 		Registry reg = rec.getEnv().getRegistry();
 		Map<String, Map<String, Object>> expected = new HashMap<>(16);
 		Set<String> cols = null;
@@ -77,34 +76,48 @@ public class IrModel extends Model {
 				cols = meta.keySet();
 			}
 		}
-		Cursor cr = rec.getEnv().getCursor();
-		String colNames = cols.stream().map(c -> cr.quote(c)).collect(Collectors.joining(","));
-		String sql = String.format("SELECT %s, id FROM ir_model WHERE model IN %%s", colNames);
-		cr.execute(sql, Arrays.asList(models));
-		List<KvMap> rows = cr.fetchMapAll();
+		if (cols == null) {
+			return;
+		}
+		List<Map<String, Object>> rows = search(rec, cols, Criteria.in("model", models), null, null, null);
 		Map<String, Map<String, Object>> existing = new HashMap<>();
-		for (KvMap kv : rows) {
+		Map<String, String> modelIds = new HashMap<>();
+		for (Map<String, Object> kv : rows) {
 			Map<String, Object> m = new HashMap<>(kv);
-			m.remove("id");
-			existing.put((String) kv.get("model"), m);
+			String model = (String) kv.get("model");
+			modelIds.put(model, (String) m.remove("id"));
+			existing.put(model, m);
 		}
 		for (Entry<String, Map<String, Object>> e : expected.entrySet()) {
 			Map<String, Object> exist = existing.get(e.getKey());
-			List<Object> values = new ArrayList<>();
-			Map<String, Object> v = e.getValue();
-			for (String col : cols) {
-				values.add(v.get(col));
-			}
-			if (exist == null) {
-				String params = "%s," + cols.stream().map(c -> "%s").collect(Collectors.joining(","));
-				String insert = String.format("INSERT INTO ir_model(%s,id) values (%s)", colNames, params);
-				values.add(IdWorker.nextId());
-				cr.execute(insert, values);
-			} else if (!e.getValue().equals(exist)) {
-				String sets = cols.stream().map(c -> cr.quote(c) + "=%s").collect(Collectors.joining(","));
-				String update = String.format("UPDATE ir_model SET %s WHERE model=%%s", sets);
-				values.add(e.getKey());
-				cr.execute(update, values);
+			Map<String, Object> values = e.getValue();
+			try {
+				String name = "model_" + e.getKey().replaceAll("\\.", "_");
+				if (exist == null) {
+					rec = create(rec, values);
+					rec.getEnv().get("ir.model.data").create(new KvMap()
+							.set("name", name)
+							.set("module", module)
+							.set("model", "ir.model")
+							.set("res_id", rec.getId()));
+
+				} else {
+					rec = rec.browse(modelIds.get(e.getKey()));
+					if (!e.getValue().equals(exist)) {
+						rec.update(values);
+					}
+					Records data = rec.getEnv().get("ir.model.data")
+							.find(Criteria.equal("module", module).and(Criteria.equal("name", name)));
+					if (!data.any()) {
+						data.create(new KvMap()
+								.set("name", name)
+								.set("module", module)
+								.set("model", "ir.model")
+								.set("res_id", rec.getId()));
+					}
+				}
+			} catch (Exception err) {
+				throw err;
 			}
 		}
 	}
@@ -112,10 +125,11 @@ public class IrModel extends Model {
 	public Map<String, Object> reflectModelParams(Records rec, MetaModel model) {
 		Map<String, Object> result = new HashMap<>(16);
 		result.put("model", model.getName());
-		result.put("name", model.getDescription());
+		result.put("name", model.getLabel());
+		result.put("description", model.getDescription());
 		result.put("order", model.getOrder());
 		// result.put("info", model.getName());
-		result.put("state", model.isCustom() ? "manual" : "base");
+		result.put("origin", model.isCustom() ? "manual" : "base");
 		result.put("is_transient", model.isTransient());
 		return result;
 	}
@@ -125,5 +139,86 @@ public class IrModel extends Model {
 		cr.execute("SELECT id FROM ir_model WHERE model=%s", Arrays.asList(name));
 		Object[] data = cr.fetchOne();
 		return data.length > 0 ? data[0] : null;
+	}
+
+	@ServiceMethod(auth = "update", doc = "生成默认视图")
+	public Object initDefaultViews(Records rec) {
+		Records view = rec.getEnv().get("ir.ui.view");
+		for (Records r : rec) {
+			String name = (String) r.get("name");
+			String model = (String) r.get("model");
+			Criteria criteria = Criteria.equal("model", model).and(Criteria.equal("mode", "primary"));
+			Records views = view.find(criteria);
+			List<Map<String, Object>> valuesList = new ArrayList<>();
+
+			if (!views.filter(v -> "grid".equals(v.get("type"))).any()) {
+				Map<String, Object> values = new HashMap<>(16);
+				values.put("name", name + "-表格");
+				values.put("model", model);
+				values.put("type", "grid");
+				values.put("mode", "primary");
+				values.put("arch", getGridArch(r));
+				valuesList.add(values);
+			}
+			if (!views.filter(v -> "form".equals(v.get("type"))).any()) {
+				Map<String, Object> values = new HashMap<>(16);
+				values.put("name", name + "-表单");
+				values.put("model", model);
+				values.put("type", "form");
+				values.put("mode", "primary");
+				values.put("arch", getFormArch(r));
+				valuesList.add(values);
+			}
+			if (!views.filter(v -> "search".equals(v.get("type"))).any()) {
+				Map<String, Object> values = new HashMap<>(16);
+				values.put("name", name + "-查询");
+				values.put("model", model);
+				values.put("type", "search");
+				values.put("mode", "primary");
+				values.put("arch", getSearchArch(r));
+				valuesList.add(values);
+			}
+			views.createBatch(valuesList);
+		}
+		return Action.reload("保存成功");
+	}
+
+	String getSearchArch(Records model) {
+		String arch = "<search>";
+		Records fields = (Records) model.get("field_ids");
+		for (Records field : fields) {
+			String fieldType = (String) field.get("field_type");
+			if (!fieldType.endsWith("many")) {
+				arch += "<field name='" + field.get("name") + "'>";
+			}
+		}
+		arch += "</search>";
+		return arch;
+	}
+
+	String getGridArch(Records model) {
+		String arch = "<grid><toolbar buttons='default'></toolbar>";
+		Records fields = (Records) model.get("field_ids");
+		for (Records field : fields) {
+			String fieldType = (String) field.get("field_type");
+			if (!fieldType.endsWith("many")) {
+				arch += "<field name='" + field.get("name") + "'>";
+			}
+		}
+		arch += "</grid>";
+		return arch;
+	}
+
+	String getFormArch(Records model) {
+		String arch = "<form><toolbar buttons='default'></toolbar>";
+		Records fields = (Records) model.get("field_ids");
+		for (Records field : fields) {
+			String fieldType = (String) field.get("field_type");
+			if (!fieldType.endsWith("many")) {
+				arch += "<field name='" + field.get("name") + "'/>";
+			}
+		}
+		arch += "</form>";
+		return arch;
 	}
 }

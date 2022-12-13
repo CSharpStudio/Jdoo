@@ -4,17 +4,19 @@
         <search>
             <field name="name"/>
             <field name="login"/>
+            <field name="active" default="true"/>
         </search>
     </view>
-    <view id='view_user_grid' name='用户-表格' type='grid' model='rbac.user'>
+    <view id='view_user_grid' name='用户-表格' model='rbac.user'>
         <grid>
             <toolbar buttons="default">
-                <button type="object" label="重置密码" service="resetPassword"/>
+                <button type="object" label="重置密码" t-enable="id" service="resetPassword"/>
             </toolbar>
             <field name="name"/>
             <field name="login"/>
             <field name="email"/>
             <field name="mobile"/>
+            <field name="active"/>
         </grid>
     </view>
     <view id='view_user_form' name='用户-表单' model='rbac.user'>
@@ -25,82 +27,160 @@
             <field name="login"/>
             <field name="email"/>
             <field name="mobile"/>
-            <field colspan="3" name="role_ids" nolabel="1">
-                <grid label="Views">
-                    <field name="name"/>
-                    <field name="is_admin"/>
-                </grid>
-            </field>
+            <field name="lang"/>
+            <field name="tz"/>
+            <field name="company_ids" editor="many2many_tags"/>
+            <field name="active"/>
+            <tabs>
+                <tab label="角色">
+                    <field colspan="4" name="role_ids" nolabel="1">
+                        <grid label="Views">
+                            <field name="name"/>
+                            <field name="is_admin"/>
+                        </grid>
+                    </field>
+                </tab>
+            </tabs>
+        </form>
+    </view>
+
+    <view id='view_user_personal_resource' key="personal" name='我的账号-资源' model='rbac.user'>
+        <resource>
+            <script src="/res/org/jdoo/base/statics/js/base/personal.js"></script>
+        </resource>
+    </view>
+    <view id='view_user_personal_form' key="personal" name='我的账号-表单' model='rbac.user'>
+        <form>
+            <toolbar buttons="none">
+                <a class="btn btn-info btn-save mr-1">保存</a>
+                <a class="btn btn-info btn-update-pwd">修改密码</a>
+            </toolbar>
+            <field name="name"/>
+            <field name="login" readonly="1"/>
+            <field name="email"/>
+            <field name="mobile"/>
+            <field name="lang"/>
+            <field name="tz"/>
+            <field name="company_ids" editor="many2many_tags" readonly="1"/>
+            <field name="company_id" t-reset="company_ids" search='[["id","in",this.company_ids]]'/>
         </form>
     </view>
 
     <view id='rbac_role_resource' name='角色-资源' model='rbac.role'>
         <resource>
-            <link rel="stylesheet" href="/org/jdoo/base/statics/css/role.css"></link>
-            <script src="/org/jdoo/base/statics/js/role.js"></script>
+            <link rel="stylesheet" href="/res/org/jdoo/base/statics/css/role.css"></link>
+            <script src="/res/org/jdoo/base/statics/js/base/role.js"></script>
         </resource>
     </view>
 
     <view id='view_role_search' name='角色-查询' model='rbac.role'>
         <search>
             <field name="name"/>
+            <field name="active" default="true"/>
         </search>
     </view>
 
     <view id='view_role_grid' name='角色-表格' type='grid' model='rbac.role'>
         <grid>
             <toolbar buttons="default">
-                <button type="object" auth="savePermission" label="权限" active="id" click="editPermission()"/>
+                <button type="object" name="setAdmin" label="设置为管理员" t-enable="id:this.is_admin===false" role="set-admin"/>
+                <button type="object" ref="setAdmin" auth="setAdmin" label="取消管理员" t-enable="id:this.is_admin" role="revoke-admin"/>
+                <button type="object" auth="savePermission" label="权限" t-enable="id:this.is_admin===false" role="edit-permission"/>
             </toolbar>
             <field name="name"/>
             <field name="is_admin"/>
+            <field name="active"/>
         </grid>
     </view>
 
     <view id='view_role_form' name='角色-表单' model='rbac.role'>
         <form>
             <toolbar buttons="default">
-                <button type="object" label="权限" click="editPermission()"/>
+                <button type="object" auth="savePermission" label="权限" t-enable="id:this.is_admin===false" role="edit-permission"/>
             </toolbar>
             <field name="name"/>
             <field name="is_admin" readonly="1"/>
-            <field colspan="3" name="user_ids" nolabel="1">
-                <grid label="Views">
-                    <field name="name"/>
-                    <field name="login"/>
-                    <field name="email"/>
-                    <field name="mobile"/>
-                </grid>
-            </field>
+            <field name="active"/>
+            <tabs>
+                <tab label="用户">
+                    <field colspan="4" name="user_ids" nolabel="1">
+                        <grid label="Views">
+                            <field name="name"/>
+                            <field name="login"/>
+                            <field name="email"/>
+                            <field name="mobile"/>
+                        </grid>
+                    </field>
+                </tab>
+            </tabs>
         </form>
     </view>
 
-    <view id='view_permission_search' name='权限-查询' model='rbac.permission'>
+    <view id='view_permission_search' name='权限码-查询' model='rbac.permission'>
         <search>
+            <field name="model"/>
             <field name="name"/>
             <field name="auth"/>
-            <field name="model"/>
+            <field name="type"/>
+            <field name="origin"/>
+            <field name="active" default="true"/>
         </search>
     </view>
 
-    <view id='view_permission_grid' name='权限-表格' type='grid' model='rbac.permission'>
+    <view id='view_permission_grid' name='权限码-表格' type='grid' model='rbac.permission'>
         <grid>
-            <toolbar buttons="default">
+            <toolbar buttons="create|edit">
+                <button name="delete" ref="edit" t-enable="ids:this.origin!='base'" class="btn-danger" click="target.delete()" confirm="确定删除?">删除</button>
                 <button type="object" label="更新" service="refresh"/>
             </toolbar>
+            <field name="model"/>
             <field name="name"/>
             <field name="auth"/>
-            <field name="model"/>
+            <field name="type"/>
+            <field name="origin"/>
+            <field name="active"/>
         </grid>
     </view>
 
-    <view id='view_permission_form' name='权限-表单' model='rbac.permission'>
+    <view id='view_permission_form' name='权限码-表单' model='rbac.permission'>
         <form>
             <toolbar buttons="default">
             </toolbar>
+            <field name="model" t-readonly="this.origin==='base'"/>
             <field name="name"/>
-            <field name="auth"/>
-            <field name="model"/>
+            <field name="auth" t-readonly="this.origin==='base'"/>
+            <field name="type" t-readonly="this.origin==='base'"/>
+            <field name="origin" readonly="1"/>
+            <field name="active" t-readonly="this.type==='service' &amp;amp;&amp;amp; this.origin==='base'"/>
+            <tabs>
+                <tab label="角色">
+                    <field name="role_ids" colspan="4" nolabel="1">
+                        <grid>
+                            <field name="name"/>
+                        </grid>
+                    </field>
+                </tab>
+            </tabs>
+        </form>
+    </view>
+
+    <view id='rbac_policy_resource' name='密码策略-资源' model='rbac.policy'>
+        <resource>
+            <script src="/res/org/jdoo/base/statics/js/base/policy.js"></script>
+        </resource>
+    </view>
+    <view id='view_policy_form' name='密码策略-表单' model='rbac.policy'>
+        <form id="policy_form_Id">
+            <toolbar buttons="save">
+            </toolbar>
+            <field name="neet_letter"/>
+            <field name="neet_symbol"/>
+            <field name="neet_number"/>
+            <field name="case_sensitivity"/>
+            <field name="length"/>
+            <field name="failed_pwd_times"/>
+            <field name="lock_time"/>
+            <field name="pwd_validity"/>
         </form>
     </view>
 </data>

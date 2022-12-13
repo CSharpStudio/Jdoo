@@ -5,10 +5,7 @@ package org.jdoo.exceptions;
  * 
  * @author lrz
  */
-public class CacheMissException extends RuntimeException {
-
-    public CacheMissException() {
-    }
+public class CacheMissException extends PlatformException {
 
     public CacheMissException(Throwable cause) {
         super(cause);
@@ -20,5 +17,21 @@ public class CacheMissException extends RuntimeException {
 
     public CacheMissException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public CacheMissException(int errorCode) {
+        super(errorCode);
+    }
+
+    public CacheMissException(Throwable cause, int errorCode) {
+        super(cause, errorCode);
+    }
+
+    public CacheMissException(String message, int errorCode) {
+        super(message, errorCode);
+    }
+
+    public CacheMissException(String message, Throwable cause, int errorCode) {
+        super(message, cause, errorCode);
     }
 }

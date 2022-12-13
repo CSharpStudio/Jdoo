@@ -34,4 +34,19 @@ public class Tuple5<A, B, C, D, E> {
     public E getItem5() {
         return item5;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Tuple3) {
+            Tuple5<?, ?, ?, ?, ?> other = (Tuple5<?, ?, ?, ?, ?>) obj;
+            return Tuple.eq(item1, other.item1) && Tuple.eq(item2, other.item2) && Tuple.eq(item3, other.item3)
+                    && Tuple.eq(item4, other.item4) && Tuple.eq(item5, other.item5);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Tuple.hash(item1) + Tuple.hash(item2) + Tuple.hash(item3) + Tuple.hash(item4) + Tuple.hash(item5);
+    }
 }

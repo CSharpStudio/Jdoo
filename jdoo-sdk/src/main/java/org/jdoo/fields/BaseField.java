@@ -7,7 +7,7 @@ import java.util.Map;
 import org.jdoo.Callable;
 import org.jdoo.Default;
 import org.jdoo.Field;
-import org.jdoo.ICriteria;
+import org.jdoo.Search;
 import org.jdoo.core.Constants;
 
 import org.apache.commons.lang3.StringUtils;
@@ -94,7 +94,13 @@ public class BaseField<T extends BaseField<T>> extends Field {
     }
 
     /**
-     * 指定计算方法
+     * 指定计算方法，模型方法或者groovy脚本，示例:
+     * 
+     * <pre>
+     * static Field area = Field.Float().compute(Callable.method("areaCompute")).label("面积");
+     * or
+     *static Field area = Field.Float().compute(Callable.script("r->(double)r.get('height') * (double)r.get('width')")).label("面积");
+     * </pre>
      * 
      * @param compute
      * @return
@@ -105,13 +111,37 @@ public class BaseField<T extends BaseField<T>> extends Field {
     }
 
     /**
-     * 指定查询方法
+     * 指定计算方法, 方法示例:
      * 
-     * @param criteria
+     * <pre>
+     * public Object areaCompute(Records rec) {
+     *     return (double) rec.get("height") * (double) rec.get("width");
+     * }
+     * </pre>
+     * 
+     * @param compute
      * @return
      */
-    public T criteria(ICriteria criteria) {
-        args.put(Constants.CRITERIA, criteria);
+    public T compute(String method) {
+        args.put(Constants.COMPUTE, Callable.method(method));
+        return (T) this;
+    }
+
+    /**
+     * 指定查询条件处理方法, 只对store(false)或计算字段有效
+     * 方法示例:
+     * 
+     * <pre>
+     * public Criteria codeSearch(Records rec, String op, Object value) {
+     *     return Criteria.binary("code", op, value);
+     * }
+     * </pre>
+     * 
+     * @param method
+     * @return
+     */
+    public T search(String method) {
+        args.put(Constants.SEARCH, Search.method(method));
         return (T) this;
     }
 
@@ -220,6 +250,21 @@ public class BaseField<T extends BaseField<T>> extends Field {
      */
     public T defaultValue(Default defaultValue) {
         args.put("defaultValue", defaultValue);
+        return (T) this;
+    }
+
+    /**
+     * 默认值
+     * 
+     * @param defaultValue
+     * @return
+     */
+    public T defaultValue(Object defaultValue) {
+        if (defaultValue instanceof Default) {
+            args.put("defaultValue", defaultValue);
+        } else {
+            args.put("defaultValue", Default.value(defaultValue));
+        }
         return (T) this;
     }
 

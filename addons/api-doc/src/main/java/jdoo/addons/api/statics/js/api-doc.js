@@ -37,7 +37,7 @@ $(window).ready(function () {
                         console.log(data);
                     } else {
                         var token = data.result.token;
-                        document.cookie = "jtoken=" + token;
+                        document.cookie = "ctx_token=" + token;
                         $("[name=login_token]").html(token);
                     }
                 }

@@ -11,13 +11,10 @@ import org.jdoo.core.MetaModel;
  * @author lrz
  */
 public class StringField<T extends BaseField<T>> extends BaseField<T> {
+    @Related
     Boolean translate;
 
-    public StringField() {
-        relatedAttributes.add("translate");
-    }
-
-    public boolean getTranslate() {
+    public boolean isTranslate() {
         if (translate == null) {
             return false;
         }

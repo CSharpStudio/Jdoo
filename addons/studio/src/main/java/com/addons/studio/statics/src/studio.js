@@ -1,0 +1,5 @@
+import './js/Fields.js'
+import './js/FormView.js'
+import './js/MenuView.js'
+import './js/ViewDesigner.js'
+import './js/Studio.js'

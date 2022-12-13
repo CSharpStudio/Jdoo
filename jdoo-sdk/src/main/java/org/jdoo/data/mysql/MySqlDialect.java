@@ -1,16 +1,28 @@
 package org.jdoo.data.mysql;
 
+import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.jdoo.data.ColumnType;
 import org.jdoo.data.Cursor;
 import org.jdoo.data.DbColumn;
 import org.jdoo.data.SqlDialect;
+import org.jdoo.data.SqlFormat;
+import org.jdoo.exceptions.DataException;
+import org.jdoo.exceptions.SqlConstraintException;
+import org.jdoo.exceptions.ValidationException;
+import org.jdoo.utils.DateUtils;
 import org.jdoo.utils.StringUtils;
 
 /**
@@ -23,9 +35,24 @@ public class MySqlDialect implements SqlDialect {
         return "UTC_TIMESTAMP()";
     }
 
+    /**
+     * 获取数据库值
+     */
+    public Object getObject(Object obj) {
+        if (obj instanceof Timestamp) {
+            Timestamp ts = (Timestamp) obj;
+            return DateUtils.atZone(ts, TimeZone.getTimeZone("UTC"));
+        }
+        if (obj instanceof Date) {
+            Date date = (Date) obj;
+            return DateUtils.atZone(date, TimeZone.getTimeZone("UTC"));
+        }
+        return obj;
+    }
+
     @Override
     public void createColumn(Cursor cr, String table, String name, String columnType, String comment, boolean notNull) {
-        String sql = String.format("ALTER TABLE `%s` ADD COLUMN `%s` %s %s", table, name, columnType,
+        String sql = String.format("ALTER TABLE %s ADD COLUMN %s %s %s", quote(table), quote(name), columnType,
                 notNull ? "NOT NULL" : "NULL");
         if (StringUtils.isNotEmpty(comment)) {
             sql += String.format(" COMMENT '%s'", comment.replace("'", "''"));
@@ -42,9 +69,9 @@ public class MySqlDialect implements SqlDialect {
             case VarChar:
                 return "varchar";
             case Text:
-                return "text";
+                return "mediumtext";
             case Binary:
-                return "blob(60000)";
+                return "mediumblob ";
             case Integer:
                 return "int";
             case Long:
@@ -88,7 +115,7 @@ public class MySqlDialect implements SqlDialect {
 
     @Override
     public void createModelTable(Cursor cr, String table, String comment) {
-        String sql = String.format("CREATE TABLE `%s` (`id` VARCHAR(13) NOT NULL, PRIMARY KEY(`id`))", table);
+        String sql = String.format("CREATE TABLE %s (`id` VARCHAR(13) NOT NULL, PRIMARY KEY(`id`))", quote(table));
         if (StringUtils.isNotEmpty(comment)) {
             sql += String.format("COMMENT = '%s'", comment.replace("'", "''"));
         }
@@ -133,45 +160,60 @@ public class MySqlDialect implements SqlDialect {
     }
 
     @Override
-    public void addUniqueConstraint(Cursor cr, String table, String constraint, String[] fields) {
-        String definition = String.format("unique(%s)", StringUtils.join(fields, ','));
-        String oldDefinition = getConstraintDefinition(cr, table, constraint);
-        if (oldDefinition != null) {
-            if (!definition.equals(oldDefinition)) {
-                dropConstraint(cr, table, constraint);
-            } else {
-                return;
+    public String addUniqueConstraint(Cursor cr, String table, String constraint, String[] fields) {
+        try {
+            String definition = String.format("unique(%s)",
+                    Arrays.stream(fields).map(f -> quote(f)).collect(Collectors.joining(",")));
+            String oldDefinition = getConstraintDefinition(cr, constraint);
+            if (oldDefinition != null) {
+                if (!definition.equals(oldDefinition)) {
+                    dropConstraint(cr, table, constraint);
+                } else {
+                    return null;
+                }
             }
+            String sql = String.format("ALTER TABLE %s ADD CONSTRAINT %s %s", quote(table), quote(constraint),
+                    definition);
+            cr.execute(sql);
+            schema.debug("Table {} add unique constaint {} as {}", table, constraint, definition);
+            return definition;
+        } catch (Exception exc) {
+            schema.warn("表{}添加唯一约束{}失败:{}", table, constraint, exc.getMessage());
+            return null;
         }
-        String sql = String.format("ALTER TABLE %s ADD CONSTRAINT %s %s COMMENT '%s'", quote(table), quote(constraint),
-                definition, definition);
-        // TODO cr.savepoint();
-        cr.execute(sql);
-        schema.debug("Table {} add unique constaint {} as {}", table, constraint, definition);
     }
 
-    void dropConstraint(Cursor cr, String table, String constraint) {
+    public void dropConstraint(Cursor cr, String table, String constraint) {
         try {
             // TODO savepoint
-            cr.execute("ALTER TABLE %s DROP CONSTRAINT %s", Arrays.asList(quote(table), quote(constraint)));
+            cr.execute(String.format("ALTER TABLE %s DROP CONSTRAINT %s", quote(table), quote(constraint)));
             schema.debug("Table {}: dropped constraint {}", table, constraint);
-
         } catch (Exception e) {
             schema.warn("Table {}: unable to drop constraint {}", table, constraint);
         }
     }
 
-    String getConstraintDefinition(Cursor cr, String table, String constraint) {
-        String sql = "SELECT INDEX_COMMENT FROM INFORMATION_SCHEMA.STATISTICS s where TABLE_SCHEMA=(select database()) and TABLE_NAME=%s and INDEX_NAME=%s";
-        cr.execute(sql, Arrays.asList(table, constraint));
+    String getConstraintDefinition(Cursor cr, String constraint) {
+        String sql = "SELECT definition FROM ir_model_constraint where name=%s";
+        cr.execute(sql, Arrays.asList(constraint));
         Object[] row = cr.fetchOne();
         return row.length > 0 ? (String) row[0] : null;
     }
 
+    Pattern constraintPattern = Pattern.compile("CONSTRAINT `(?<name>\\S+)` FOREIGN KEY");
+
     @Override
-    public String getConstraint(SQLException cause) {
-        // java.sql.SQLIntegrityConstraintViolationException
-        return null;
+    public RuntimeException getError(SQLException err, SqlFormat sql) {
+        if (err.getErrorCode() == 1451) {
+            String msg = err.getMessage();
+            Matcher m = constraintPattern.matcher(msg);
+            if (m.find()) {
+                String constraint = m.group("name");
+                throw new SqlConstraintException(constraint);
+            }
+            throw new ValidationException("数据被引用,不能删除", err);
+        }
+        return new DataException(String.format("执行SQL[%s]失败", sql.getSql()), err);
     }
 
     @Override
@@ -196,9 +238,44 @@ public class MySqlDialect implements SqlDialect {
         column1 = quote(column1);
         column2 = quote(column2);
         String sql = "CREATE TABLE " + table + " (" + column1 + " VARCHAR(13) NOT NULL, " + column2
-                + " VARCHAR(13) NOT NULL, PRIMARY KEY(" + column1 + "," + column2 + "))"
-                + " COMMENT = '" + comment + "'";
+                + " VARCHAR(13) NOT NULL, PRIMARY KEY(" + column1 + "," + column2 + "))";
+
+        if (StringUtils.isNotEmpty(comment)) {
+            sql += String.format(" COMMENT = '%s'", comment.replace("'", "''"));
+        }
         cr.execute(sql);
         schema.debug("Create table %s: %s", table, comment);
     }
+
+    @Override
+    public List<Object[]> getForeignKeys(Cursor cr, Collection<String> tables) {
+        String sql = "SELECT k.constraint_name, k.table_name, k.column_name, k.referenced_table_name, k.referenced_column_name, s.definition"
+                + " FROM information_schema.key_column_usage k"
+                + " LEFT JOIN ir_model_constraint s on k.constraint_name=s.name"
+                + " WHERE k.table_name IN %s AND k.table_schema=DATABASE()";
+        cr.execute(sql, Arrays.asList(tables));
+        return cr.fetchAll();
+    }
+
+    @Override
+    public String addForeignKey(Cursor cr, String table1, String column1, String table2, String column2,
+            String ondelete) {
+        String fk = limitIdentity(String.format("fk_%s_%s", table1, column1));
+        String sql = String.format("ALTER TABLE %s"
+                + " ADD CONSTRAINT %s"
+                + " FOREIGN KEY (%s)"
+                + " REFERENCES %s (%s)"
+                + " ON DELETE %s",
+                cr.quote(table1), cr.quote(fk), cr.quote(column1), cr.quote(table2), cr.quote(column2), ondelete);
+        try {
+            cr.execute(sql);
+            schema.debug("Table {}: added foreign key {} references {}({}) ON DELETE {}", table1, column1, table2,
+                    column2, ondelete);
+        } catch (Exception exc) {
+            schema.warn("表 {} 添加外键 {} 引用 {}({}) ON DELETE {}失败:{}", table1, column1, table2, column2, ondelete,
+                    exc.getMessage());
+        }
+        return fk;
+    }
+
 }

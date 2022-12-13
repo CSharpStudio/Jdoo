@@ -6,7 +6,7 @@ package org.jdoo.core;
  * @author lrz
  */
 public class Constants {
-    public final static String SUPERUSER_ID = "superuser";
+    public final static String SYSTEM_USER = "__system__";
     public final static String ANONYMOUS = "☒ANONYMOUS";
 
     public final static String NAME = "name";
@@ -22,6 +22,8 @@ public class Constants {
 
     public final static String ARGS = "args";
     public final static String COMPUTE = "compute";
+    public final static String INVERSE = "inverse";
+    public final static String SEARCH = "search";
     public final static String STORE = "store";
     public final static String STATE = "state";
     public final static String COPY = "copy";
@@ -34,6 +36,7 @@ public class Constants {
     public final static String READONLY = "readonly";
     public final static String HELP = "help";
     public final static String LABEL = "label";
+    public final static String AUTH_MODEL = "authModel";
     public final static String DEPENDS = "depends";
     public final static String CRITERIA = "criteria";
 
@@ -54,7 +57,6 @@ public class Constants {
     public final static String MANY2MANY = "many2many";
     public final static String ONE2MANY = "one2many";
 
-    
     public final static String BASE = "base";
     public final static String TABLE = "table";
     public final static String LOG_ACCESS = "logAccess";
@@ -66,6 +68,6 @@ public class Constants {
     public final static String SERVICE_KEY = "services";
     public final static String UNIQUE_KEY = "uniques";
 
-    
     public final static String BASE_PACKAGE = "org.jdoo.base";
+    public final static String MANY2ONEREFERENCE = "many2oneReference";
 }

@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data>
-    <menu id="menu_ir_ui_menu" name="菜单" model="ir.ui.menu" view="grid,form" seq="6" parent="menu_model"/>
+    <view id='menu_resource' name='菜单-资源' model='ir.ui.menu'>
+        <resource>
+            <script src="/res/org/jdoo/base/statics/js/base/menu.js"></script>
+            <script src="/res/org/jdoo/base/statics/js/base/model-lookup.js"></script>
+        </resource>
+    </view>
 
     <view id='menu_search' name='菜单-查询' model='ir.ui.menu'>
         <search>
@@ -19,17 +24,18 @@
         </grid>
     </view>
     <view id='menu_form' name='菜单-表单' model='ir.ui.menu'>
-        <form>
+        <form tree="1" sort_field="sequence">
             <toolbar buttons="default">
             </toolbar>
             <field name="name"/>
-            <field name="model"/>
-            <field name="view"/>
+            <field name="parent_id" readonly="1" link="0"/>
             <field name="sequence"/>
-            <field name="parent_id"/>
             <field name="icon"/>
+            <field name="model" editor="model_lookup"/>
+            <field name="view" editor="menu_view"/>
+            <field name="url" colspan="4"/>
+            <field name="click" colspan="2"/>
             <field name="css"/>
-            <field name="click"/>
             <field name="active"/>
         </form>
     </view>

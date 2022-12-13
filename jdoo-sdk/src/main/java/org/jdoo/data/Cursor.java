@@ -10,14 +10,17 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.jdoo.exceptions.DataException;
 import org.jdoo.util.KvMap;
+import org.jdoo.utils.ObjectUtils;
+import org.jdoo.utils.PropertiesUtils;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 游标
@@ -25,7 +28,7 @@ import org.apache.logging.log4j.Logger;
  * @author lrz
  */
 public class Cursor implements AutoCloseable {
-    private static Logger logger = LogManager.getLogger(Cursor.class);
+    private static Logger logger = LoggerFactory.getLogger(Cursor.class);
     /** decent limit on size of IN queries - guideline = Oracle limit */
     static int IN_MAX = 1000;
     Connection connection;
@@ -124,6 +127,24 @@ public class Cursor implements AutoCloseable {
         execute(sql, params, false);
     }
 
+    static Boolean printSql;
+
+    boolean isPrintSql() {
+        if (printSql == null) {
+            printSql = ObjectUtils.toBoolean(PropertiesUtils.getProperty("printSql"));
+        }
+        return printSql;
+    }
+
+    /**
+     * 设置是否打印sql
+     * 
+     * @param isPrint
+     */
+    public static void setPrintSql(boolean isPrint) {
+        printSql = isPrint;
+    }
+
     public boolean execute(String sql, Collection<?> params, boolean logExceptions) {
         reset();
         SqlFormat format = mogrify(sql, params);
@@ -131,9 +152,11 @@ public class Cursor implements AutoCloseable {
             statement = connection.prepareStatement(format.getSql());
             int parameterIndex = 1;
             for (Object p : format.getParmas()) {
-                statement.setObject(parameterIndex++, p);
+                statement.setObject(parameterIndex++, sqlDialect.prepareObject(p));
             }
-            System.out.println(format.toString());
+            if (isPrintSql()) {
+                System.out.println(format.toString());
+            }
             boolean res = statement.execute();
             if (res) {
                 resultSet = statement.getResultSet();
@@ -147,7 +170,11 @@ public class Cursor implements AutoCloseable {
             }
             return res;
         } catch (SQLException e) {
-            throw new DataException("执行SQL失败:" + sql, e);
+            System.out.println("SQL ERROR============>");
+            System.out.println(format.getSql());
+            System.out.println(format.getParmas().stream().map(p -> p == null ? "null" : p.toString())
+                    .collect(Collectors.joining(",")));
+            throw getSqlDialect().getError(e, format);
         }
     }
 
@@ -186,19 +213,19 @@ public class Cursor implements AutoCloseable {
         return list;
     }
 
-    public KvMap fetchMapOne() {
+    public Map<String, Object> fetchMapOne() {
         ensureExecuted();
         if (state == CursorState.Fetchable) {
-            KvMap map = readMap();
+            Map<String, Object> map = readMap();
             scroll();
             return map;
         }
         return KvMap.empty();
     }
 
-    public List<KvMap> fetchMapMany(int size) {
+    public List<Map<String, Object>> fetchMapMany(int size) {
         ensureExecuted();
-        List<KvMap> list = new ArrayList<>();
+        List<Map<String, Object>> list = new ArrayList<>();
         int i = 0;
         while (state == CursorState.Fetchable && i++ < size) {
             list.add(readMap());
@@ -207,9 +234,9 @@ public class Cursor implements AutoCloseable {
         return list;
     }
 
-    public List<KvMap> fetchMapAll() {
+    public List<Map<String, Object>> fetchMapAll() {
         ensureExecuted();
-        List<KvMap> list = new ArrayList<>();
+        List<Map<String, Object>> list = new ArrayList<>();
         while (state == CursorState.Fetchable) {
             list.add(readMap());
             scroll();
@@ -217,13 +244,13 @@ public class Cursor implements AutoCloseable {
         return list;
     }
 
-    KvMap readMap() {
+    Map<String, Object> readMap() {
         try {
             ResultSetMetaData meta = resultSet.getMetaData();
             Object[] values = new Object[meta.getColumnCount()];
             KvMap map = new KvMap(values.length);
             for (int i = 1; i <= values.length; i++) {
-                map.put(meta.getColumnLabel(i), resultSet.getObject(i));
+                map.put(sqlDialect.getColumnLabel(meta.getColumnLabel(i)), resultSet.getObject(i));
             }
             return map;
         } catch (SQLException e) {
@@ -236,7 +263,7 @@ public class Cursor implements AutoCloseable {
             ResultSetMetaData meta = resultSet.getMetaData();
             Object[] values = new Object[meta.getColumnCount()];
             for (int i = 0; i < values.length; i++) {
-                values[i] = resultSet.getObject(i + 1);
+                values[i] = sqlDialect.getObject(resultSet.getObject(i + 1));
             }
             return values;
         } catch (SQLException e) {

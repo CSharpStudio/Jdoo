@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import org.jdoo.Manifest;
@@ -15,8 +16,8 @@ import org.jdoo.exceptions.TypeException;
 import org.jdoo.services.MethodService;
 import org.jdoo.utils.StringUtils;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * 模型建构
@@ -24,7 +25,7 @@ import org.apache.logging.log4j.Logger;
  * @author lrz
  */
 public class ModelBuilder {
-    private Logger logger = LogManager.getLogger(BaseModel.class);
+    private Logger logger = LoggerFactory.getLogger(BaseModel.class);
 
     private static ModelBuilder instance;
 
@@ -46,13 +47,13 @@ public class ModelBuilder {
      * @return
      */
     public MetaModel buildBaseModel(Registry registry) {
-        MetaModel base = toMeta(new BaseModel());
         MetaModel model = new MetaModel();
+        model.module = Constants.BASE;
+        MetaModel base = toMeta(new BaseModel(), model.module);
         model.name = Constants.BASE;
         model.setBases(Arrays.asList(base));
         buildModelAttributes(registry, model);
         model.registry = registry;
-        model.module = Constants.BASE;
         registry.put(Constants.BASE, model);
         return model;
     }
@@ -72,11 +73,11 @@ public class ModelBuilder {
             BaseModel model = (BaseModel) clazz.getDeclaredConstructor().newInstance();
             MetaModel meta = buildModel(registry, model, module);
             registry.put(meta.getName(), meta);
+            return meta;
         } catch (Exception e) {
             e.printStackTrace();
             throw new ModelException("构建模型[" + clazz.getName() + "]失败", e);
         }
-        return null;
     }
 
     public MetaModel buildModel(Registry registry, BaseModel cls, String module) {
@@ -111,7 +112,7 @@ public class ModelBuilder {
         }
         // 构建模型的bases
         List<MetaModel> bases = new ArrayList<MetaModel>();
-        bases.add(toMeta(cls));
+        bases.add(toMeta(cls, module));
         for (String parent : parents) {
             if (!registry.contains(parent)) {
                 throw new TypeException(String.format("class[%s]定义的继承模型[%s]不存在于注册表", cls.getClass(), parent));
@@ -176,10 +177,31 @@ public class ModelBuilder {
             if (base.registry == null) {
                 meta.label = (String) base.args.getOrDefault(Constants.LABEL, meta.label);
                 meta.description = (String) base.args.getOrDefault(Constants.DESCRIPTION, meta.description);
+                meta.authModel = (String) base.args.getOrDefault(Constants.AUTH_MODEL, meta.authModel);
                 meta.table = (String) base.args.getOrDefault(Constants.TABLE, meta.table);
                 meta.logAccess = (Boolean) base.args.getOrDefault(Constants.LOG_ACCESS, meta.logAccess);
                 meta.present = (String[]) base.args.getOrDefault(Constants.PRESENT, meta.present);
                 meta.presentFormat = (String) base.args.getOrDefault(Constants.PRESENT_FORMAT, meta.presentFormat);
+                meta.order = (String) base.args.getOrDefault(Constants.ORDER, meta.order);
+                // 先移除
+                for (Service svc : (Service[]) base.args.get(Constants.SERVICE_KEY)) {
+                    String[] removes = svc.remove();
+                    if (removes.length > 0) {
+                        for (String remove : removes) {
+                            if ("@all".equals(remove)) {
+                                meta.services.clear();
+                            } else {
+                                meta.services.remove(remove);
+                            }
+                        }
+                    }
+                }
+                // 再添加
+                for (Service svc : (Service[]) base.args.get(Constants.SERVICE_KEY)) {
+                    if (svc.remove().length == 0) {
+                        updateServices(meta, svc);
+                    }
+                }
                 for (Method method : (List<Method>) base.args.get(Constants.METHOD_KEY)) {
                     updateMethods(meta, method);
                     Model.Constrains constrains = method.getAnnotation(Model.Constrains.class);
@@ -195,9 +217,6 @@ public class ModelBuilder {
                         }
                         meta.services.put(serviceName, new MethodService(serviceName, service, method));
                     }
-                }
-                for (Service svc : (Service[]) base.args.get(Constants.SERVICE_KEY)) {
-                    updateServices(meta, svc);
                 }
                 for (UniqueConstraint uc : (List<UniqueConstraint>) base.args.get(Constants.UNIQUE_KEY)) {
                     meta.uniques.put(uc.getName(), uc);
@@ -223,28 +242,23 @@ public class ModelBuilder {
     }
 
     private void updateServices(MetaModel meta, Service svc) {
-        String remove = svc.remove();
-        if (StringUtils.isNotBlank(remove))
-            meta.services.remove(remove);
-        else {
-            Class<?> c = svc.type();
-            if (BaseService.class.isAssignableFrom(svc.type())) {
-                try {
-                    BaseService bs = (BaseService) c.getConstructor().newInstance();
-                    bs.setName(svc.name());
-                    bs.setLabel(svc.label());
-                    bs.setAuth(svc.auth());
-                    bs.setDescription(svc.description());
-                    meta.services.put(svc.name(), bs);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    logger.warn(String.format("创建模型[%s]类型为[%s]的服务[%s]失败", meta.name, svc.name(), c.getName()), e);
-                }
+        Class<?> c = svc.type();
+        if (BaseService.class.isAssignableFrom(svc.type())) {
+            try {
+                BaseService bs = (BaseService) c.getConstructor().newInstance();
+                bs.setName(svc.name());
+                bs.setLabel(svc.label());
+                bs.setAuth(svc.auth());
+                bs.setDescription(svc.description());
+                meta.services.put(svc.name(), bs);
+            } catch (Exception e) {
+                e.printStackTrace();
+                logger.warn(String.format("创建模型[%s]类型为[%s]的服务[%s]失败", meta.name, svc.name(), c.getName()), e);
             }
         }
     }
 
-    private MetaModel toMeta(BaseModel model) {
+    private MetaModel toMeta(BaseModel model, String module) {
         MetaModel meta = new MetaModel();
         meta.args = new HashMap<String, Object>(model.getRefector().getArgs());
         Class<?> clazz = model.getClass();
@@ -269,6 +283,7 @@ public class ModelBuilder {
                     MetaField f = (MetaField) field.get(null);
                     String key = field.getName();
                     f.setName(key);
+                    f.setModule(module);
                     meta.fields.put(key, f);
                 } catch (Exception e) {
                     throw new ModelException(
@@ -280,8 +295,8 @@ public class ModelBuilder {
         // services
         Service[] services = clazz.getAnnotationsByType(Model.Service.class);
         for (Service svc : services) {
-            String remove = svc.remove();
-            if (StringUtils.isEmpty(remove)) {
+            String[] remove = svc.remove();
+            if (remove.length == 0) {
                 if (!BaseService.class.isAssignableFrom(svc.type())) {
                     logger.warn(String.format("class[%s]声明的服务[%s]类型[%s]无效,应为BaseService的子类", clazz.getName(),
                             svc.name(), svc.type().getName()));
@@ -293,16 +308,20 @@ public class ModelBuilder {
         Model.UniqueConstraint[] uniqueConstraints = clazz.getAnnotationsByType(Model.UniqueConstraint.class);
         List<UniqueConstraint> uniques = new ArrayList<>();
         for (Model.UniqueConstraint uc : uniqueConstraints) {
-            uniques.add(new UniqueConstraint(uc.name(), uc.fields(), uc.message()));
+            uniques.add(new UniqueConstraint(uc.name(), uc.fields(), uc.message(), module));
         }
         meta.args.put(Constants.UNIQUE_KEY, uniques);
 
         return meta;
     }
 
-    public void buildModule(Registry registry, Manifest manifest) {
+    public Collection<String> buildModule(Registry registry, Manifest manifest) {
+        List<String> models = new ArrayList<>();
         for (Class<?> clazz : manifest.models()) {
-            buildModel(registry, clazz, manifest.name());
+            MetaModel meta = buildModel(registry, clazz, manifest.name());
+            models.add(meta.getName());
+            models.addAll(meta.inheritChildren);
         }
+        return models;
     }
 }

@@ -54,7 +54,7 @@ public class GroovyTest {
         builder.buildModel(reg, TestResUser.class, "");
         builder.buildModel(reg, TestModel.class, "");
         reg.setupModels(cr);
-        reg.initModels(cr, reg.getModels().keySet());
+        //reg.initModels(cr, reg.getModels().keySet(), true);
 
         Environment env = new Environment(reg, cr, "", new HashMap<>());
 

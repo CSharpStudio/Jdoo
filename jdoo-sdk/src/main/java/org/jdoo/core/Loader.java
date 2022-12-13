@@ -1,8 +1,8 @@
 package org.jdoo.core;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,17 +12,15 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import org.jdoo.Manifest;
+import org.jdoo.Records;
 import org.jdoo.data.Cursor;
 import org.jdoo.data.Database;
-import org.jdoo.exceptions.ValueException;
-import org.jdoo.util.KvMap;
-import org.jdoo.utils.ImportUtils;
-import org.jdoo.utils.PathUtils;
-import org.springframework.util.ClassUtils;
-
+import org.jdoo.utils.ManifestUtils;
+import org.jdoo.utils.ObjectUtils;
+import org.jdoo.utils.PropertiesUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * 加载器
@@ -31,7 +29,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class Loader {
     static Loader instance;
-    private Logger logger = LogManager.getLogger(Loader.class);
+    private Logger logger = LoggerFactory.getLogger(Loader.class);
 
     public static void setLoader(Loader loader) {
         instance = loader;
@@ -46,6 +44,7 @@ public class Loader {
 
     ModelBuilder builder = ModelBuilder.getBuilder();
 
+    @SuppressWarnings("unchecked")
     public void loadModules(Database db, Registry registry) {
         builder.buildBaseModel(registry);
 
@@ -54,145 +53,128 @@ public class Loader {
             if (!init) {
                 init(cr);
             }
-            List<KvMap> newModules = loadModuleGraph(cr, registry);
-            registry.setupModels(cr);
-            registry.initModels(cr, registry.getModels().keySet());
-
-            Environment env = new Environment(registry, cr, Constants.SUPERUSER_ID, Collections.emptyMap());
-            for (KvMap m : newModules) {
-                String pkg = (String) m.get("package_info");
-                loadData(env, pkg, getManifest(pkg));
+            // 强制更新
+            boolean forceUpdate = ObjectUtils.toBoolean(PropertiesUtils.getProperty("forceUpdate"));
+            if (forceUpdate) {
+                cr.execute("UPDATE ir_module SET state='installing' WHERE state='installed'");
             }
-            env.get("base").flush();
+
+            // load installed and installing modules
+            List<Map<String, Object>> newModules = loadModuleGraph(cr, registry);
+            registry.setupModels(cr);
+            Environment env = new Environment(registry, cr, Constants.SYSTEM_USER, Collections.emptyMap());
+            Records http = env.get("ir.http");
+            // load data of new modules
+            for (Map<String, Object> m : newModules) {
+                Collection<String> models = (Collection<String>) m.get("models");
+                registry.initModels(env, models, (String) m.get("name"), false);
+                String pkg = (String) m.get("package_info");
+                env.get("ir.model.data").call("loadData", pkg);
+            }
+            if (newModules.size() > 0) {
+                env.get("rbac.permission").call("refresh");
+            }
             cr.execute("UPDATE ir_module SET state='installed' WHERE state='installing'");
+            // remove modules
+            cr.execute("SELECT id,name,package_info FROM ir_module WHERE state ='removing'");
+            List<Map<String, Object>> rows = cr.fetchMapAll();
+            if (rows.size() > 0) {
+                // List<String> toRemoveModules = rows.stream().map(m -> (String) m.get("name"))
+                // .collect(Collectors.toList());
+                // env.get("ir.model.data").call("removeData", toRemoveModules);
+                rows.stream().map(m -> (String) m.get("package_info")).forEach(pkg -> {
+                    Manifest manifest = ManifestUtils.getManifest(pkg);
+                    http.call("unregisterControllers", manifest);
+                });
+                cr.execute("UPDATE ir_module SET state='installable' WHERE state='removing'");
+            }
+            env.get("rbac.permission").call("initModelAuthFields");
+            env.get("base").flush();
+            registry.getModules().forEach(manifest -> {
+                http.call("registerControllers", manifest);
+            });
             cr.commit();
         }
         registry.loaded = true;
     }
 
-    List<KvMap> loadModuleGraph(Cursor cr, Registry registry) {
-        List<KvMap> newModules = new ArrayList<>();
-        cr.execute("SELECT id,name,package_info,state FROM ir_module WHERE state='installed' or state='installing'");
-        List<KvMap> datas = cr.fetchMapAll();
-        Map<String, KvMap> nameModules = new HashMap<>(datas.size());
-        Map<String, Set<String>> dependency = new HashMap<>(datas.size());
+    @SuppressWarnings("unchecked")
+    List<Map<String, Object>> loadModuleGraph(Cursor cr, Registry registry) {
+        cr.execute("SELECT id,name,package_info,state FROM ir_module WHERE state in ('installed', 'installing')");
+        List<Map<String, Object>> datas = cr.fetchMapAll();
+        Map<String, Map<String, Object>> nameModules = new HashMap<>(datas.size());
         Set<String> moduleIds = new HashSet<>();
-        for (KvMap data : datas) {
+        for (Map<String, Object> data : datas) {
+            data.put("deps", new HashSet<String>());
             moduleIds.add((String) data.get("id"));
             nameModules.put((String) data.get("name"), data);
-            if ("installing".equals(data.get("state"))) {
-                newModules.add(data);
-            }
         }
         cr.execute(
                 "SELECT d.name,m.name as module FROM ir_module_dependency d JOIN ir_module m on d.module_id=m.id WHERE module_id in %s",
                 Arrays.asList(moduleIds));
-        List<KvMap> deps = cr.fetchMapAll();
-        for (KvMap dep : deps) {
-            String module = (String) dep.get("module");
-            Set<String> set = dependency.get(module);
-            if (set == null) {
-                set = new HashSet<>();
-                dependency.put(module, set);
+        List<Map<String, Object>> deps = cr.fetchMapAll();
+        for (Map<String, Object> dep : deps) {
+            String moduleName = (String) dep.get("module");
+            Map<String, Object> module = nameModules.get(moduleName);
+            if (module != null) {
+                Set<String> set = (Set<String>) module.get("deps");
+                set.add((String) dep.get("name"));
             }
-            set.add((String) dep.get("name"));
         }
+        Manifest manifest = ManifestUtils.getManifest("org.jdoo.base");
+        builder.buildModule(registry, manifest);
+        registry.modules.put("base", manifest);
 
-        builder.buildModule(registry, getManifest("org.jdoo.base"));
-        registry.initModels.add("base");
-
-        for (Entry<String, KvMap> e : nameModules.entrySet()) {
-            buildModule(cr, registry, e.getKey(), nameModules, dependency);
+        List<Map<String, Object>> newModules = new ArrayList<>();
+        for (Entry<String, Map<String, Object>> e : nameModules.entrySet()) {
+            newModules.addAll(buildModule(cr, registry, e.getKey(), nameModules));
         }
-
         return newModules;
     }
 
-    void buildModule(Cursor cr, Registry registry, String module, Map<String, KvMap> nameModules,
-            Map<String, Set<String>> dependency) {
-        if (!registry.initModels.contains(module)) {
-            Set<String> deps = dependency.get(module);
-            if (deps != null) {
+    @SuppressWarnings("unchecked")
+    List<Map<String, Object>> buildModule(Cursor cr, Registry registry, String module,
+            Map<String, Map<String, Object>> nameModules) {
+        List<Map<String, Object>> newModules = new ArrayList<>();
+        if (!registry.containsModule(module)) {
+            Map<String, Object> data = nameModules.get(module);
+            if (data == null) {
+                logger.error(String.format("模块%s未安装", module));
+            } else {
+                Set<String> deps = (Set<String>) data.get("deps");
                 for (String dep : deps) {
                     if (StringUtils.isNotEmpty(dep)) {
-                        buildModule(cr, registry, dep, nameModules, dependency);
+                        newModules.addAll(buildModule(cr, registry, dep, nameModules));
                     }
                 }
-            }
-        }
-        if (!registry.initModels.contains(module)) {
-            KvMap data = nameModules.get(module);
-            String pkg = (String) data.get("package_info");
-            if (StringUtils.isNotBlank(pkg)) {
-                builder.buildModule(registry, getManifest(pkg));
-                registry.initModels.add(module);
-            } else {
-                // TODO build without package
-            }
-        }
-    }
-
-    public void loadData(Environment env, String packageName, Manifest manifest) {
-        String[] files = manifest.data();
-        for (String file : files) {
-            if (StringUtils.isNoneBlank(file)) {
-                String path = PathUtils.combine(packageName.replaceAll("\\.", "/"), file).toLowerCase();
-                ClassLoader loader = ClassUtils.getDefaultClassLoader();
-                InputStream input = loader.getResourceAsStream(path);
-                if (input != null) {
-                    if (path.endsWith(".xml")) {
-                        ImportUtils.importXml(input, manifest.name(), env, (m, e) -> {
-                            logger.warn(m, e);
-                        });
-                    } else if (path.endsWith(".csv")) {
-                    }
+                if ("installing".equals(data.get("state"))) {
+                    newModules.add(data);
+                }
+                String pkg = (String) data.get("package_info");
+                if (StringUtils.isNotBlank(pkg)) {
+                    Manifest manifest = ManifestUtils.getManifest(pkg);
+                    data.put("models", builder.buildModule(registry, manifest));
+                    registry.addModule(module, manifest);
                 } else {
-                    logger.warn("找不到文件:" + file);
+                    // TODO build without package
                 }
             }
         }
-    }
-
-    public void loadData(Environment env, String packageName) {
-        Manifest manifest = getManifest(packageName);
-        loadData(env, packageName, manifest);
-    }
-
-    Package getPackage(String module) {
-        try {
-            Class<?> clazz = Class.forName(module + ".package-info");
-            return clazz.getPackage();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    Manifest getManifest(String packageName) {
-        Package pkg = getPackage(packageName);
-        if (pkg == null) {
-            throw new ValueException("加载模块:[" + packageName + "]失败，请检查package-info");
-        }
-        Manifest manifest = pkg.getAnnotation(Manifest.class);
-        if (manifest == null) {
-            throw new ValueException("包[" + packageName + "]未定义Manifest");
-        }
-        return manifest;
+        return newModules;
     }
 
     void init(Cursor cr) {
         Registry registry = new Registry(null);
         builder.buildBaseModel(registry);
         String pkg = "org.jdoo.base";
-        Manifest manifest = getManifest(pkg);
+        Manifest manifest = ManifestUtils.getManifest(pkg);
         builder.buildModule(registry, manifest);
         registry.setupModels(cr);
-        registry.initModels(cr, registry.getModels().keySet());
+        Environment env = new Environment(registry, cr, "__system__", Collections.emptyMap());
+        registry.initModels(env, registry.getModels().keySet(), "base", true);
 
-        Environment env = new Environment(registry, cr, Constants.SUPERUSER_ID, Collections.emptyMap());
-        env.get("ir.module").call("updateModules");
-
-        loadData(env, pkg, manifest);
+        env.get("ir.model.data").call("loadData", pkg);
+        env.get("rbac.permission").call("refresh");
         env.get("base").flush();
     }
 }
